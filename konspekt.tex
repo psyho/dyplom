@@ -1,0 +1,115 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{polski}
+\usepackage{hyphenat}
+
+%opening
+\title{Konspekt Pracy - Optymalizacja
+wyboru środowiska realizacji baz danych dla potrzeb wysokowydajnych,
+złożonych systemów informacyjnych}
+\author{Adam Pohorecki}
+
+\begin{document}
+\bibliographystyle{plain}
+\hyphenation{MySQL NoSQL Cassandra Twitter Facebook Google Amazon BigTable}
+
+\maketitle
+
+\section{Definicja Problemu i Cel Pracy}
+
+\subsection*{Wstęp}
+
+Popularyzacja dostępu do internetu przyczyniła się w ostatnich latach do 
+powstania licznych serwisów, które mogą się pochwalić dziesiątkami, a nawet
+setkami milionów odwiedzin dziennie. Twórcy serwisów takich jak Facebook,
+Twitter czy Google zostali postawieni przed problemem stworzenia rozproszonej
+architektury bazodanowej, która zapewni horyzontalną skalowalność przy
+równoczesnym zachowaniu wysokiej dostępności. Ze względu na występujący jeszcze
+kilka lat temu brak takich rozwiązań na rynku firmy te były zmuszone do
+implementacji tego typu baz na własne potrzeby. Ostatnimi laty jednak sytuacja
+zaczęła ulegać zmianie: produkty wytworzone na wewnętrzny użytek zostają
+upubliczniane na licencjach Open Source, dzięki czemu obecnie mamy już dostęp do
+przynajmniej kilkunastu rozwiązań umożliwiających dostęp do peta-bajtów danych
+rozproszonych na tysiącach serwerów.
+
+\subsection*{NoSQL}
+
+Powszechny i darmowy dostęp do produktów bazodanowych obiecujących wysoką
+skalowalność zaowocował powstaniem ruchu określanego popularnie mianem NoSQL
+(\emph{Not only SQL} - nie tylko SQL). Nazwa ta bierze się stąd, że
+większość nowych produktów bazodanowych stworzonych z myślą o wysokiej
+skalowalności nie dysponuje możliwością zadawania zapytań w języku SQL. Ruch ten
+jest zainteresowany problematyką dużych i bardzo dużych serwisów internetowych,
+które ze względów wydajnościowych nie stać na wykorzystywanie tradycyjnych
+silników bazodanowych z transakcjami i łączeniem tabel w zapytaniach.
+
+W literaturze trudno znaleźć nazwę problemu, który próbuje rozwiązać ruch
+NoSQL. W artykule \cite{monash-db-hvsp} autor sugeruje nazwę HVSP (ang.
+\emph{High Volume Simple Processing}). Sugerowane wyróżniki problemu to:
+\begin{itemize}
+ \item Wielu równocześnie korzystających z bazy użytkowników, dokonujących
+zarówno odczytów, jak i zapisów.
+ \item Operacje wykonywane przez użytkowników są nieskomplikowane, bez
+transakcji, łączenia tabel, czy operacji grupujących.
+\end{itemize}
+
+Dotychczas popularnym rozwiązaniem było stosowanie zdenormalizowanych,
+horyzontalnie dzielonych (ang. \emph{sharded}) i replikowanych baz (np. MySQL)
+wspartych przez przechowywany w pamięci RAM serwerów cache (zazwyczaj
+Memcached). Produkty NoSQL zazwyczaj idą o krok dalej całkowicie pozbywając się
+transakcji i joinów, a często także sztywnego schematu bazy.
+
+\subsection*{Cel pracy}
+Praca dyplomowa, której konspekt niniejszym przedstawiam, ma na celu opisanie
+dostępnych na rynku rozwiązań NoSQL, zwracając uwagę na szczególne właściwości
+i możliwości zastosowania poszczególnych produktów, jak również ich
+dojrzałości, tempa ich rozwoju, oceny aktywności ich użytkowników i ekosystemu
+narzędzi z nimi związanych. Elementem tego porównania będzie także zbudowanie
+frameworku do przeprowadzania testów na części zaprezentowanych produktów,
+zróżnicowanych pod względem klas tych rozwiązań (osobno dla \emph{document
+oriented} \emph{key-value stores}, \emph{table oriented}, \emph{graph
+oriented}). Ponieważ każde narzędzie dysponuje własną nomenklaturą konieczne
+będzie także wprowadzenie jednolitego nazewnictwa, które ułatwi zrozumienie,
+oraz porównanie opisanych produktów.
+
+Porównanie takie uważam za wartościowe, ze względu na to, iż będzie
+najprawdopodobniej jednym z pierwszych obszernych porównań produktów NoSQL, a
+możliwe że pierwszym takim napisanym w języku polskim.
+  
+\section{Studium Literatury}
+W studium literatury zajmę się opisaniem teorii CAP\cite{brewers-conjecture}
+(\emph{Consistency, Availability, Partition Tolerance}), zwanej również
+teorią Brewer'a od nazwiska jej autora. Teoria ta twierdzi, że rozproszony
+system nie jest w stanie zapewnić równocześnie wszystkich trzech gwarancji:
+konsystencji danych widzianych przez węzły systemu, odporności całości systemu
+na awarie poszczególnych jego węzłów oraz odporności systemu na utratę
+połączenia pomiędzy poszczególnymi węzłami lub ich grupami. Przedstawię także
+zasady działania Google BigTable\cite{google-bigtable} oraz Amazon
+Dynamo\cite{amazon-dynamo}, które bardzo istotnie wpłynęły na architekturę
+systemów NoSQL. Porównam także semantykę BASE (\emph{Basically Available,
+Soft-state, Eventually-consistent}) z ACID (\emph{Atomicity, Consistency,
+Isolation, Durability}).
+
+\section{Opis dostępnych rozwiązań}
+Przedstawiona zostanie klasyfikacja rozwiązań NoSQL (podział na document
+oriented, table oriented, key-value stores, graph oriented i RDBMS based) oraz
+dla każdej z grup przedstawię charakterystykę 2-3 produktów przynależących do
+danej kategorii.
+
+\section{Porównanie dostępnych rozwiązań}
+W tej części dokonam opisu eksperymentów przeprowadzonych z użyciem wcześniej
+opisanych produktów, oraz stworzonego na potrzeby pracy frameworka do ich
+testowania. Przedstawiona zostanie także analiza wyników powyższych
+eksperymentów.
+
+\section{Zakończenie}
+Praca zostanie zakończona prezentacją wniosków wynikających ze zdobytych
+informacji na temat systemów NoSQL oraz przeprowadzonych eksperymentów.
+Dołączona bibliografia zawierać będzie notatki dotyczące poszczególnych
+pozycji, a w załączniku do pracy, dla wygody przyszłych czytelników,
+dołączę komplet artykułów wymienionych w bibliografii.
+
+\bibliography{bibliografia}
+
+\end{document}
