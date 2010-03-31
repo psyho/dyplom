@@ -1,0 +1,188 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<meta name="description" content="An explanation of Eric Brewer's CAP theorem, which says you cannot have more than two of Consistency, Availability and Partition-tolerance in web-based distributed systems.">
+	<script src="prototype.js" type="text/javascript"></script>
+	<script src="effects.js" type="text/javascript"></script>
+	<script src="http://www.google-analytics.com/urchin.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		_uacct = "UA-2121854-1";
+		urchinTracker();
+	</script>
+	<title>Brewer's CAP Theorem</title>
+	<link href="style.css%3F1251557642" media="screen" rel="Stylesheet" type="text/css" />
+</head>
+<body>
+	<div id="toolbar">
+		<div id="header"><h1>:julianbrowne</h1></div>
+		<div id="navigation">
+				<a href="http://www.julianbrowne.com/">home</a>
+				<a href="http://www.julianbrowne.com/nav/archives/index">archive</a>
+				<a href="http://www.julianbrowne.com/article/viewer/about">about</a>
+				<a href="http://feeds.feedburner.com/julianbrownerecent" target="_blank" title="Subscribe to new posts on this site using your favorite reader">rss</a>
+		</div>
+	</div>
+	<div id="content"><div id="article">
+	<h1>Brewer's CAP Theorem</h1>
+	<h2>The kool aid Amazon and Ebay have been drinking</h2>
+	<h3>By Julian Browne on January 11, 2009. Filed Under <a href="http://www.julianbrowne.com/nav/find/architecture" class="link2" title="architecture">architecture</a>, <a href="http://www.julianbrowne.com/nav/find/business" class="link2" title="business">business</a>, <a href="http://www.julianbrowne.com/nav/find/strategy" class="link2" title="strategy">strategy</a></h3>
+	<p class="firstpara">On Friday 4th June 1976, in a small upstairs room away from the main concert auditorium, the <a href="http://en.wikipedia.org/wiki/Sex_Pistols">Sex Pistols</a> kicked off their first gig at Manchester's <a href="http://en.wikipedia.org/wiki/Free_Trade_Hall">Lesser Free Trade Hall</a>. There's some confusion as to who exactly was there in the audience that night, partly because there was another concert just six weeks later, but mostly because it's considered to be a gig that <a href="http://www.bbc.co.uk/print/manchester/content/articles/2006/05/11/110506_sex_pistols_gig_feature.shtml">changed western music culture</a> forever. So iconic and important has that appearance become that David Nolan wrote a book, <a href="http://www.amazon.co.uk/gp/product/0954970497?ie=UTF8&amp;tag=julibrow-21&amp;linkCode=as2&amp;camp=1634&amp;creative=19450&amp;creativeASIN=0954970497">I Swear I Was There: The Gig That Changed the World</a>, investigating just whose claim to have been present was justified. Because the 4th of June is generally considered to be the genesis of punk rock<sup>6</sup>.</p>
+
+<p>Prior to this (in fact since around 1971) there had been a number of <a href="http://en.wikipedia.org/wiki/Protopunk">protopunk</a> bands, such as the <a href="http://www.punk77.co.uk/punkhistory/newyorkdolls.htm">New York Dolls</a> and the <a href="http://en.wikipedia.org/wiki/The_Velvet_Underground">Velvet Underground</a>, but it was this one set by the Sex Pistols that in music folklore started the revolution that set in motion the driving guitars of the <a href="http://www.buzzcocks.com/">Buzzcocks</a>, the plaintive wailing of <a href="http://en.wikipedia.org/wiki/The_Smiths">The Smiths</a>, the eclectic syncopations of the <a href="http://www.dcs.ed.ac.uk/home/cxl/fall/index.html">The Fall</a>, the rising majesty of <a href="http://en.wikipedia.org/wiki/Joy_Division">Joy Division</a> and Simply Red (I guess you can't have everything).</p>
+
+<p>Wednesday 19th July 2000, may not go down in popular culture with quite the same magnitude but it's had a similar impact on internet scale business as the Sex Pistols did on music a quarter of a century earlier, for that was the <a href="http://www.cs.berkeley.edu/~brewer/cs262b-2004/PODC-keynote.pdf">keynote speech</a><img src="page_white_acrobat.png" align="absmiddle" border="0" height="12" width="12" alt="" title="Adobe PDF"> by <a href="http://www.cs.berkeley.edu/~brewer/">Eric Brewer</a> at the ACM Symposium on the <a href="http://www.podc.org/podc2000/">Principles of Distributed Computing</a> (PODC).</p>
+
+<p>The Sex Pistols had shown that barely-constrained fury was more important to their contemporaries than art-school structuralism, giving anyone with three chords and something to say permission to start a band. Eric Brewer, in what became known as Brewer's Conjecture, said that as applications become more web-based we should stop worrying about data consistency, because if we want high availability in these new distributed applications, then guaranteed consistency of data is something we <em>cannot have</em>, thus giving anyone with three servers and a keen eye for customer experience permission to start an internet scale business. Disciples of Brewer (present that day or later converts) include the likes of <a href="http://www.infoq.com/news/2008/01/consistency-vs-availability">Amazon</a>, <a href="http://www.infoq.com/articles/ebay-scalability-best-practices">EBay</a>, and <a href="http://highscalability.com/scaling-twitter-making-twitter-10000-percent-faster">Twitter</a>.</p>
+
+<p>Two years later, in 2002, <a href="http://lpd.epfl.ch/sgilbert/">Seth Gilbert</a> and <a href="http://people.csail.mit.edu/lynch/">Nancy Lynch</a> of MIT, <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.20.1495&amp;rep=rep1&amp;type=pdf">formally proved</a><img src="page_white_acrobat.png" align="absmiddle" border="0" height="12" width="12" alt="" title="Adobe PDF"> Brewer to be correct and thus Brewer's Theorem was born. </p>
+
+<p><strong>Brewer's (CAP) Theorem</strong></p>
+
+<p>So what exactly is Brewer's Theorem, and why does it warrant comparison with a 1976 punk gig in Manchester?</p>
+
+<p>Brewer's 2000 talk was based on his theoretical work at UC Berkley and observations from running <a href="http://en.wikipedia.org/wiki/Inktomi">Inktomi</a>, though Brewer and others were talking about trade-off decisions that need to be made in highly scalable systems years before that (e.g. "<a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.1.2034&amp;rep=rep1&amp;type=pdf">Cluster-Based Scalable Network Services</a>"<img src="page_white_acrobat.png" align="absmiddle" border="0" height="12" width="12" alt="" title="Adobe PDF"> from SOSP in 1997 and "<a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.24.3690&amp;rep=rep1&amp;type=pdf">Harvest, yield, and scalable tolerant systems</a>"<img src="page_white_acrobat.png" align="absmiddle" border="0" height="12" width="12" alt="" title="Adobe PDF"> in 1999) so the contents of the presentation weren't new and, like many of these ideas, they were the work of many smart people (as I am sure Brewer himself would be quick to point out).</p>
+
+<p>What he said was there are three core <a href="http://www.julianbrowne.com/article/viewer/systemic-requirements">systemic requirements</a> that exist in a special relationship when it comes to designing and deploying applications in a distributed environment (he was talking specifically about the web but so many corporate businesses are multi-site/multi-country these days that the effects could equally apply to your data-centre/LAN/WAN arrangement).</p>
+
+<p>The three requirements are: <em><strong>Consistency</strong></em>, <em><strong>Availability</strong></em> and <em><strong>Partition Tolerance</strong></em>, giving Brewer's Theorem its other name - <strong>CAP</strong>.</p>
+
+<p>To give these some real-world meaning let's use a simple example: you want to buy a copy of <a href="http://en.wikipedia.org/wiki/Leo_Tolstoy">Tolstoy</a>'s <a href="http://en.wikipedia.org/wiki/War_and_Peace">War &amp; Peace</a> to read on a particularly long vacation you're starting tomorrow. Your favourite web bookstore has one copy left in stock. You do your search, check that it can be delivered before you leave and add it to your basket. You remember that you need a few other things so you browse the site for a bit (have you ever bought just <em>one</em> thing online? Gotta maximise the parcel dollar). While you're reading the customer reviews of a suntan lotion product, someone, somewhere else in the country, arrives at the site, adds a copy to their basket and goes right to the checkout process (they need an urgent fix for a wobbly table with one leg <em>much</em> shorter than the others).</p>
+
+<ul>
+<li><p><strong>Consistency</strong></p>
+
+<p>A service that is <em>consistent</em> operates fully or not at all. Gilbert and Lynch use the word "atomic" instead of consistent in their proof, which makes more sense technically because, strictly speaking, consistent is the C in <a href="http://en.wikipedia.org/wiki/ACID">ACID</a> as applied to the ideal properties of database transactions and means that data will never be persisted that breaks certain pre-set constraints. But if you consider it a preset constraint of distributed systems that multiple values for the same piece of data are not allowed then I think the leak in the abstraction is plugged (plus, if Brewer had used the word atomic, it would be called the AAP theorem and we'd all be in hospital every time we tried to pronounce it).</p>
+
+<p>In the book buying example you can add the book to your basket, or fail. Purchase it, or not. You can't half-add or half-purchase a book. There's one copy in stock and only one person will get it the next day. If both customers can continue through the order process to the end (i.e. make payment) the lack of consistency between what's in stock and what's in the system will cause an issue. Maybe not a huge issue in this case - someone's either going to be bored on vacation or spilling soup - but scale this up to thousands of inconsistencies and give them a monetary value (e.g. trades on a financial exchange where there's an inconsistency between what you think you've bought or sold and what the exchange record states) and it's a huge issue.</p>
+
+<p>We might solve consistency by utilising a database. At the correct moment in the book order process the number of War and Peace books-in-stock is decremented by one. When the other customer reaches this point, the cupboard is bare and the order process will alert them to this <em>without</em> continuing to payment. The first operates fully, the second not at all.</p>
+
+<p>Databases are great at this because they focus on ACID properties and give us Consistency by also giving us Isolation, so that when Customer One is reducing books-in-stock by one, and simultaneously increasing books-in-basket by one, any intermediate states are isolated from Customer Two, who has to wait a few milliseconds while the data store is made consistent.</p></li>
+<li><p><strong>Availability</strong></p>
+
+<p>Availability means just that - the service is available (to operate fully or not as above). When you buy the book you want to get a response, not some browser message about the web site being uncommunicative. Gilbert &amp; Lynch in their proof of CAP Theorem make the good point that availability most often deserts you when you need it most - sites tend to go down at busy periods precisely because they are busy. A service that's available but not being accessed is of no benefit to anyone.</p></li>
+<li><p><strong>Partition Tolerance</strong></p>
+
+<p>If your application and database runs on one box then (ignoring scale issues and assuming all your code is perfect) your server acts as a kind of atomic processor in that it either works or doesn't (i.e. if it has crashed it's not available, but it won't cause data inconsistency either).</p>
+
+<p>Once you start to spread data and logic around different nodes then there's a risk of partitions forming. A partition happens when, say, a network cable gets chopped, and Node A can no longer communicate with Node B. With the kind of distribution capabilities the web provides, temporary partitions are a relatively common occurrence and, as I said earlier, they're also not that rare inside global corporations with multiple data centres.</p>
+
+<p>Gilbert &amp; Lynch defined partition tolerance as:</p>
+
+<blockquote>
+    <p>No set of failures less than total network failure is allowed to cause the system to respond incorrectly</p>
+</blockquote>
+
+<p>and noted Brewer's comment that a one-node partition is equivalent to a server crash, because if nothing can connect to it, it may as well not be there.</p></li>
+</ul>
+
+<p><strong>The Significance of the Theorem</strong></p>
+
+<p>CAP Theorem comes to life as an application scales. At low transactional volumes, small latencies to allow databases to get consistent has no noticeable affect on either overall performance or the user experience. Any load distribution you do undertake, therefore, is likely to be for systems management reasons.</p>
+
+<p>But as activity increases, these pinch-points in throughput will begin limit growth and create errors. It's one thing having to wait for a web page to come back with a response and another experience altogether to enter your credit card details to be met with "HTTP 500 java.lang.schrodinger.purchasingerror" and wonder whether you've just paid for something you won't get, not paid at all, or maybe the error is immaterial to this transaction. Who knows? You are unlikely to continue, more likely to shop elsewhere, and very likely to phone your bank.</p>
+
+<p>Either way this is not good for business. Amazon <a href="http://highscalability.com/latency-everywhere-and-it-costs-you-sales-how-crush-it">claim</a> that just an extra one tenth of a second on their response times will cost them 1% in sales. Google <a href="http://glinden.blogspot.com/2006/11/marissa-mayer-at-web-20.html">said</a> they noticed that just a half a second increase in latency caused traffic to drop by a fifth.</p>
+
+<p>I've written a little about scalability <a href="http://www.julianbrowne.com/article/viewer/scalability">before</a>, so won't repeat all that here except to make two points: the first is that whilst addressing the problems of scale might be an architectural concern, the initial discussions are not. They are business decisions. I get very tired of hearing, from techies, that such-and-such an approach is not warranted because current activity volumes don't justify it. It's not that they're wrong; more often than not they're quite correct, it's that to limit scale from the outset is to implicitly make revenue decisions - a factor that should be made explicit during business analysis.</p>
+
+<p>The second point is that once you embark on discussions around <em>how</em> to best scale your application the world falls broadly into two ideological camps: the database crowd and the non-database crowd.</p>
+
+<p>The database crowd, unsurprisingly, like database technology and will tend to address scale by talking of things like <a href="http://en.wikipedia.org/wiki/Optimistic_concurrency_control">optimistic locking</a> and <a href="http://en.wikipedia.org/wiki/Shard_(database_architecture)">sharding</a>, keeping the database at the heart of things.</p>
+
+<p>The non-database crowd will tend to address scale by managing data outside of the database environment (avoiding the relational world) for as long as possible.</p>
+
+<p>I think it's fair to say that the former group haven't taken to CAP Theorem with quite the same gusto as the latter (though they are <a href="http://sqlblog.com/blogs/linchi_shea/archive/2008/12/17/the-cap-theorem.aspx">talking about it</a>). This is because if you have to drop one of consistency, availability, or partition tolerance, many opt to drop consistency which is the raison d'être of the database. The logic. no doubt, is that availability and partition-tolerance keep your money-making application alive, whereas inconsistency just feels like one of those things you can work around with clever design.</p>
+
+<p>Like so much else in IT, it's not as black and white as this. Eric Brewer, on slide 13 of his PODC talk, when comparing ACID and it's informal counterpart <a href="http://www.infoq.com/articles/pritchett-latency">BASE</a> even says "I think it's a spectrum". And if you're interested in this as a topic (it's slightly outside of what I want to talk about here) you could do worse than start with a paper called "<a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.34.7743&amp;rep=rep1&amp;type=pdf">Design and Evaluation of a Continuous Consistency Model for Replicated Services</a>"<img src="page_white_acrobat.png" align="absmiddle" border="0" height="12" width="12" alt="" title="Adobe PDF"> by Haifeng Yu and Amin Vahdat. Nobody should interpret CAP as implying the database is dead.</p>
+
+<p>Where both sides agree though is that the answer to scale is distributed parallelisation not, as was once thought, supercomputer grunt. Eric Brewer's influence on the <a href="http://en.wikipedia.org/wiki/Network_of_Workstations">Network of Workstations</a> projects of the mid-nineties led to the architectures that exposed CAP theorem, because as he says in another presentation on <a href="http://video.google.co.uk/googleplayer.swf?docid=4168901697847625272&amp;hl=en&amp;fs=true">Inktomi and the Internet Bubble</a><img src="page_white_flash.png" align="absmiddle" border="0" height="12" width="12" alt="" title="Adobe Flash"> the answer has always been processors working in parallel:</p>
+
+<blockquote>
+    <p>If they're not working in parallel you have no chance to get the problem done in a reasonable amount of time. This is a lot like anything else. If you have a really big job to do you get lots of people to do it. So if you are building a bridge you have lots of construction workers. That's parallel processing also. So a lot of this will end up being "how do we mix parallel processing and the internet?"</p>
+</blockquote>
+
+<p><strong>The Proof in Pictures</strong></p>
+
+<p>Here's a simplified proof, in pictures because I find it much easier to understand that way. I've mostly used the same terms as Gilbert and Lynch so that this ties up with their paper.</p>
+
+<div style="text-align: center;"><img src="intro.png"         border="0"></div>
+
+<p>The diagram above shows two nodes in a network, N<sub>1</sub> and N<sub>2</sub>. They both share a piece of data V (how many physical copies of War and Peace are in stock), which has a value V<sub>0</sub>. Running on N<sub>1</sub> is an algorithm called A which we can consider to be safe, bug free, predictable and reliable. Running on N<sub>2</sub> is a similar algorithm called B. In this experiment, A writes new values of V and B reads values of V.</p>
+
+<div style="text-align: center;"><img src="scenario-1.png" border="0"></div>
+
+<p>In a sunny-day scenario this is what happens: (1) First A writes a new value of V, which we'll call V<sub>1</sub>. (2) Then a message (M) is passed from N<sub>1</sub> to N<sub>2</sub> which updates the copy of V there. (3) Now any read by B of V will return V<sub>1</sub>.</p>
+
+<div style="text-align: center;"><img src="scenario-2.png" border="0"></div>
+
+<p>If the network partitions (that is messages from N<sub>1</sub> to N<sub>2</sub> are not delivered) then N<sub>2</sub> contains an inconsistent value of V when step (3) occurs.</p>
+
+<p>Hopefully that seems fairly obvious. Scale this is up to even a few hundred transactions and it becomes a major issue. If M is an asynchronous message then N<sub>1</sub> has no way of knowing whether N<sub>2</sub> gets the message. Even with guaranteed delivery of M, N<sub>1</sub> has no way of knowing if a message is delayed by a partition event or something failing in N<sub>2</sub>. Making M synchronous doesn't help because that treats the write by A on N<sub>1</sub> and the update event from N<sub>1</sub> to N<sub>2</sub> as an atomic operation, which gives us the same latency issues we have already talked about (or worse). Gilbert and Lynch also prove, using a slight variation on this, that even in a partially-synchronous model (with ordered clocks on each node) atomicity cannot be guaranteed.</p>
+
+<p>So what CAP tells us is that if we want A and B to be highly available (i.e. working with minimal latency) and we want our nodes N<sub>1</sub> to N<sub>n</sub> (where n could be hundreds or even thousands) to remain tolerant of network partitions (lost messages, undeliverable messages, hardware outages, process failures) then <em>sometimes</em> we are going to get cases where some nodes think that V is V<sub>0</sub> (one copy of War and Peace in stock) and other nodes will think that V is V<sub>1</sub> (no copies of War and Peace in stock).</p>
+
+<p>We'd really like everything to be structured, consistent and harmonious, like the music of a <a href="http://en.wikipedia.org/wiki/Prog_rock">prog rock</a> band from the early seventies, but what we are faced with is a little bit of punk-style anarchy. And actually, whilst it might scare our grandmothers, it's OK once you know this, because both can work together quite happily.</p>
+
+<p>Let's quickly analyse this from a transactional perspective.</p>
+
+<div style="text-align: center;"><img src="tx-view.png"     border="0"></div>
+
+<p>If we have a transaction (i.e. unit of work based around the persistent data item V) called &alpha;, then &alpha;<sub>1</sub> could be the write operation from before and &alpha;<sub>2</sub> could be the read. On a local system this would be easily be handled by a database with some simple locking, isolating any attempt to read in &alpha;<sub>2</sub> until &alpha;<sub>1</sub> completes safely. In the distributed model though, with nodes N<sub>1</sub> and N<sub>2</sub> to worry about, the intermediate synchronising message has also to complete. Unless we can control <em>when</em> &alpha;<sub>2</sub> happens, we can <em>never</em> guarantee it will see the same data values &alpha;<sub>1</sub> writes. All methods to add control (blocking, isolation, centralised management, etc) will impact either partition tolerance or the availability of &alpha;<sub>1</sub> (A) and/or &alpha;<sub>2</sub> (B).</p>
+
+<p><strong>Dealing with CAP</strong></p>
+
+<p>You've got a few choices when addressing the issues thrown up by CAP. The obvious ones are:</p>
+
+<ol>
+<li><p><strong>Drop Partition Tolerance</strong></p>
+
+<p>If you want to run without partitions you have to stop them happening. One way to do this is to put everything (related to that transaction) on one machine, or in one atomically-failing unit like a rack. It's not 100% guaranteed because you can still have partial failures, but you're less likely to get partition-like side-effects. There are, of course, significant scaling limits to this.</p></li>
+<li><p><strong>Drop Availability</strong></p>
+
+<p>This is the flip side of the drop-partition-tolerance coin. On encountering a partition event, affected services simply wait until data is consistent and therefore remain unavailable during that time. Controlling this could get fairly complex over many nodes, with re-available nodes needing logic to handle coming back online gracefully.</p></li>
+<li><p><strong>Drop Consistency</strong></p>
+
+<p>Or, as Werner Vogels puts it, accept that things will become "<a href="http://www.allthingsdistributed.com/2008/12/eventually_consistent.html">Eventually Consistent</a>" (updated Dec 2008). Vogels' article is well worth a read. He goes into a lot more detail on operational specifics than I do here.</p>
+
+<p>Lots of inconsistencies don't actually require as much work as you'd think (meaning continuous consistency is probably not something we need anyway). In my book order example if two orders <em>are</em> received for the one book that's in stock, the second just becomes a back-order. As long as the customer is told of this (and remember this is a rare case) everybody's probably happy.</p></li>
+<li><p><strong>The BASE Jump</strong></p>
+
+<p>The notion of accepting eventual consistency is supported via an architectural approach known as BASE (<strong>B</strong>asically <strong>A</strong>vailable, <strong>S</strong>oft-state, <strong>E</strong>ventually consistent). BASE, as its name indicates, is the logical opposite of ACID, though it would be quite wrong to imply that any architecture should (or could) be based wholly on one or the other. This is an important point to remember, given our industry's habit of "oooh shiny" strategy adoption.</p>
+
+<p>And here I defer to Professor Brewer himself who emailed me some comments on this article, saying:</p>
+
+<blockquote>
+    <p>the term "BASE" was first presented in the 1997 SOSP article that you cite.  I came up with acronym with my students in their office earlier that year.  I agree it is contrived a bit, but so is "ACID" -- much more than people realize, so we figured it was good enough. Jim Gray and I discussed these acronyms and he readily admitted that ACID was a stretch too -- the A and D have high overlap and the C is ill-defined at best.  But the pair connotes the idea of a spectrum, which is one of the points of the PODC lecture as you correctly point out.</p>
+</blockquote>
+
+<p>Dan Pritchett of EBay has a <a href="http://softwaresummit.org/2007/speakers/presentations/PritchettArchitectingForLatency.pdf">nice presentation</a><img src="page_white_acrobat.png" align="absmiddle" border="0" height="12" width="12" alt="" title="Adobe PDF"> on BASE.</p></li>
+<li><p><strong>Design around it</strong></p>
+
+<p>Guy Pardon, CTO of <a href="http://www.atomikos.com/">atomikos</a> wrote an interesting post which he called "<a href="http://guysblogspot.blogspot.com/2008/09/cap-solution-proving-brewer-wrong.html">A CAP Solution (Proving Brewer Wrong)</a>", suggesting an architectural approach that would deliver Consistency, Availability and Partition-tolerance, though with some caveats (notably that you don't get all three guaranteed in the same instant).</p>
+
+<p>It's worth a read as Guy eloquently represents an opposing view in this area.</p></li>
+</ol>
+
+<p><strong>Summary</strong></p>
+
+<p>That you can only guarantee two of Consistency, Availability and Partition Tolerance is real and evidenced by the most successful websites on the planet. If it works for them I see no reason why the same trade-offs shouldn't be considered in everyday design in corporate environments. If the business explicitly doesn't want to scale then fine, simpler solutions are available, but it's a conversation worth having. In any case these discussions will about appropriate designs for specific operations, not the whole shebang. As Brewer said in his email "the only other thing I would add is that different parts of the same service can choose different points in the spectrum". Sometimes you <a href="http://www.julianbrowne.com/article/viewer/gangsta-scale">absolutely need consistency</a> whatever the scaling cost, because the risk of not having it is too great.</p>
+
+<p>These days I'd go so far as to say that Amazon and EBay don't have a scalability problem. I think they <em>had</em> one and now they have the tools to address it. That's why they can freely talk about it. Any scaling they do now (given the size they already are) is really more of the same. Once you've scaled, your problems shift to those of operational maintenance, monitoring, rolling out software updates etc. - tough to solve, certainly, but nice to have when you've got those revenue streams coming in.</p>
+
+<p><strong>References</strong></p>
+
+<ol>
+<li><p>HP's take on CAP Theorem, a white paper entitle "<a href="http://h71028.www7.hp.com/ERC/downloads/5983-2544EN.pdf">There is no free lunch with distributed data</a>"<img src="page_white_acrobat.png" align="absmiddle" border="0" height="12" width="12" alt="" title="Adobe PDF"></p></li>
+<li><p>Computer Science Notes on <a href="http://www.cogs.susx.ac.uk/courses/dist-sys/node263.html">Distributed Transactions</a> and <a href="http://www.cogs.susx.ac.uk/courses/dist-sys/node286.html">Network Partitions</a> from University of Sussex</p></li>
+<li><p>Nice <a href="http://www.mooseyard.com/Jens/2007/04/twitter-rails-hammers-and-11000-nails-per-second/">post</a> by Jens Alfke on databases, scaling and Twitter.</p></li>
+<li><p><a href="http://blogs.msdn.com/pathelland/default.aspx">Pat Helland</a>'s Microsoft paper on distributed transactions and SOA called <a href="http://www.cidrdb.org/cidr2005/papers/P12.pdf">Data on the Outside versus Data on the Inside</a><img src="page_white_acrobat.png" align="absmiddle" border="0" height="12" width="12" alt="" title="Adobe PDF">, which he later related to CAP Theorem <a href="http://blogs.msdn.com/pathelland/archive/2007/05/20/soa-and-newton-s-universe.aspx">here</a></p></li>
+<li><p>Another set of Computer Science <a href="http://cs.gmu.edu/~setia/cs707/slides/replication2.pdf">course slides</a><img src="page_white_acrobat.png" align="absmiddle" border="0" height="12" width="12" alt="" title="Adobe PDF">, this time from George Mason University in Virginia, on <a href="http://cs.gmu.edu/~setia/cs707/">Distributed Software Systems</a> and particularly CAP Theorem and the clash between ACID and BASE ideologies.</p></li>
+<li><p>The 4th June 1976 is considered to be the birth of Punk Rock in the UK. Thanks to Charlie Dellacona for pointing out that the <a href="http://en.wikipedia.org/wiki/The_Ramones">Ramones</a> take credit for starting the movement in early 1974 in the US, though their official <a href="http://en.wikipedia.org/wiki/Ramones_%28album%29">punk recordings</a> are more or less contemporaneous.</p></li>
+<li><p>Thanks to <a href="http://www.hyuki.com/">Hiroshi Yuki</a>, a <a href="http://www.hyuki.com/yukiwiki/wiki.cgi?BrewersCapTheorem">Japanese translation</a> of this article is available. </p></li>
+<li><p>Thanks to <a href="http://www.codeinvain.com/blog/">Daniel Cohen</a>, a <a href="http://www.codeinvain.com/heblog/169/cap-you-can-have-only-two/">two</a> <a href="http://www.codeinvain.com/heblog/219/%D7%94%D7%AA%D7%9E%D7%95%D7%93%D7%93%D7%95%D7%AA-%D7%A2%D7%9D-cap/">part</a> Hebrew translation of this article is available.</p></li>
+</ol>
+</div></div>
+	<div id="footer"><h1>&copy; Copyright: 2010 Julian Browne. All rights reserved.</h1></div>
+</body>
+</html>

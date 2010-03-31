@@ -3,5 +3,7 @@
 *.aux
 *.bbl
 *.pdf
+!bibliografia_pliki/**/*
 *.backup
 *.blg
+.idea/*
