@@ -1,4 +1,4 @@
-desc "builds the .pdf document"
+desc "builds the .pdf document (specified in FILE)"
 task :pdf do
   file_name = ENV['FILE'] || 'konspekt'
   system("pdflatex #{file_name}")
@@ -23,7 +23,7 @@ rescue LoadError
 end
 
 def bibliography_entries
-  BibTeX::Parser.parse_bibtex_file("bibliografia.bib")
+  BibTeX::Parser.parse_bibtex_file(File.join("tex", "bibliografia.bib"))
 end
 
 def get_bib_entry_by_key(entry_key)
@@ -42,7 +42,7 @@ def make_directory_unless_exists(name)
 end
 
 def root_files_dir
-  'bibliografia_pliki'
+  'bibliografia'
 end
 
 def entry_dir_for_key(entry_key)
