@@ -1,0 +1,176 @@
+a
+{
+	color: rgb(0,102,204);
+	text-decoration: none;
+}
+a:hover
+{
+	color: rgb(17,68,119);
+	text-decoration: underline;
+}
+a.title-link
+{
+	color: #666 !important;
+	text-decoration: none;
+}
+a:visited
+{
+	color: rgb(162,66,124);
+}
+body
+{
+	font-size: 100%;
+	font-family: calibri,tahoma,arial,sans-serif;
+	margin: 0px 0px 20px 0px;
+	background: #FFF;
+}
+blockquote
+{
+	font-family: calibri,tahoma,arial,sans-serif;
+	background: #F5F5F5;
+	color: #333;
+	padding: 5px;
+}
+pre
+{
+        font-size:110%;
+	padding: 5px;
+	overflow: auto;
+	width: 95%;
+	max-height: 450px;
+	margin: 0px auto;
+	line-height: 100%;
+	border: silver 2px dotted;
+}
+code
+{
+        font-size:110%;
+}
+
+h1, h2, h3
+{
+	margin: 0px;
+	padding: 0px;
+}
+.description
+{
+	color: #333;
+}
+#content
+{
+	position: absolute;
+	margin-right: 20px;
+	margin-left: 225px;
+	margin-bottom: 20px;
+	width: 70%;
+}
+#container
+{
+	position: absolute;
+	margin-right: 20px;
+	margin-left: 225px;
+	margin-bottom: 20px;
+	width: 70%;
+}
+#links
+{
+        font-size: 90%;
+	padding: 15px;
+	width: 200px;
+}
+.blog
+{
+	padding-left: 15px;
+	padding-right: 15px;
+        margin-top: 10px;
+}
+.blogbody
+{
+	color: #333;
+	font-weight: normal;
+	line-height: 130%;
+        zoom: 1;
+        margin-bottom:50px;
+}
+.title
+{
+	font-size: 130%;
+	color: #666;
+}
+.date
+{
+	color: black;
+	margin-bottom: 10px;
+	font-weight: bold;
+}
+.posted
+{
+        margin-top:10px;
+        margin-bottom:15px;
+}
+.side
+{
+	color: #333;
+	font-weight: normal;
+	line-height: 140%;
+	padding: 2px;
+}
+.welovecodinghorror
+{
+	background-color: rgb(255,255,235);
+	color: #333;
+	font-weight: normal;
+	padding: 6px 6px;
+	line-height: 140%;
+}
+.sidetitle
+{
+	color: #666;
+	font-weight: bold;
+	padding: 2px;
+	margin-top: 15px;
+	letter-spacing: .3em;
+	text-transform: uppercase;
+}
+.syndicate
+{
+	line-height: 140%;
+	padding: 2px;
+	margin-top: 15px;
+}
+.comments-head
+{
+       clear: both;
+	color: #666;
+	margin-bottom: 5px;
+	font-weight: bold;
+}
+.comments-body,
+#comment-preview-content {
+	color: #333;
+	font-weight: normal;
+	background: #F5F5F5;
+	line-height: 140%;
+	padding: 5px 5px 15px 10px;
+	margin-bottom: 10px;
+}
+.comments-post
+{
+	color: #333;
+	font-weight: normal;
+}
+.jeff_atwood
+{
+        background-color: #FFECC7;
+}
+
+/* hiddenBox class for comments to function */
+.hiddenBox {
+    display: none;
+}
+
+#atp-comments {
+  margin-bottom : 60px;
+  }
+/* ph=1 */
+/* nhm:from_kauri */

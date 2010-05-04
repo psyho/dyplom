@@ -1,14 +1,22 @@
-desc "builds the .pdf document (specified in FILE)"
+def run_in_tex(cmd)
+  system("cd tex && #{cmd}")
+end
+
+desc "builds the .pdf document specified in FILE (main by default)"
 task :pdf do
-  file_name = ENV['FILE'] || 'konspekt'
-  system("pdflatex #{file_name}")
-  system("bibtex #{file_name}")
-  2.times { system("pdflatex #{file_name}") }
+  file_name = ENV['FILE'] || "main" 
+  run_in_tex("pdflatex #{file_name}")
+  run_in_tex("bibtex #{file_name}")
+  2.times { run_in_tex("pdflatex #{file_name}") }
+  run_in_tex("cp #{file_name}.pdf ..")
 end
 
 desc "removes generated files"
 task :clean do
-  system "rm -rf *.aux *.log *.pdf *.bbl *.blg"
+  cmd = "rm -rf *.aux *.log *.pdf *.bbl *.blg *.lof *.lot *.tdo *.toc *~"
+  system(cmd)
+  run_in_tex(cmd)
+  system("find . -name *~ | xargs rm -f")
 end
 
 def check_entry(entry_key)

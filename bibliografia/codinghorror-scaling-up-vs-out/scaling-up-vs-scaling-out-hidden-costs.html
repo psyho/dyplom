@@ -1,0 +1,1641 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"> 
+ 
+<html> 
+ 
+<head> 
+<script type="text/javascript" src="http://static.typepad.com/.shared:v25.4:typepad:en_us/js/yui/yahoo-dom-event.js,/js/sixatrack-loader.js"></script>
+<title>Coding Horror: Scaling Up vs. Scaling Out: Hidden Costs</title> 
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
+<link rel="stylesheet" href="styles-site.css" type="text/css" /> 
+<link rel="stylesheet" href="styles-site-mobile.css" type="text/css" media="handheld" /> 
+<link rel="stylesheet" href="styles-site-print.css" type="text/css" media="print" /> 
+<link rel="alternate" type="application/rss+xml" title="RSS" href="http://feeds.feedburner.com/codinghorror/" /> 
+<link rel="start" href="http://www.codinghorror.com/blog/" title="Home" /> 
+
+
+<link rel="prev" href="http://www.codinghorror.com/blog/2009/06/monty-hall-monty-fall-monty-crawl.html" title="Monty Hall, Monty Fall, Monty Crawl" />
+
+<link rel="next" href="http://www.codinghorror.com/blog/2009/06/the-iphone-software-revolution.html" title="The iPhone Software Revolution" />
+
+
+<script type="text/javascript"> 
+var TPApp = {};
+TPApp.app_uri = "http://www.typepad.com/";
+</script> 
+<script type="text/javascript" src="http://static.typepad.com/.shared:v25.4:typepad:en_us/js/yui/yahoo-dom-event.js"></script> 
+<script type="text/javascript" src="http://static.typepad.com/.shared:v25.4:typepad:en_us/js/app/thumbnail-gallery-min.js"></script> 
+<script type="text/javascript" src="http://static.typepad.com/.shared:v25.4:typepad:en_us/js/app/flyouts.js"></script>
+
+<link rel="shortcut icon" href="favicon.ico" /> 
+
+</head>
+
+<body>
+	
+
+<div class="blog"> 
+
+<div style="float:left; "> 
+<a href="http://www.codinghorror.com/blog/"><img src="coding-horror-official-logo-small.png" alt="I &lt;3 Steve McConnell" border="0" height="91" width="100"></a>*
+</div> 
+<div style="float:left; margin-top:10px;"> 
+<a href="http://www.codinghorror.com/blog/"><img alt="Coding Horror" src="coding-horror-text.png" border="0" height="25" width="275"></a><br/> 
+<span class="description">programming and human factors<br/>by Jeff Atwood</span> 
+</div> 
+
+
+<div style="float:right; margin-top:20px;" id="searchbox"> 
+<form method="get" action="http://www.google.com/custom" target="_top"> 
+<input type="hidden" name="domains" value="www.codinghorror.com"></input> 
+<label for="sbi" style="display: none">Enter your search terms</label> 
+<input type="text" name="q" size="31" maxlength="255" value="" id="sbi"></input> 
+<label for="sbb" style="display: none">Submit search form</label> 
+<input type="submit" name="sa" value="Search" id="sbb"></input><br/> 
+<input type="radio" name="sitesearch" value="" id="ss0"></input> 
+<label for="ss0" title="Search the Web">Web</label></td> 
+<input type="radio" name="sitesearch" value="www.codinghorror.com" checked id="ss1"></input> 
+<label for="ss1" title="Search www.codinghorror.com">Coding Horror</label> 
+<input type="hidden" name="client" value="pub-6424649804324178"></input> 
+<input type="hidden" name="forid" value="1"></input> 
+<input type="hidden" name="ie" value="ISO-8859-1"></input> 
+<input type="hidden" name="oe" value="ISO-8859-1"></input> 
+<input type="hidden" name="safe" value="active"></input> 
+<input type="hidden" name="cof" value="GALT:#0066CC;GL:1;DIV:#FFFFFF;VLC:A2427C;AH:center;BGC:FFFFFF;LBGC:FFFFFF;ALC:666666;LC:666666;T:000000;GFNT:0066CC;GIMP:0066CC;LH:50;LW:344;L:http://www.codinghorror.com/blog/images/codinghorror-search-logo1.png;S:http://www.codinghorror.com/blog/;FORID:1"></input> 
+<input type="hidden" name="hl" value="en"></input> 
+</form> 
+</div> 
+
+</div> 
+<br clear="all"> 
+
+<div id="container"> 
+ 
+<div class="blog"> 
+
+<h2 class="date">Jun 23, 2009</h2> 
+
+<div class="blogbody"> 
+
+<h3 class="title"><a href="scaling-up-vs-scaling-out-hidden-costs.html" class="title-link">Scaling Up vs. Scaling Out: Hidden Costs</a></h3> 
+
+<p>
+In <a href="http://www.codinghorror.com/blog/archives/001195.html">My Scaling Hero</a>, I described the amazing scaling story of plentyoffish.com. It&#39;s impressive by any measure, but also particularly relevant to us because we&#39;re on the Microsoft stack, too. I was intrigued when Markus <a href="http://plentyoffish.wordpress.com/2009/06/14/upgrades-themes-date-night/">posted this recent update</a>:
+<p>
+<blockquote>
+Last monday we upgraded our core database server after a power outage knocked the site offline. I haven&#39;t touched this machine since 2005 so it was a major undertaking to do it last minute. We upgraded from a machine with 64 GB of ram and 8 CPUs to <b>a HP ProLiant DL785 with 512 GB of ram and 32 CPUs</b> ...
+</blockquote>
+<p>
+The <a href="http://h10010.www1.hp.com/wwpc/us/en/en/WF05a/15351-15351-3328412-241644-3328423-3716072.html">HP ProLiant DL785 G5</a> <i>starts</i> at $16,999 -- and that&#39;s barebones, with nothing inside. Fully configured, as Markus describes, it&#39;s <a href="http://h18004.www1.hp.com/products/quickspecs/13046_na/13046_na.html">kind of a monster</a>:
+<p>
+<ul>
+<li>7U size (a typical server is 2U, and mainstream servers are often 1U)
+<li>8 CPU sockets
+<li>64 memory sockets
+<li>16 drive bays
+<li>11 expansion slots
+<li>6 power supplies
+</li></li></li></li></li></li></ul>
+<p>
+It&#39;s unclear if they bought it pre-configured, or added the disks, CPUs, and memory themselves. The most expensive configuration shown on the HP website is $37,398 and that includes only 4 processors, no drives, and a paltry 32 GB memory. When topped out with ultra-expensive 8 GB memory DIMMs, 8 high end Opterons, 10,000 RPM hard drives, and everything else -- by my estimates, it probably <b>cost closer to $100,000</b>. That might even be a lowball number, considering that <a href="http://www.tpc.org/results/individual_results/HP/HP_DL785_300G_11-17-2008_ES.pdf">the DL785 submitted to the TPC benchmark website</a> (pdf) had a &quot;system cost&quot; of $186,700. And that machine only had 256 GB of RAM. (But, to be fair, that total included another major storage array, and a bunch of software.)
+<p>
+At any rate, let&#39;s assume $100,000 is a reasonable ballpark for the monster server Markus purchased. It is the very definition of <b>scaling up</b> -- a seriously big iron single server.
+<p>
+But what if you <b>scaled out</b>, instead -- <a href="http://hadoop.apache.org/">Hadoop</a> or <a href="http://labs.google.com/papers/mapreduce.html">MapReduce</a> style, across lots and lots of inexpensive servers? After some initial configuration bumps, I&#39;ve been happy with the inexpensive Lenovo ThinkServer RS110 servers we use. They&#39;re no match for that DL785 -- but they aren&#39;t exactly chopped liver, either:
+<p>
+<table width="400">
+<tr>
+<td>Lenovo ThinkServer RS110 barebones</td>
+<td>$600</td>
+</tr>
+<tr>
+<td>8 GB RAM</td>
+<td>$100</td>
+</tr>
+<tr>
+<td>2 x eBay <a href="http://www.codinghorror.com/blog/archives/001200.html">drive brackets</a></td>
+<td>$50</td>
+</tr>
+<tr>
+<td>2 x 500 GB SATA hard drives, mirrored</td>
+<td>$100</td>
+</tr>
+<tr>
+<td>Intel Xeon X3360 2.83 GHz quad-core CPU</td>
+<td>$300</td>
+</tr>
+</table>
+<p>
+Grand total of <b>$1,150</b> per server. Plus another 10 percent for tax, shipping, and so forth. I replace the bundled CPU and memory that the server ships with, and then resell the salvaged parts on eBay for about $100 -- so let&#39;s call the total price per server $1,200.</p>
+<p>
+Now, assuming a <b>fixed spend of $100,000</b>, we could build <b>83</b> of those 1U servers. Let&#39;s compare what we end up with for our money:
+<p>
+<table width="400">
+<tr>
+<td>&#0160;
+<td align="right"><b>Scaling Up</b>
+<td align="right"><b>Scaling Out</b>
+</td></td></td></tr>
+<tr>
+<td>CPUs
+<td align="right">32
+<td align="right">332
+</td></td></td></tr>
+<tr>
+<td>RAM
+<td align="right">512 GB
+<td align="right">664 GB
+</td></td></td></tr>
+<tr>
+<td>Disk
+<td align="right">4 TB
+<td align="right">40.5 TB
+</td></td></td></tr>
+</table>
+<p>
+<i>Now</i> which approach makes more sense?
+<p>
+(These numbers are a bit skewed because that DL785 is at the absolute extreme end of the big iron spectrum. You pay a hefty premium for fully maxxing out. It is possible to build a slightly less powerful server with <i>far</i> better bang for the buck.)
+<p>
+But there&#39;s something else to consider: software licensing.
+<p>
+<table width="400">
+<tr>
+<td>&#0160;
+<td align="right"><b>Scaling Up</b>
+<td align="right"><b>Scaling Out</b>
+</td></td></td></tr>
+<tr>
+<td>OS
+<td align="right">$2,310
+<td align="right">$33,200*
+</td></td></td></tr>
+<tr>
+<td>SQL
+<td align="right">$8,318
+<td align="right">$49,800*
+</td></td></td></tr>
+</table>
+<p>
+(If you&#39;re using all open source software, then of course these costs will be very close to zero. We&#39;re assuming a Microsoft shop here, with the necessary licenses for Windows Server 2008 and SQL Server 2008.)
+<p>
+<i>Now</i> which approach makes more sense?
+<p>
+What about the power costs? Electricity and rack space isn&#39;t free.
+<p>
+<table width="400">
+<tr>
+<td>&#0160;
+<td align="right"><b>Scaling Up</b>
+<td align="right"><b>Scaling Out</b>
+</td></td></td></tr>
+<tr>
+<td>Peak Watts
+<td align="right">1,200w
+<td align="right">16,600w
+</td></td></td></tr>
+<tr>
+<td>Power Cost / Year
+<td align="right">$1,577
+<td align="right">$21,815
+</td></td></td></tr>
+</table>
+<p>
+<i>Now</i> which approach makes more sense?
+<p>
+I&#39;m not picking favorites. This is presented as food for thought. There are at least a dozen other factors you&#39;d want to consider depending on the particulars of your situation. Scaling up and scaling out are <i>both</i> viable solutions, depending on what problem you&#39;re trying to solve, and what resources (financial, software, and otherwise) you have at hand.
+<p>
+That said, I think it&#39;s fair to conclude that <b>scaling out is only frictionless when you use open source software</b>. Otherwise, you&#39;re in a bit of a conundrum: scaling up means paying less for licenses and a lot more for hardware, while scaling out means paying less for the hardware, and a <i>whole</i> lot more for licenses.
+<p>
+<small>* I have <i>no</i> idea if these are the right prices for Windows Server 2008 and SQL Server 2008, because <a href="http://www.microsoft.com/Sqlserver/2005/en/us/licensing.aspx">reading about the licensing models makes my brain hurt</a>. If anything, it could be substantially more.</small>
+<p>
+<table>
+<tr><td class="welovecodinghorror">
+[advertisement] Interested in <a href="http://www.atlassian.com/agile" rel="nofollow">agile</a>? See how a world-leading software vendor is practicing <a href="http://www.atlassian.com/agile" rel="nofollow">agile</a>.
+</td></tr>
+</table>
+<p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p></p>
+
+
+
+ 
+ 
+<div class="posted">Posted by Jeff Atwood &nbsp;&nbsp; <script src="http://technorati.com/linkcount" type="text/javascript"></script><a class="tr-linkcount" href="http://technorati.com/search/http://www.codinghorror.com/blog/2009/06/scaling-up-vs-scaling-out-hidden-costs.html?sub=nscosmos">View blog reactions</a></div> 
+ 
+
+<div style="float:left;">&laquo; <a href="http://www.codinghorror.com/blog/2009/06/monty-hall-monty-fall-monty-crawl.html">Monty Hall, Monty Fall, Monty Crawl</a></div> 
+
+
+
+<div style="float:right;"><a href="http://www.codinghorror.com/blog/2009/06/the-iphone-software-revolution.html">The iPhone Software Revolution</a> &raquo;</div> 
+
+
+</div> 
+
+
+
+
+<div class="comments-head"><a name="comments"></a>Comments</div> 
+
+
+
+<div class="comments-body larry"> 
+<p>Seems like a &#39;scale up&#39; crowd, but a couple points:</p>
+
+<p>1. As pointed out, you probably could get away with a lot less than 83 servers to replace this one beefy server. This will cut down on a lot of the costs you are touching on, including the admin headache.  Completely agree you have to go open source for this to work though.</p>
+
+<p>2.  Scalabity: Yes, it is harder to architect your system to be able to scale this way, but once it is set up it becomes trivial to scale.  Want to add 25% more capacity?  Just add a couple of more machines.  At some point your &#39;beefy&#39; setup is at capacity, and you just can&#39;t scale any more, at any price.</p>
+
+<p>3. Machine failures/uptime:  You are really going to have a single machine that cost you 100k? What if you really really care about failures/uptime? Hot backup?  Now we are talking 200k.  With the scaled out setup you don&#39;t have to worry about this as much.  If one machine out of your 83 fails, it&#39;s less important.  The system will still be up and running.  And, it&#39;s not only failures but hardware/OS/software updates/upgrades... </p>
+<span class="comments-post" style="margin-left:20px">larry on June 24, 2009  2:17 AM</span> 
+</div> 
+
+
+
+<div class="comments-body yeah"> 
+<p>fifty-seventh!</p>
+<span class="comments-post" style="margin-left:20px">Yeah! on June 24, 2009  2:28 AM</span> 
+</div> 
+
+
+
+<div class="comments-body mark"> 
+<p>EnterpriseDB also scales out very nicely, at a 1/6 of the cost of oracle.  </p>
+<span class="comments-post" style="margin-left:20px">Mark on June 24, 2009  2:42 AM</span> 
+</div> 
+
+
+
+<div class="comments-body mark"> 
+<p>By the way, Thank you Jeff for fixing the site where it can be accessed without running scripts. Thank you very much.</p>
+<span class="comments-post" style="margin-left:20px">Mark on June 24, 2009  2:48 AM</span> 
+</div> 
+
+
+
+<div class="comments-body mhuyck"> 
+<p>Douglas McClean: check your dictionary.  Spend is both a noun and a verb.</p>
+<span class="comments-post" style="margin-left:20px">mhuyck on June 24, 2009  2:51 AM</span> 
+</div> 
+
+
+
+<div class="comments-body andreas_krey"> 
+<p>Maintaining the 83 servers with open source isn&#39;t quite as difficult as it seems. You &#39;just&#39; make an install CD, and whenever a box has a serious problem you swap parts until the install comes through again. Getting windows to reinstall that painlessly may be a bit more tricky and require pretty identical hardware.</p>
+
+<p>Or swap the whole box.</p>
+<span class="comments-post" style="margin-left:20px">Andreas Krey on June 24, 2009  2:51 AM</span> 
+</div> 
+
+
+
+<div class="comments-body vincent"> 
+<p>Ok I like the spirit of this article, but the dollar comparison doesn&#39;t take into account which one can handle more traffic. <br />
+ <br />
+I&#39;d like to see a cost per user/hit/connection/transaction, because its very possible that the dollar per unit of measure isn&#39;t linear for either of these two options.</p>
+
+<p>Does MS SQL even scale up to that beefy of a box?  Can you have that many instances in a cluster?</p>
+<span class="comments-post" style="margin-left:20px">Vincent on June 24, 2009  3:56 AM</span> 
+</div> 
+
+
+
+<div class="comments-body josh"> 
+<p>&quot;a fixed spend of $100,000&quot;</p>
+
+<p>&gt; Spend is not a noun. Did you mean &quot;budget&quot;? ;)<br />
+&gt;<br />
+&gt; Douglas McClean on June 24, 2009 9:45 AM</p>
+
+<p>Indeed.</p>
+
+<p>&gt; Douglas McClean: check your dictionary. Spend is both a noun and a verb.<br />
+&gt;<br />
+&gt; mhuyck on June 24, 2009 1:51 PM</p>
+
+<p>dictionary.com doesn&#39;t show a noun definition for &quot;spend&quot;. This looks like a simple error.</p>
+<span class="comments-post" style="margin-left:20px">Josh on June 24, 2009  4:10 AM</span> 
+</div> 
+
+
+
+<div class="comments-body jm"> 
+<p>Okay, but what if Monty Hall opens a door to reveal a netbook?  Do you swap your first door, in hopes of getting the DL785?</p>
+<span class="comments-post" style="margin-left:20px">JM on June 24, 2009  4:12 AM</span> 
+</div> 
+
+
+
+<div class="comments-body martin"> 
+<p>&quot;open source is only free if your time is free&quot;</p>
+
+<p>I&#39;m curious about what the original commenter meant with this. If I use SQL Server instead of, say, PostgreSQL, will a Microsoft guy come home and install it for me? I agree with the phrase in some other contexts, but I&#39;m not sure about what it means in this case. Which advantages would I get for using Microsoft instead of open source? Is the Microsoft tech support realy *that* good?</p>
+
+<p>Note: I know the question sounds like trolling, but I really mean it. It sounds like the kind of scenario where open source is supposed to suck, according to non-open source guys.</p>
+<span class="comments-post" style="margin-left:20px">Martin on June 24, 2009  4:18 AM</span> 
+</div> 
+
+
+
+<div class="comments-body james"> 
+<p>Larry&#39;s point about resilience to failure is important, but the other things you need to worry about that nobody seems to have mentioned are:</p>
+
+<p>1. network infrastructure - the moment your 83 servers aren&#39;t sharing a bus you have to tie them together.  </p>
+
+<p>2. systems management - if 6 of your 83 servers are broken somehow, will you notice?   You&#39;ll also neet to monitor the network too.  And your software as well as any vendors&#39; software.</p>
+
+<p>3. you&#39;d better hope that you can buy bigger hardware before you reach the performance limit of your brute box; it has a hard ceiling somewhere.   On the other hand hitting the ceiling with a many-boxes approach is a squishy affair; you start to notice that you&#39;re getting diminishing returns for adding new boxes quite a while before you get no benefit at all.   (actually, larry mentioned this point)</p>
+
+<p>4. If you&#39;re going to do the design work to scale to 83 boxes, you may as well fold in the relevant measures to span data centers, at least for failover.   That gives you a big reliability boost, at least for many applications.</p>
+
+<p>5. no question, there is more engineering work in the 83-boxes approach.   How many software engineers are you going to have to pay?<br />
+</p>
+<span class="comments-post" style="margin-left:20px">James on June 24, 2009  4:20 AM</span> 
+</div> 
+
+
+
+<div class="comments-body steve"> 
+<p>I&#39;m convinced that if Netflix ran the world we would all be happier.  What a great combination of vision, UI, and infrastructure.</p>
+
+<p>Does anyone know what their setup is?</p>
+<span class="comments-post" style="margin-left:20px">Steve on June 24, 2009  5:34 AM</span> 
+</div> 
+
+
+
+<div class="comments-body balls"> 
+<p>James Wrote:</p>
+
+<p>&gt;&gt;5. no question, there is more engineering work in the 83-boxes &gt;&gt;approach. How many software engineers are you going to have to pay?</p>
+
+<p>None, hombre. That&#39;s a hardware problem ;)</p>
+<span class="comments-post" style="margin-left:20px">Balls on June 24, 2009  5:57 AM</span> 
+</div> 
+
+
+
+<div class="comments-body mark"> 
+<p>@Martin, while in most cases I do not care that much for open source software, here I agree with you. PostgreSQL is much more user friendly than SQL server, as long as you don&#39;t want to do performance tuning. Most DBA&#39;s that I have meet could not performance tune PostgreSQL. Then there is EnterpriseDB, built on top of PostgreSQL, which does not generally need to be performance tuned. </p>
+<span class="comments-post" style="margin-left:20px">Mark on June 24, 2009  6:44 AM</span> 
+</div> 
+
+
+
+<div class="comments-body artsrc"> 
+<p>&gt;&gt; Nobody scales out their databases that way. That&#39;s crazy talk.</p>
+
+<p><a href="http://en.wikipedia.org/wiki/BigTable" rel="nofollow">http://en.wikipedia.org/wiki/BigTable</a></p>
+
+<p>Scaling out on low cost hardware provides more computing power at lower cost.  People who can conquer the issues of managing and virtualizing the large numbers of machines reap a reward.  Then they can, and sometimes do, use this capability to make a big profit in businesses which otherwise could not exist.</p>
+
+<p>As pointed out by the comment above, some systems can&#39;t leverage low cost deployment.  This is justified by their ability to support legacy programming models.</p>
+
+<p>What are some possible outcomes:</p>
+
+<p>1. Low cost deployment takes over and we change our programming model is changed.<br />
+2. Low cost deployment takes over and it is enhanced to support the current SQL programming model<br />
+3. High cost deployment remains and we keep our current programming model.</p>
+
+<p>I don&#39;t like the current programming model.  So I hope for 1.<br />
+</p>
+<span class="comments-post" style="margin-left:20px">artsrc on June 24, 2009  7:13 AM</span> 
+</div> 
+
+
+
+<div class="comments-body artsrc"> 
+<p>&quot;Scaling up will typically involve less man-hours deploying the app. Scaling out will require more time unless you fully automate the deployment process (Azure for the enterprise anybody?)&quot;</p>
+
+<p><a href="http://code.google.com/appengine/docs/python/gettingstarted/uploading.html" rel="nofollow">http://code.google.com/appengine/docs/python/gettingstarted/uploading.html</a></p>
+
+<p>I don&#39;t where outsourcing hardware operation stops making sense.  If it does at some point there is/was an opportunity for a vendor like Sun, to support the ability to set up an in house cluster that handled that sort of thing.  Assuming of course Google does not productize their offering.</p>
+
+<p><br />
+</p>
+<span class="comments-post" style="margin-left:20px">artsrc on June 24, 2009  7:23 AM</span> 
+</div> 
+
+
+
+<div class="comments-body marshall"> 
+<p>Great comments here, very insightful for the most part.</p>
+
+<p>I totally agree, the upfront cost is only one part and definitely not the most significant factor.</p>
+
+<p>The personal and power costs are going to exceed any software and hardware costs pretty rapidly. </p>
+<span class="comments-post" style="margin-left:20px">Marshall on June 24, 2009  8:06 AM</span> 
+</div> 
+
+
+
+<div class="comments-body mark_brackett"> 
+<p>Your licensing costs are *way* off. I&#39;ll ballpark our Select prices (they&#39;re likely cheaper than most, but ratios would be close). </p>
+
+<p>Sql 2008 Ent with SA: ~$7500/cpu <br />
+Server 2008 Ent with SA: ~$450<br />
+Server 2008 Std with SA: ~$150<br />
+Server 2008 Web with SA: ~$45</p>
+
+<p>I assume you&#39;re hosting a public website - since you&#39;re not authenticating against AD you don&#39;t require a Core CAL, but Sql Server needs CPU licenses.</p>
+
+<p>So, for the HP:</p>
+
+<p>$7500 * 8 CPUs + $450 = $60,450</p>
+
+<p>For the 83, we&#39;ll figure 41 are DB, 41 are web, and the extra is standby (no additional Sql license needed). We can use Svr 2008 Std for the DB servers, and Svr 208 Web for the web:</p>
+
+<p>($7500 + $145) * 41 = $313,455 (DB)<br />
+$45 * 41 = $1845 (Web)<br />
+$145 = Standby</p>
+
+<p>Of course, if you&#39;re going to run 41 DB servers, maybe you can get by with Sql Std (~$1800). That brings the DB tier down to a more reasonable $79745. That makes the software within ballpark of each other.</p>
+
+<p>Of course, it&#39;d be quite an odd configuration to have 41 DB servers and 41 Web servers. A more realistic scenario might be 4 quad DB servers ($7780) and 40 web servers ($1800) - which makes the licensing a non-issue. Assume the quad DB servers cost 4 x your Lenovo servers, and I&#39;ve got just enough left over for the SAN I&#39;m going to need to get all those DB servers working together. ;)</p>
+
+<p>* I am not a Microsoft licensing expert, but I was a reseller many years ago. However, this is only a blog comment - do not take reliance on any of this. If you have questions about software licensing, please contact your Microsoft reseller and/or Microsoft Licensing. Or, use Linux.</p>
+<span class="comments-post" style="margin-left:20px">Mark Brackett on June 24, 2009  8:44 AM</span> 
+</div> 
+
+
+
+<div class="comments-body toby"> 
+<p>Most comments have already covered my concerns. Here&#39;s some separate ones:</p>
+
+<p>- Are the power costs of the big iron really only 1200w? My home desktop consumes over half that. Also, with a big iron you&#39;ll need a bigger more powerful UPS to keep it running in the case of power failure. Simpler battery backup works for the scale-out solution.</p>
+
+<p>- People have been quick to mention sysadmin and developer costs on the scale out solution. It&#39;s not like these are non-existent for a big iron as well. In fact sysadmin factors may be just as high on a big iron as you&#39;ll probably pay a premium to have someone sufficiently qualified to handle such an exotic beast. Meanwhile a sysdmin that can deal with a cluster of standard metal is a dime a dozen.</p>
+
+<p>- How well can you share a big iron between developers? If you have a team of 12 developers, which would you rather have, one big server or a cluster of 83 small ones? Keep in mind that a bug by any single developer could take down an entire server.</p>
+<span class="comments-post" style="margin-left:20px">Toby on June 24, 2009  8:44 AM</span> 
+</div> 
+
+
+
+<div class="comments-body sysadmin"> 
+<p>NO, too many things to think about! My head hurts so bad!</p>
+<span class="comments-post" style="margin-left:20px">SysAdmin on June 24, 2009  8:56 AM</span> 
+</div> 
+
+
+
+<div class="comments-body mike_stone"> 
+<p>No offense Jeff, but this is exactly why I&#39;m so happy that I&#39;m not a Microsoft guy :-)</p>
+
+<p>Very interesting to see the comparison though, thanks!</p>
+<span class="comments-post" style="margin-left:20px">Mike Stone on June 24, 2009 10:44 AM</span> 
+</div> 
+
+
+
+<div class="comments-body daniel_hlbling"> 
+<p>I&#39;m not sure if you also have considered the cost that scaling out brings to your software side.<br />
+It&#39;s not easy to write a reliable piece of software that will scale so well that it will run on n machines without hassle.</p>
+
+<p>As to throwing a lot more processing power at one installation usually works with not too much pain on the application side.</p>
+
+<p>greetings Daniel</p>
+<span class="comments-post" style="margin-left:20px">Daniel Hölbling on June 24, 2009 10:44 AM</span> 
+</div> 
+
+
+
+<div class="comments-body luke_l"> 
+<p>And when that one monolithic machine dies due to any number of reasons, which one is better then?</p>
+<span class="comments-post" style="margin-left:20px">Luke L on June 24, 2009 10:44 AM</span> 
+</div> 
+
+
+
+<div class="comments-body douglas_mcclean"> 
+<p>Spend is not a noun. Did you mean &quot;budget&quot;? ;)</p>
+<span class="comments-post" style="margin-left:20px">Douglas McClean on June 24, 2009 10:45 AM</span> 
+</div> 
+
+
+
+<div class="comments-body phil_scott"> 
+<p>Hey Jeff, don&#39;t forget about the cooling costs too. It&#39;s a hell of a lot more difficult to cool 83 servers than one</p>
+<span class="comments-post" style="margin-left:20px">Phil Scott on June 24, 2009 10:46 AM</span> 
+</div> 
+
+
+
+<div class="comments-body anonymous"> 
+<p>You left out the most expensive component.</p>
+<span class="comments-post" style="margin-left:20px">Anonymous on June 24, 2009 10:46 AM</span> 
+</div> 
+
+
+
+<div class="comments-body oliver"> 
+<p>Comparing 1 DL785 against 83 RS110 is not quite fair I think, because you usually don&#39;t buy servers until your budget is spent, but until the site runs smoothly. Any idea how many RS110s you would need to replace one DL785? Might be interesting to do the calculations again with that value.</p>
+
+<p>(Though I assume the result will lean toward Scaling Out, which is more similar to Googles strategy).</p>
+<span class="comments-post" style="margin-left:20px">oliver on June 24, 2009 10:46 AM</span> 
+</div> 
+
+
+
+<div class="comments-body patrick"> 
+<p>One thing that you didn&#39;t touch on was redundancy.  It seems mighty short-sighted to have one beast of a system that runs an entire database without any sort of backup system.  Especially since this db machine IS such a beast, I doubt they would have one just sitting in the corner waiting to be utilized if the primary goes down.  </p>
+
+<p>I could see a compromise approach working well.  Have 3-4 &#39;semi-beast&#39; machines to run the db so that if one goes down you still have the other 2-3 running the site, you may have slower performance, but you still have performance and you don&#39;t have the large licensing/power/rack costs associated with many running machines.  </p>
+<span class="comments-post" style="margin-left:20px">patrick on June 24, 2009 10:46 AM</span> 
+</div> 
+
+
+
+<div class="comments-body oli"> 
+<p>This is a very simplistic comparison. Too simplistic. </p>
+
+<p>What about redundancy? Even a $100k server can crash! A couple of clusters would give you so much better </p>
+
+<p>Computational power? Does the applied use lend itself well to batch or clustered processing?</p>
+
+<p>Datacenter fees? 7U isn&#39;t cheap but it&#39;s a lot cheaper than 83! Colocation fees per hertz is strongly weighed toward the 7U uberserver. Where does the price point cross over?</p>
+<span class="comments-post" style="margin-left:20px">Oli on June 24, 2009 10:48 AM</span> 
+</div> 
+
+
+
+<div class="comments-body joemo"> 
+<p>That&#39;s impressive food for thought.  Thanks for another enjoyable and thought provoking read, Jeff.</p>
+<span class="comments-post" style="margin-left:20px">JoeMo on June 24, 2009 10:48 AM</span> 
+</div> 
+
+
+
+<div class="comments-body bradford"> 
+<p>I just want to 2nd what artsrc says ... just because the RDBMS doesn&#39;t scale-out, doesn&#39;t mean that databases don&#39;t. BigTable is an excellent example of this. I run HBase, the open source version of BigTable. </p>
+
+<p>As my article explains, RDBMSs have abstracted away the storage of your data at the cost of many other things - scalability, performance, domain solvablitiy (SQL or nothing -- try doing PageRank in THAT), and many other things. </p>
+<span class="comments-post" style="margin-left:20px">Bradford on June 24, 2009 10:48 AM</span> 
+</div> 
+
+
+
+<div class="comments-body sea_cat"> 
+<p>To all the people advocating scaling out for redundancy, isn&#39;t the promise of cloud computing that your install/deployment is as simple as with a single-server but the stability and load handling is as robust as scaling out? I haven&#39;t looked much into cloud-hosted apps so I don&#39;t know if that&#39;s the idea or not.</p>
+<span class="comments-post" style="margin-left:20px">Sea Cat on June 24, 2009 10:52 AM</span> 
+</div> 
+
+
+
+<div class="comments-body practicality"> 
+<p>Another fun Microsoft license note. If you are non-profit the licenses come at a 95% (approx.) discount. So for a non-profit to scale out would be cheap.</p>
+<span class="comments-post" style="margin-left:20px">Practicality on June 24, 2009 10:53 AM</span> 
+</div> 
+
+
+
+<div class="comments-body peter_beardsley"> 
+<p>What about the &quot;blade&quot; type servers that were all the rage a while ago?</p>
+
+<p>It sounds like you get all the benefits of &quot;scaling out&quot; while ostensibly reducing power/cooling costs.</p>
+
+<p>You&#39;re paying a tax for proprietary hardware for sure, but the economies of scale has to work better than a bunch of 1U racks.</p>
+<span class="comments-post" style="margin-left:20px">Peter Beardsley on June 24, 2009 10:55 AM</span> 
+</div> 
+
+
+
+<div class="comments-body shane_starcher"> 
+<p>I think the article would be more interesting if you took into account specing them out to similar cpu&#39;s and ram etc.  That way you can see how many U&#39;s different they are along with power consumption and software cost.</p>
+
+<p>Also I&#39;m assuming M$ chargers per install of SQL.  Oracle chargers per CPU core for most processors.</p>
+<span class="comments-post" style="margin-left:20px">Shane Starcher on June 24, 2009 11:02 AM</span> 
+</div> 
+
+
+
+<div class="comments-body hunter"> 
+<p>Building and then maintaining 83 servers is a serious time drain. You also need all sorts of new systems in place to handle updates, maintenance, log checking in any reasonable way.</p>
+
+<p>Since you seem to value your time quite low (you like to do all these menial tasks yourself based on your statements on the SO podcast and this blog) but for many people, that would be a huge piece of the puzzle.</p>
+
+<p>With 83 servers, you probably need to hire a full-time sysadmin, which should be factored into your figures.</p>
+<span class="comments-post" style="margin-left:20px">Hunter on June 24, 2009 11:04 AM</span> 
+</div> 
+
+
+
+<div class="comments-body wbk"> 
+<p>&quot;scaling out is only frictionless when you use open source software&quot;<br />
+AND when your time is free.</p>
+
+<p>captcha: &quot;BOSTON expound&quot;</p>
+<span class="comments-post" style="margin-left:20px">wbk on June 24, 2009 11:05 AM</span> 
+</div> 
+
+
+
+<div class="comments-body douglas_f_shearer"> 
+<p>Your comparison relies on your 83 1U servers being equal in performance to the single piece of big iron, so of course the licensing/power/rackspace costs will be far higher.</p>
+
+<p>In reality, filling the same 7U space with 7 1U servers is likely provide quit a large saving in cost (especially the initial hardware) for only a small increase in complexity. This would also provide redundancy as already pointed out.</p>
+<span class="comments-post" style="margin-left:20px">Douglas F Shearer on June 24, 2009 11:07 AM</span> 
+</div> 
+
+
+
+<div class="comments-body john_bledsoe"> 
+<p>This particular example has more specific considerations than the more general &quot;scale up/scale out&quot; question. Here we&#39;re dealing specifically with Microsoft SQL Servers. (I don&#39;t think my SQL Server knowledge is that out-of-date, but please forgive me if it is.)</p>
+
+<p>SQL Server doesn&#39;t &quot;just cluster&quot; in a way that you could add another server to some magical configuration and everything will work just fine.  You have failover clustering, in which a second server can be primed and ready for traffic if the first server fails. You also have federated databases, which each system stores part of the data and knows how to access the other parts if necessary.</p>
+
+<p>The point is, a SQL Server cluster requires a lot of custom code, either on the application side or at least the SQL DDL side. You need to take the cost of writing and maintaining all of that code into account when considering this particular question.</p>
+
+<p>(Look&#39;s like SQL Server 2008 also has &quot;Peer-to-Peer Replication&quot;. I don&#39;t think this is just magic, still, but it may help.)</p>
+<span class="comments-post" style="margin-left:20px">John Bledsoe on June 24, 2009 11:07 AM</span> 
+</div> 
+
+
+
+<div class="comments-body ben"> 
+<p>This has been touched on by others, but the cost of maintaining the scaling out option, it&#39;s more complex software issues, etc, are not trivial, and you will get more hardware failures, though each one should matter less due to the redundancies.</p>
+
+<p>It&#39;s probably a case by case kind of decision, but I would probably generally favour a compromise approach as well. Scale up until it starts to get nasty expensive, and then look into distributing the workload. You can do a surprising amount with one or just a few machines.</p>
+<span class="comments-post" style="margin-left:20px">Ben on June 24, 2009 11:08 AM</span> 
+</div> 
+
+
+
+<div class="comments-body joshua_ochs"> 
+<p>I work in hosting for a *large* hosting provider, so for once I have some insight to share. A lot has changed in the datacenter space over the last few years. But first the things that haven&#39;t:</p>
+
+<p> - Separation of application and database duties is critical so that each can scale independently of the other - the databases scale up, and the applications scale out.<br />
+ - Typically databases scale vertically (what you refer to as &quot;scaling up&quot;) as they have a central data repository that must be kept in sync across multiple servers. So you tend to see either &quot;big iron&quot; or very high CPU systems act as database servers. Clustering - whether active or standby - is a must. Systems that do scale out like Oracle RAC are frightfully expensive and difficult to maintain.<br />
+ - Application servers *should* scale horizontally. Just throwing processing power at something is a good sign You&#39;re Doing It Wrong. If an application properly keeps its state in a remote backend database (see Very Large Database Servers above) then you can add as many application servers as you need, using pizza boxes or whatever is most efficient.<br />
+ - VERY few applications will scale linearly as processors are added, as most only have so many threads and parallelism in place. Serial operations happen, and will reduce the potential of these monster &quot;scale up&quot; solutions.<br />
+ - For horizontal scaling you&#39;ll likely need external load balancing, which is another piece of hardware, and another thing to power, cool, and manage.<br />
+ - Power (and cooling, which is tightly tied to the wattage you&#39;re pulling) is critical, so you&#39;re likely to want to find a middle ground between a 1U pizza box and a 7U monster like the HP. There are also other issues such as storage, expansion slots, etc.</p>
+
+<p>Now as for what&#39;s changed. In a nutshell, performance per watt.</p>
+
+<p> - It used to be you could just about count processors by rack unit. A 1U server was a single processor, 2U was dual, 4U was quad, etc. There were some minor efficiencies gained - 4U servers tended to become 3U over time - but not much. Until multi-core processors hit.<br />
+ - These days, you can pack quad-core processors into most servers. A 1U server can typically now reach 8 processing cores (2 x Quad-Core). So while that 32-CPU beast may be 7U, if you just need raw processing and memory, you&#39;ll likely still come out ahead using small pizza boxes. Internal storage and expansion will be minimal, but if you&#39;re using NAS or SAN it&#39;s a non-issue, and you&#39;ll get better storage management to boot. SAN avoids burdening your network and offers much higher performance, but at a price.<br />
+ - Licensing varies, but Microsoft in particular considers a single die 1 processor, regardless of the number of cores therein. This heavily favors multicore solutions and reduces the licensing penalty above.</p>
+
+<p>As others have commented, your costs and numbers above only make sense if it actually took 83 of those servers to match up to the HP - something that I doubt would be the case for most well-written applications. If we&#39;re judicious and say that 16 would match it (personally I&#39;d blace bets you&#39;d still be ahead) then those numbers look quite different.</p>
+
+<p>So in an ideal world, you&#39;d have a nice SAN backing up your servers&#39; data needs, a bunch of small servers for application (blade servers are actually quite nice in this niche), and a couple large clustered servers for the database, with a gigabit network for communication between them.<br />
+</p>
+<span class="comments-post" style="margin-left:20px">Joshua Ochs on June 24, 2009 11:10 AM</span> 
+</div> 
+
+
+
+<div class="comments-body ed"> 
+<p>As everybody knows, open source is only free if your time is free. </p>
+
+<p>What are your system admin costs for 83 servers? Not pretty. Probably cost more per year in salary and cost burdens than the big iron hardware. And don&#39;t forget to factor in some kind of serious hardware for load balancing, and admin of that.<br />
+</p>
+<span class="comments-post" style="margin-left:20px">Ed on June 24, 2009 11:10 AM</span> 
+</div> 
+
+
+
+<div class="comments-body fishstick_kitty"> 
+<p>I assume you wouldn&#39;t put sql server on every machine, right?  The configuration for clustering those would be kinda crazy and probably not necessary.</p>
+
+<p>Also, here&#39;s a thought...how about doing a little analysis and actually architecting your server setup to handle your user load...THEN start comparing different solutions.</p>
+<span class="comments-post" style="margin-left:20px">fishstick_kitty on June 24, 2009 11:15 AM</span> 
+</div> 
+
+
+
+<div class="comments-body denny"> 
+<p>Joshua: nice summary, thanks.  Rounded off the original post nicely.</p>
+<span class="comments-post" style="margin-left:20px">Denny on June 24, 2009 11:20 AM</span> 
+</div> 
+
+
+
+<div class="comments-body shane_starcher"> 
+<p>Joshua: You sir are spot on thank you for typing that.</p>
+<span class="comments-post" style="margin-left:20px">Shane Starcher on June 24, 2009 11:25 AM</span> 
+</div> 
+
+
+
+<div class="comments-body miff"> 
+<p>This is why I don&#39;t do any ASP.NET work.</p>
+<span class="comments-post" style="margin-left:20px">Miff on June 24, 2009 11:26 AM</span> 
+</div> 
+
+
+
+<div class="comments-body bradc"> 
+<p>Interesting, but you can&#39;t really scale SQL &quot;out&quot; that way without a whole lot of application redesign. </p>
+
+<p>Other types of servers, though (like web servers) would scale out (relatively) simply.</p>
+<span class="comments-post" style="margin-left:20px">BradC on June 24, 2009 11:27 AM</span> 
+</div> 
+
+
+
+<div class="comments-body hoffmann"> 
+<p>I guess the problem is that you pay the same price for a windows/sql server software that runs on XXXX CPUs than the version of windows/sql that runs on XX CPUs. I remember back then before the multi-core age that you used to pay for your software on the base of how many CPUs it would run on. That kind of scare away small developers because they can&#39;t afford their small server costing more on software than on hardware. MS should make a windows server license to run on most of 4 CPUs and be way cheaper.</p>
+<span class="comments-post" style="margin-left:20px">Hoffmann on June 24, 2009 11:27 AM</span> 
+</div> 
+
+
+
+<div class="comments-body asmor"> 
+<p>Reminds me a lot of a calc 1 optimization problem, or trying to debate the merits of a 10x1 rectangle vs. a 1x10 rectangle.</p>
+
+<p>Clearly, the correct answer lies somewhere in the middle, far from the two extremes you&#39;ve presented.</p>
+<span class="comments-post" style="margin-left:20px">Asmor on June 24, 2009 11:28 AM</span> 
+</div> 
+
+
+
+<div class="comments-body d_lambert"> 
+<p>I think the biggest tactical advantage for scaling out is that you can buy capacity a couple of grand at a time and install it without taking down the capacity that&#39;s already running.</p>
+
+<p>Other than that, the big iron starts to look pretty good.  I think this is a central part of the appeal of VM-based server consolidation -- to a certain extent, you can get the best of both worlds.</p>
+
+<p>Great breakdown, though - thanks.</p>
+<span class="comments-post" style="margin-left:20px">D. Lambert on June 24, 2009 11:31 AM</span> 
+</div> 
+
+
+
+<div class="comments-body matt"> 
+<p>Something that others didn&#39;t seem to mention, when scaling out you&#39;re no longer running a single instance of Sql Server and Windows. With 83 separate servers you now have 83 instances of Windows and 83 instances of SQL Server gobbling up hard drive space and RAM. With 40 TB storage at your disposal drive space probably won&#39;t be an issue but I would imagine that Sql Server would act a lot differently when it has access to 8 GB RAM as opposed to having access to 512 GB. <br />
+</p>
+<span class="comments-post" style="margin-left:20px">Matt on June 24, 2009 11:32 AM</span> 
+</div> 
+
+
+
+<div class="comments-body tk"> 
+<p>Ubuntu 9.04 64bit Server + Apache 2.2 + MySQL 5 + PHP + OpenJDK 1.6 + Red5 0.8 = $0</p>
+
+<p>There are some things money can&#39;t buy. These things are known as open source software :)</p>
+
+<p>With the right planning, software licensing really can cost $0.</p>
+<span class="comments-post" style="margin-left:20px">TK on June 24, 2009 11:32 AM</span> 
+</div> 
+
+
+
+<div class="comments-body eric"> 
+<p>&quot;scaling out is only frictionless when you use open source software&quot;</p>
+
+<p>correction...<br />
+scaling out is only frictionless when you use low/no cost software.</p>
+
+<p>It&#39;s the per-server (or worse, per-cpu) licensing that frequently kills the non-opensource approach (which is not the sole difference of opensource software).</p>
+
+<p>If you have a &#39;site&#39; license for whatever product you are running, however, it may not be open source but may have a fixed cost, and you can still scale horizontally.</p>
+
+<p>For a search engine (pre-google days) we migrated from a large 32cpu SGI machine to 70+ commodity servers allowing us to cancel the annual maintenance costs that were easily in the mid six figures (at the time).  We tried to go horizontal with a J2EE engine, but found it licensed per server and found horizontal scaling limited by license costs alone.<br />
+</p>
+<span class="comments-post" style="margin-left:20px">Eric on June 24, 2009 11:36 AM</span> 
+</div> 
+
+
+
+<div class="comments-body andrew"> 
+<p>@Miff</p>
+
+<p>&quot;This is why I don&#39;t do any ASP.NET work&quot;</p>
+
+<p>Because the 13th most popular site in the US needs a big database server?</p>
+<span class="comments-post" style="margin-left:20px">Andrew on June 24, 2009 11:38 AM</span> 
+</div> 
+
+
+
+<div class="comments-body dennis_gorelik"> 
+<p>Thanks to Joshua Ochs -- great &quot;scaling-up vs scaling-out&quot; overview!<br />
+Thanks to Jeff too for asking the question. :-)<br />
+</p>
+<span class="comments-post" style="margin-left:20px">Dennis Gorelik on June 24, 2009 11:44 AM</span> 
+</div> 
+
+
+
+<div class="comments-body george"> 
+<p>I did notice Plenty of Fish had got a bit faster recently ;)</p>
+<span class="comments-post" style="margin-left:20px">George on June 24, 2009 11:46 AM</span> 
+</div> 
+
+
+
+<div class="comments-body keith"> 
+<p>Reminds me of the old &quot;Grudge Match&quot;: a rottweiler vs. a rottweiler&#39;s weight in chihuahuas.  <br />
+www.grudge-match.com/History/rott-chi.shtml<br />
+</p>
+<span class="comments-post" style="margin-left:20px">keith on June 24, 2009 11:52 AM</span> 
+</div> 
+
+
+
+<div class="comments-body andrei_rinea"> 
+<p>Scaling out implies several hidden &quot;costs&quot; such as synchronization overhead (replication and so on), balancing overhead and so on. </p>
+
+<p>Scaling out can look nice but sometimes it will not be as nice as it looks.</p>
+<span class="comments-post" style="margin-left:20px">Andrei Rinea on June 24, 2009 11:53 AM</span> 
+</div> 
+
+
+
+<div class="comments-body jeremy"> 
+<p>The site I&#39;m working at is shifting from a &quot;scaled up&quot; approach to a &quot;scaled out&quot; approach.</p>
+
+<p>We currently have a few hundreds of thousands of users running off four or five SQL Server back-end boxes configured quite similarly to the big-end Proliant mentioned, plus further application servers and front-end boxes. </p>
+
+<p>Our problem is threefold:</p>
+
+<p>- huge bottlenecks into the SQL databases<br />
+- the application tier is monolithic and hard to update or scale<br />
+- the SQL Server licence costs are outrageous</p>
+
+<p>So the solution chosen has been to rearchitect, from the ground up, into a set of 20-30 small services. </p>
+
+<p>At the bottom, the core services each have their own database. Above this, a coordinating layer performs business logic. At the top an MVC layer does the presentation. </p>
+
+<p>All services are stateless, so scaling out should be very simple: just add another box where necessary in the middle tiers. </p>
+
+<p>We are replacing the single fairly monolithic database tier with a series of small databases that should share the load between them, and moving the business logic out of stored procedures to the services. This means we can move over to MySQL.</p>
+
+<p>The downside? 150+ developers for about a year!</p>
+<span class="comments-post" style="margin-left:20px">Jeremy on June 24, 2009 12:00 PM</span> 
+</div> 
+
+
+
+<div class="comments-body monte"> 
+<p>You&#39;ve equated &quot;Open Source&quot; with &quot;Free as in beer&quot;, which isn&#39;t necessarily true... buying RedHat Enterprise Linux is plenty expensive on its own.</p>
+<span class="comments-post" style="margin-left:20px">Monte on June 24, 2009 12:02 PM</span> 
+</div> 
+
+
+
+<div class="comments-body jul"> 
+<p>Just for the fun of arguing : <br />
+are 4 virtual servers on 1 big iron (let&#39;s say 8proc/8Gb mem/8Tb hd) more interesting than 4 pizza box with the same specifications (2proc/2Gb/2tb) ?</p>
+
+<p></p>
+
+<p><br />
+</p>
+<span class="comments-post" style="margin-left:20px">jul on June 24, 2009 12:03 PM</span> 
+</div> 
+
+
+
+<div class="comments-body joel_coehoorn"> 
+<p>It seems like you ought to be able to find some middle ground: somewhere between the big monster and 83 smaller systems.  Perhaps 6 medium-level systems spread over 3 different sites, to improve both performance and redundancy.  What would a setup like that cost?  What happens when you throw cloud computing into the mix?</p>
+<span class="comments-post" style="margin-left:20px">Joel Coehoorn on June 24, 2009 12:05 PM</span> 
+</div> 
+
+
+
+<div class="comments-body michael_meadows"> 
+<p>Even scaling out on open source software isn&#39;t frictionless.  The cost of maintaining one (or two servers in an active/passive setup) is far cheaper than a hundred smaller servers... It&#39;s the difference between one big problem a year and five small changes a week.  Also, the cost of developing software that gets the full benefit from distribution versus horsepower is typically more.  State management and distributed transactions can consume at least one developer&#39;s full time efforts depending on the nature of the business.</p>
+<span class="comments-post" style="margin-left:20px">Michael Meadows on June 24, 2009 12:05 PM</span> 
+</div> 
+
+
+
+<div class="comments-body dmb"> 
+<p>Only people who have never tried scaling out a non-trivial DB app participate in these (stupid) discussions. Fact is, unless your DB can be easily partitioned, by design, you will have one heck of a time scaling it out and you will need a TON of hardware. Not everything fits into BigTable. Most applications have certain latency, throughput and concurrency requirements which often make partitioning / sharding difficult or unfeasible. If you want decent response times on a large partitioned DB and you don&#39;t want to scale up, you will have to consider things like Netezza, Teradata, Vertica, Greenplum, Aster, etc. For large amounts of data, those can cost $1M a year or more. The cost of scale up becomes easier to swallow in this case, assuming your problem can indeed be solved by scale up. </p>
+
+<p>My point is, just because Google solved some of their (very specialized) problems by scaling out 10 years ago doesn&#39;t mean you should do so now. It usually makes sense to scale up within individual nodes (i.e. have 8 cores and 32/64GB of RAM instead of the typical 4 and 16GB of RAM) and have more cores and fewer nodes overall. It also usually makes sense to have a good RAID controller and a wide RAID array (600-800MB/sec read / 400-500MB/sec write). It does not make sense to use Hadoop for anything unless you can cough up more than 15-20 nodes, significantly, orders of magnitude more. See, Hadoop only begins to beat _one_ decent 8 core box when you have 10 nodes in the cluster.</p>
+
+<p>I mean, Jesus tittyfucking Christ, if you haven&#39;t done anything large scale, just STFU and don&#39;t regurgitate the same old bullshit you&#39;ve heard five years ago.</p>
+
+<p>That is all. Thank you.</p>
+<span class="comments-post" style="margin-left:20px">DMB on June 24, 2009 12:12 PM</span> 
+</div> 
+
+
+
+<div class="comments-body anthony_chaves"> 
+<p>I haven&#39;t seen anyone mention using an in-memory data grid with a scale-out/scale-up approach.  An IMDG scales out to handle more load while lowering the load on the database box.  Buying a smaller number of 1U servers with maxed out memory and a database box a fraction of the cost in the post is more predictably scalable.  </p>
+
+<p>Depending on your grid capacity a database failure may not be as catastrophic as it once was. If the entire contents of your database fits in the grid then the application using it will continue to perform finds and updates just the same as if the database was up.  The grid batches all updates and will update the database when it is available again.  </p>
+
+<p>IMDGs also offer a ton of features for graceful failover, data availability and redundancy and self-healing topologies.  All this works like magic.</p>
+
+<p>Two great resources for IMDGs are Billy Newport&#39;s blog (<a href="http://devwebsphere.com)" rel="nofollow">http://devwebsphere.com)</a> and Nati Shalom&#39;s blog (<a href="http://natishalom.typepad.com)." rel="nofollow">http://natishalom.typepad.com).</a>  </p>
+<span class="comments-post" style="margin-left:20px">Anthony Chaves on June 24, 2009 12:14 PM</span> 
+</div> 
+
+
+
+<div class="comments-body robert_synnott"> 
+<p>As many have said, yes, this is slightly ridiculous. There are very few database loads which will scale from one machine to 83 without quite a lot of messing, and frankly most of them are key-value oriented and you wouldn&#39;t want to be using SQL Server anyway.</p>
+
+<p>It&#39;s a very different story with application servers, of course; it&#39;s usually the more the merrier there and you can greatly reduce admin overhead by using a standard image and code pushing method.</p>
+<span class="comments-post" style="margin-left:20px">Robert Synnott on June 24, 2009 12:14 PM</span> 
+</div> 
+
+
+
+<div class="comments-body dmb"> 
+<p>&gt;&gt; And this is why Microsoft HPC will never be a serious offering. Who would want to pay that kind of licensing for 32, let alone 1000 servers? </p>
+
+<p>This is why Windows HPC edition is quite a bit cheaper to license. In fact, if you buy software with support (as large clusters often do), even _plain_ Windows would be cheaper.</p>
+<span class="comments-post" style="margin-left:20px">DMB on June 24, 2009 12:17 PM</span> 
+</div> 
+
+
+
+<div class="comments-body daniel"> 
+<p>Good points.  I think in the end you could justify either approach.  There are some other factors as well:<br />
+Scaling up will typically involve less man-hours deploying the app.  Scaling out will require more time unless you fully automate the deployment process (Azure for the enterprise anybody?)</p>
+
+<p>Scaling up will involve less network complexity and infrastructure.  Scaling out will involve more.<br />
+</p>
+<span class="comments-post" style="margin-left:20px">Daniel on June 24, 2009 12:26 PM</span> 
+</div> 
+
+
+
+<div class="comments-body jim"> 
+<p>And this is why Microsoft HPC will never be a serious offering. Who would want to pay that kind of licensing for 32, let alone 1000 servers? I maintain a small (14 nodes, 64 cores) cluster for a couple of labs, and there would be no way they could afford that kind of iron if they had to pay to put Windows on there.</p>
+
+<p>Also, your story of scaling up rather than out means that unless you also increase the number and bandwidth (like myrinet or infiniband) of your connections, they will be maxed out over a very small demand on CPU, given most web applications.</p>
+<span class="comments-post" style="margin-left:20px">Jim on June 24, 2009 12:28 PM</span> 
+</div> 
+
+
+
+<div class="comments-body mark_roddy"> 
+<p>&quot;But what if you scaled out, instead -- Hadoop or MapReduce style, across lots and lots of inexpensive servers?&quot;</p>
+
+<p>None of the calculations take into account the cost of rewriting a large portion of an existing software base so that it can leverage a distributed computing environment instead of a classic 3-Tier approach.  Not to mention the reduced time to market that would be accrued in that time period.  I doubt Markus was willing to wait a year while his developers rewrote everything.  Even if his group did decide to leverage distributed computing he would need some machine to run everything until the overhaul was completed.</p>
+<span class="comments-post" style="margin-left:20px">Mark Roddy on June 24, 2009 12:38 PM</span> 
+</div> 
+
+
+
+<div class="comments-body bradford"> 
+<p>This article has some good points, but it completely ignores the most important part of scalability: figuring out what problem you&#39;re trying to solve. When you scale up, the marginal utility of each core decreases rapidly. </p>
+
+<p>When you&#39;re solving a lot of &quot;Google-Scale&quot; problems over extremely large data sets, scale-up architectures are absurd: you&#39;re quite I/O bound. My company needs to crunch through dozens of terabytes of data on the social media space, comprised of billions of multi-KB records. Hadoop and HBase are the only way to tackle this problem. </p>
+
+<p>If you absolutely need to have a 100% RDBMS like I believe the OP is talking about, then there&#39;s companies like Greenplum and Vertica, who recommend $25k boxes or so, and can process petabytes of info far more efficiently than a homegrown SQL server farm. </p>
+
+<p>As for, &quot;As everybody knows, open source is only free if your time is free.&quot;, we&#39;ve spent $0 on maintaining our Linux farm besides the salary of 1 person. The marginal cost for supporting another box is 0, because of the amazing variety of cluster management tools in the Open Source world. UNIX was meant from the beginning to be a highly available, network-enabled environment. </p>
+
+<p>I just wrote an article on <a href="http://www.roadtofailure.com" rel="nofollow">http://www.roadtofailure.com</a> on why Scale-Up is dead to a large portion of the problem space :)</p>
+<span class="comments-post" style="margin-left:20px">Bradford on June 24, 2009 12:49 PM</span> 
+</div> 
+
+
+
+<div class="comments-body hardwareguy"> 
+<p>Scaling out isn&#39;t frictionless with open source software.  There&#39;s not exactly a zero-configuration scaling package that I&#39;ve seen, you&#39;d have to spend big money on your developers/admins getting it all to work together.</p>
+<span class="comments-post" style="margin-left:20px">Hardwareguy on June 24, 2009 12:55 PM</span> 
+</div> 
+
+
+
+<div class="comments-body dennis"> 
+<p>Two words: Cray CX1</p>
+
+<p>7U<br />
+16 processors<br />
+384 GB memory<br />
+$77,000+</p>
+
+<p>Geek factor: Priceless</p>
+<span class="comments-post" style="margin-left:20px">Dennis on June 24, 2009 12:56 PM</span> 
+</div> 
+
+
+
+<div class="comments-body patrick_peters"> 
+<p>Keep also in mind that not every application is originally designed to scale out. Scale out means you have to design your code and having an architecture to avoid server affinity.</p>
+
+<p>I have seen projects come to a point when there a serious performance problem and they want to scale out. Then they conclude that their architecture is not well designed to work across multiple tiers, and then you have a real problem!</p>
+<span class="comments-post" style="margin-left:20px">Patrick Peters on June 24, 2009 12:58 PM</span> 
+</div> 
+
+
+
+<div class="comments-body alnitak"> 
+<p>What happens to your comparison if you scale out to just 8 systems, giving you the same number of cores as the tricked-out DL785?</p>
+
+<p>That would give a similar performance (distributed scaling issues notwithstanding) but at far lower capital cost and much more reasonable licensing and running costs.<br />
+</p>
+<span class="comments-post" style="margin-left:20px">Alnitak on June 24, 2009  1:39 PM</span> 
+</div> 
+
+
+
+<div class="comments-body keith_caselman"> 
+<p>I think Joshua Ochs hit&#39;s it best when he talks about the right hardware solution for the right application. You can argue MS SQL vs MySQL clustering and on what OS and what type of architecture, but bottom line is it depends on the application. Everyone wants a fabric network of servers like Google&#39;s  or amazon&#39;s where host added and host failures are seamless to the processing demands. But until Linux or MS build us that better mouse trap to have and hold as our own, we are stuck with weighting our needs on an individual need.  ...and don&#39;t point your fingers at those high end servers until you&#39;ve read the specs on the redundant power supplies, nic, backbones and raid arrays. Sometimes you do get what you pay for when the application will not scale out. On the other hand much is to be said for failover one can archive with pizzaboxes as you call them.  IMHO, The happy medium is scale as you grow, pay as you go and never pay for more than you need. The old saying the right tool for the right job, applies to hardware also. Good post Joshua Ochs<br />
+</p>
+<span class="comments-post" style="margin-left:20px">Keith Caselman on June 24, 2009  1:44 PM</span> 
+</div> 
+
+
+
+<div class="comments-body sethmailinatorcom"> 
+<p>&gt; And when that one monolithic machine dies due to any number of reasons, which one is better then?</p>
+
+<p>HEAR. HEAR.</p>
+
+<p>captcha: lesson tinfoil :_)</p>
+<span class="comments-post" style="margin-left:20px">seth@mailinator.com on June 24, 2009  1:59 PM</span> 
+</div> 
+
+
+
+<div class="comments-body paul"> 
+<p>For 100K$ you can get 4 SuperMicro 2U Twin², which would then have:<br />
+128 Xeon Cores<br />
+768 GB Ram<br />
+16 TB Diskspace<br />
+8U Space requirements<br />
+With a maximum power requirement of 4800W<br />
+That doesn&#39;t look to bad for me.</p>
+<span class="comments-post" style="margin-left:20px">Paul on June 25, 2009  2:12 AM</span> 
+</div> 
+
+
+
+<div class="comments-body carra"> 
+<p>And this is why 2010 will be the year of linux.</p>
+<span class="comments-post" style="margin-left:20px">Carra on June 25, 2009  2:54 AM</span> 
+</div> 
+
+
+
+<div class="comments-body mecki"> 
+<p>Take a look at CPU vendors. Years ago they were scaling up. CPUs got more and GHz of processing power. Now they are scaling out, instead of making a single core faster, they add more and more cores.</p>
+
+<p>Have system gotten faster because of this? Yes, if the application can make decent usage of all these cores they got much faster, even though we are back at around 2 GHz and were far beyond 3 GHz before. A current 2 GHz Dual Core CPU can beat the crap out of an overcloked 4 GHz CPU with a single core.</p>
+
+<p>As you pointed out, the advantage of scaling up is that the software doesn&#39;t have to be optimized for anything in particular, while scaling out only works well if the software can really operate that way. However, pretty much every software can. Just take a simple LAMP project (Linux, Apache, MySQL, PHP). You can have a single Apache server in front that gets all requests and spread these across a whole server farm of Apache servers, totally transparent. Each of these run only Apache and PHP. The MySQL Databases can be scaled out to different servers again. You can go as far as having one server not for every database but actually for every single table of a database.</p>
+<span class="comments-post" style="margin-left:20px">Mecki on June 25, 2009  3:08 AM</span> 
+</div> 
+
+
+
+<div class="comments-body bobo"> 
+<p>Managing 84 servers is not that nice, and you should expect an increased % of HW failures. And since I work in a farm with 30 &quot;barebone&quot; servers and some blade servers I can tell the difference</p>
+
+<p>Additionally 84 servers mean clustering or redesign of the applications running on them, and more maintenance, so additional time that hasn&#39;t been counted in the calculations: </p>
+
+<p>or do open source activists work for free?</p>
+<span class="comments-post" style="margin-left:20px">Bobo on June 25, 2009  3:16 AM</span> 
+</div> 
+
+
+
+<div class="comments-body simone"> 
+<p>I don&#39;t think this comparison is really fair.<br />
+you don&#39;t need 83 1U servers to compete with the power of the 7U server.<br />
+So probably you might end up buying just 10 1U server to reach the same amount of CPU power.<br />
+This will also reflect on the licenses, power and hosting costs, which will be just 1/8th of what you write.</p>
+
+<p>And the big monster is not enough... if you are talking about DB servers, than you&#39;d need a cluster, which might cost even more (external disk unit, 2 physical machines) and will have higher costs attached (if I&#39;m not wrong SQL Server Datacenter edition, the only one that run on clusters, costs 30K).</p>
+
+<p>This also must be evaluated based on the kind of software you are running on:<br />
+DB servers are most likely to scale up, with redundancy<br />
+Web Farms are better suited to scale out, same with application servers.</p>
+
+<p>Another option you have to consider is: putting everything up in the cloud.<br />
+</p>
+<span class="comments-post" style="margin-left:20px">Simone on June 25, 2009  3:18 AM</span> 
+</div> 
+
+
+
+<div class="comments-body nij"> 
+<p>Nice post Jeff.</p>
+
+<p>A client of mine recently got their main DB turned into a clustered DB server at a major hosting company. Clustering (for them at least) basically means you get some amount of fault tolerance at the &#39;mere&#39; cost of 2x the main processing boxes (i.e. 2x Windows Clustered servers) and some _extremely_ expensive SAN storage that is used by both machines.</p>
+
+<p>You, however, will quite possibly have the option of splitting your DB&#39;s into 3 (I&#39;m assuming one for StackOverflow, one for ServerFault and one for SuperUser). Depending on your willingness to lose &#39;minuts&#39; of data, you could then vary the sizes of these servers by necessity, have them at different sites, and use a circular roubd-robin approach to log-shipping. In this way, each &#39;DB&#39; machine would need to be able to store it&#39;s own DB and the one it was receiving log-ships from, and computationally be able to &#39;muddle through&#39; if it had to actually process two DB&#39;s at once due to one server failing.</p>
+
+<p>This is not true fault-tolerance, but may offer a pragmatic intermediate approach to the big iron and clustering and so on.</p>
+<span class="comments-post" style="margin-left:20px">Nij on June 25, 2009  4:26 AM</span> 
+</div> 
+
+
+
+<div class="comments-body ck"> 
+<p>Another fun possibility is to rent instances on the Amazon cloud.</p>
+
+<p>Prices run as low as $428 /year for a reserved instance or can be billed by the hour if your computing demands change frequently. If you build a good AMI image, you can automatically create and destroy instances as needed for load handling.</p>
+
+<p>Of course if you &quot;brick&quot; an instance with valuable data on it, you&#39;re *very* hosed. There&#39;s no option to drive/fly to the data center to hook up a monitor and keyboard to the thing for the purposes of stepping past a boot time kernel panic. (this has been my headache this week)</p>
+<span class="comments-post" style="margin-left:20px">CK on June 25, 2009  6:39 AM</span> 
+</div> 
+
+
+
+<div class="comments-body duh"> 
+<p>Wow.</p>
+
+<p>I don&#39;t mean the costs of scaling up vs scaling out in hardware, that&#39;s pretty old news. But I was never fully aware of how hard shops using proprietary software were getting screwed until I read this...</p>
+<span class="comments-post" style="margin-left:20px">Duh on June 25, 2009  6:46 AM</span> 
+</div> 
+
+
+
+<div class="comments-body johnopincar"> 
+<p>In my experience, very few problems scale out easily.  Scaling out always looks good on paper and never goes nearly as well. Having a lot of small things is almost always more painful and expensive than having a couple of big things in practice.  Even if the big things cost 5 or 10 times as much.  Even with outsourcing, people are expensive.  Even if you aren&#39;t paying them much you still have to manage them effectively.  Effective management of people is the hardest thing to do in business, IMO.  And the more &quot;things&quot; you have the more people you need to manage them.</p>
+
+<p>Now I won&#39;t deny that there are some very specialized, large-scale cases where scaling out is the only option you have.   But before you go that route, you better triple check your plan and consult some people that have real-world experience with more than a calculator.</p>
+
+<p>Having fewer, more powerful processors actully provides you more flexibility for handling intensive, linear tasks while still being able to &quot;scale-out&quot; virtually.  If you currently have a process like that and you could spend 50K to bring a single new server in to make it run in 1/4th the time or you could spend 50K on a project to re-architect the process to be non-linear (assuming that&#39;s even possible), going the hardware route is a no-brainer.</p>
+<span class="comments-post" style="margin-left:20px">JohnOpincar on June 25, 2009  7:18 AM</span> 
+</div> 
+
+
+
+<div class="comments-body tero"> 
+<p>Markus obviously wants to be a one man shop so one big server makes sense. Clustering, replication, SANs etc. Too much work, too much to worry about with diminishing returns. You also do not want to rewrite your application ground up to support some kind of scaling out strategy. I don&#39;t see Markus touching what is working already.</p>
+
+<p>Bigger operations are a sprawling jungle of complicated and confusing software with piles of servers not doing a whole lot of useful things. That would be just about every company on the planet. That&#39;s why Markus should be a scaling hero.<br />
+</p>
+<span class="comments-post" style="margin-left:20px">Tero on June 25, 2009  8:16 AM</span> 
+</div> 
+
+
+
+<div class="comments-body theo"> 
+<p>Scaling out a database is certainly possible when you want to do data ware housing/BI or MapReduce like stuff but scaling out your database when you want to do online transaction processing is hard. </p>
+
+<p>The biggets Oracle RAC customers uses 32 nodes. Read here: <a href="http://mediaproducts.gartner.com/reprints/oracle/article61/article61.html" rel="nofollow">http://mediaproducts.gartner.com/reprints/oracle/article61/article61.html</a> </p>
+<span class="comments-post" style="margin-left:20px">Theo on June 25, 2009  8:45 AM</span> 
+</div> 
+
+
+
+<div class="comments-body chip_overclock"> 
+<p>I&#39;ve had jobs ranging from embedded development on hardware that would fit in your shirt pocket to several years spent at a national lab with a floor full of supercomputers. It&#39;s interesting to see that these scalability issues crop up in a similar fashion at all parts of this spectrum: &quot;bigger&quot; versus &quot;more&quot;.</p>
+
+<p>But in many ways, as the manycore folks suggest, &quot;bigger&quot; has become &quot;more&quot;, as the way things have gotten bigger is to have more cores. Licensing issues aside, we are faced with transitioning our production systems from one or two core platforms to dozens of cores. This transition presents similar issues (differing perhaps only in scale or maybe not at all), whether those cores are all in one chassis or spread across a campus.</p>
+
+<p>I&#39;m guessing that we&#39;ll all have to starting thinking about the memory architectures and processor interconnects a lot more carefully, much like the supercomputer and MPP folks have always had to do. Suddenly we&#39;re faced with deskside MPP systems that aren&#39;t the exotic hardware we once may have known and loved (or hated) but are the latest commodity whitebox we bought over the internet.</p>
+
+<p>I believe that embedded developers and supercomputer developers may have a leg up on everyone else because they&#39;ve been dealing with these issues for decades. The manycore folks at Berkeley seem to also have the opinion that the embedded area has a lot to contribute in this domain. I think product development organizations should consider leveraging any developers they have in the embedded domain to multi-core/manycore server-side development since (I hope) the skill sets are transferable.</p>
+
+<p>I think it&#39;s going to be kinda interesting.</p>
+<span class="comments-post" style="margin-left:20px">Chip Overclock on June 25, 2009  9:48 AM</span> 
+</div> 
+
+
+
+<div class="comments-body timothy_lee_russell"> 
+<p>I would suggest outsourcing the hardware infrastructure to Amazon Web Services.  They have brought transparency to many of the hidden costs associated with scaling.</p>
+
+<p>For instance, they have figured out the pricing of Microsoft SQL and present it to you in a way that is predictable, i.e. 12.5 cents per hour.</p>
+
+<p>Obviously, a linear model doesn&#39;t work for everyone financially -- but it does take the guess work out of it.</p>
+<span class="comments-post" style="margin-left:20px">Timothy Lee Russell on June 25, 2009  9:52 AM</span> 
+</div> 
+
+
+
+<div class="comments-body peter"> 
+<p>We&#39;re a Microsoft shop (and a gold partner, too, so our cost for OS/SQLServer software for internal development use is $0). We also use virtuals for development. So for us, the key feature of a server is the amount of RAM one can jam into it, as each virtual is going to be sucking up 1G of RAM (more or less, but it is a reasonable rule of thumb). So that honking great beast of a machine will be able to host close to 500 virtuals for development, while the 83x 1U servers are probably going to be close: about 6-7 virtuals per server. On the down side, 83x 1U servers = 2 full racks of servers with a bit left over, while the big beast is less than 1/4 of a rack. </p>
+
+<p>Our current AC infrastructure has a hard time handling what we&#39;ve already got. It is a 20-ton unit and needs maintenance several times per year (especially when the cottonwood trees are shedding and the roof heat exchangers start looking like cubical sheep). </p>
+
+<p>We&#39;re further constrained by corporate policy that states we are forbidden from obtaining &quot;used&quot; stuff, so the ebay items are way off limits. This was comically absurd when I was looking into an itanium server to develop against (we can check x64 builds with 64-bit vista/server 2003/2008, but for ia64, we need totally different hardware). The cheapest new itanium box comes from HP and starts around $15k, while used 1U itanium servers are in the $200 range (with RAM and HD, you&#39;re still looking at maybe $1k per). </p>
+<span class="comments-post" style="margin-left:20px">Peter on June 25, 2009  9:55 AM</span> 
+</div> 
+
+
+
+<div class="comments-body joshua_ochs"> 
+<p>A lot of excellent discussion on this post - it&#39;s been an interesting read. A few more things that are particular to my background...</p>
+
+<p> - As for software licensing - bbviously scale out will incur more costs in that arena than scale up (unless you&#39;re 100% free/open source); how badly that affects you is extremely application and vendor dependent.<br />
+- Scaling out is very hard to do if you didn&#39;t design for it in the beginning. Let&#39;s face it - most homegrown stuff isn&#39;t designed up front for issues like this, and so it&#39;s going to be difficult/impossible to scale many such systems horizontally.<br />
+ - Horizontal scaling requires a much more dedicated approach to system management - you&#39;ll need to be able to automatically build servers, apply patches en masse, backup/restore, push content updates, etc. Content management systems, reporting and alerts - just more of everything. Moving from 20 to 80 servers isn&#39;t hard, but the move from 4 or so to 20 is. This stuff is not trivial, but depending on how much value is in your infrastructure (is this your core business, what&#39;s the size of your business, etc) it may be warranted.<br />
+ - Scaling out does have other hidden costs. You&#39;ll need external load balancers, as I mentioned. You also may need a beefier network, better/more switches, NIC teaming, etc. Centralized storage like SAN or NAS - while I highly recommend it - can be complex and costly.<br />
+ - And of course, you can meld the two. Not only by separating your application and database servers and scaling independently, but by splitting the database into multiple servers. This may not always be possible, but at least we&#39;re back to standard software engineering techniques of factoring and database design.<br />
+ - Virtualization makes a lot of these issues even trickier, but offer the hope of major gains *if done right*. You gain a huge amount of flexibility in adjusting workloads, CPU/memory allocations, or migrating systems to better servers. You also have an additional layer to manage, and have to be very careful balancing resources between virtual machines. This is especially difficult when all systems are the same, as you can&#39;t use the differences in application design to your advantage (for instance, placing a CPU-intensive VM on the same system as an I/O-intensive VM, etc). However, don&#39;t expect it to be cheaper - far from it. Hardware cost tends to scale exponentially once you pass 4CPU (16 core) systems, so partitioning a 32CPU server into 32 x 1CPU servers won&#39;t likely be cost effective.<br />
+ - Beyond virtualization there are interesting technologies like Solaris Containers and other lightweight partitioning schemes to consider. Not even going there - this is long enough. :)<br />
+ - Finally, planning for failure. You definitely don&#39;t want a single huge machine, as everything is in one basket. Many folks will then move to clustering for redundancy, but then you have a new set of trade-offs: do you go with Active-Active clustering, and watch your ability to handle load drop by 50% when a node dies, or go with Active-Passive clustering and have an expensive paperweight 90% of the time? It may hurt to have a passive server sitting there, but the last thing you want to see is one server die, immediately followed by your second server cratering under the load.<br />
+ - Scaling out offers built-in N+1 redundancy, in that a single node failing takes out very little of your capacity. This makes hardware management somewhat less critical, as you haven&#39;t lost much capacity (relatively speaking), and you&#39;re not sitting vulnerable on a single point of failure until it&#39;s fixed.</p>
+
+<p>So... from my perspective, scaling out is the preferred method, because of the usual cost savings, flexibility, simplified growth, and redundancy. However, it&#39;s not for everyone. Your applications may not be written this way, your databases may be tied to closely to the applications, or you may not have the necessary support infrastructure for lots of smaller machines. Like so many things, it&#39;s a set of tradeoffs - but that&#39;s what keeps our field interesting.</p>
+<span class="comments-post" style="margin-left:20px">Joshua Ochs on June 25, 2009 11:10 AM</span> 
+</div> 
+
+
+
+<div class="comments-body anonymous"> 
+<p>Your lisencing costs are way off..  Its a website you only need Server Plus CAL Pricing which is a tiny fraction of the cost of per cpu lisencing </p>
+<span class="comments-post" style="margin-left:20px">Anonymous on June 25, 2009 11:26 AM</span> 
+</div> 
+
+
+
+<div class="comments-body anonymous"> 
+<p>Your lisencing costs are way off..  Its a website you only need Server Plus CAL Pricing which is a tiny fraction of the cost of per cpu lisencing </p>
+<span class="comments-post" style="margin-left:20px">Anonymous on June 25, 2009 11:27 AM</span> 
+</div> 
+
+
+
+<div class="comments-body anonymous"> 
+<p>Your lisencing costs are way off..  Its a website you only need Server Plus CAL Pricing which is a tiny fraction of the cost of per cpu lisencing </p>
+<span class="comments-post" style="margin-left:20px">Anonymous on June 25, 2009 11:27 AM</span> 
+</div> 
+
+
+
+<div class="comments-body nbdeveloper"> 
+<p>re: [Joshua Ochs on June 24, 2009 10:10 AM]</p>
+
+<p>Joshua, I&#39;ve saved your comment off in a text file that I will read repeatedly. Thanks man. </p>
+
+<p>Jeff, thanks for the thought provoking article, without it Joshua wouldn&#39;t have ever replied with so much good info.</p>
+<span class="comments-post" style="margin-left:20px">NBDeveloper on June 26, 2009  4:56 AM</span> 
+</div> 
+
+
+
+<div class="comments-body kibbee"> 
+<p>Jeff, you may want to read the &quot;Special Considerations&quot; (<a href="http://www.microsoft.com/Sqlserver/2005/en/us/special-considerations.aspx)" rel="nofollow">http://www.microsoft.com/Sqlserver/2005/en/us/special-considerations.aspx)</a> page about licensing on SQL Server.  Basically it says that you need a CAL for each computer (or user) accessing the database, even if they access it through some other middleware application such as a web server.  So if you have a public website, the only way to go for licensing is per processor.  With the big 7u server with 32 processors, that would require SQL Server Enterprise edition (standard only runs on a maximum of 4 processors), which runs about $25,000 per physical processor, which would cost you $200,000 just for SQL Server licenses.  On the scale out solution, you could run SQL Server standard edition, which is still $6000 per processor, which would run you $498000. </p>
+
+<p>For someone who insisted that he build his own servers from scratch, you seem to know very little about the licensing of the software you installed on them.  Which makes me wonder if you even have them licensed correctly.</p>
+<span class="comments-post" style="margin-left:20px">Kibbee on June 26, 2009  7:48 AM</span> 
+</div> 
+
+
+
+<div class="comments-body eran_kampf"> 
+<p>This comparison is wrong because the Microsoft stack - Windows and SQL server - is not built (or priced) to scale out cheaply.</p>
+
+<p>Systems that are built for large scale using a different set of technologies (i.e not relational database) to enable this kind of growth - map-reduce frameworks like Hadoop, column base databases, distributed data warehouses.</p>
+
+<p>Scaling out is not a matter of choosing between 1 bigass server and 83 small ones. Software has to be built to scale out, and when it does costs should be cheaper...</p>
+<span class="comments-post" style="margin-left:20px">Eran Kampf on June 26, 2009  7:53 AM</span> 
+</div> 
+
+
+
+<div class="comments-body shmork"> 
+<p>A somewhat more interesting comparison might be how Wikipedia works: <a href="http://meta.wikimedia.org/wiki/Wikimedia_servers" rel="nofollow">http://meta.wikimedia.org/wiki/Wikimedia_servers</a></p>
+
+<p>It&#39;s something of a compromise (albeit with all free software)—they scale up in some places, out in others, depending on the function of the servers in question (and take care to divide up the functions a bit so that they can do this). On the whole it runs rather smoothly given the size of the databases, the number of constant I/O operations, and the number of visitors. </p>
+<span class="comments-post" style="margin-left:20px">Shmork on June 26, 2009  8:48 AM</span> 
+</div> 
+
+
+
+<div class="comments-body phred"> 
+<p>As others have said, the management cost of 80 servers is non-trivial.  Once you have that many, you&#39;ll probably want to know if one of them has a hdd warning, an ecc memory warning, or a fan failure.  For one server that&#39;s not so bad, but for 80 you&#39;re going to want to deploy one of the vendor&#39;s hardware management solutions (which are free, iirc) but non-zero to maintain.  Oh, and I suspect you&#39;ll want to patch and deploy app updates to those servers, that&#39;s non-trivial and non-zero cost also.</p>
+
+<p>One other difference is that the larger servers from the major vendors build redundency into the server to avoid problems like a power supply failure taking out the box.  The cheaper servers don&#39;t employ those things to keep costs down and exactly because it is assumed you&#39;ll deploy them in a way that one going down doesn&#39;t take down the app.  So while you have more of your eggs in one basket when it comes to the DL785, it is a more resilient system (and one big reason the chassis cost is $16k alone.)  The cheaper servers are more cost effective but less reliable.  It&#39;s a reasonable tradeoff but one that has to be factored in.</p>
+<span class="comments-post" style="margin-left:20px">Phred on June 26, 2009 10:35 AM</span> 
+</div> 
+
+
+	
+
+
+	
+<p>
+
+
+
+
+
+<a href="http://www.codinghorror.com/blog/2009/06/scaling-up-vs-scaling-out-hidden-costs/comments/page/2/#comments"><span class="pager-label">More comments</span><span class="chevron">&#187;</span></a>
+
+</p>
+
+
+
+
+<a name="endcomments"></a> 
+
+
+
+<style>
+textarea {
+ 	width : 600px;
+	font-size : 14px;
+	}
+#comment-author,
+#comment-email,
+#comment-url {
+	font-size : 14px;
+	padding : 3px;
+	width : 350px;
+	}
+</style>
+
+
+<!-- comment form -->
+<div id="atp-comments">
+	<div id="comment-preview" class="hiddenBox">
+		<h3 id="header-verify-comment" class="comments-header hiddenBox">Verify your Comment</h3>
+		<h3 id="header-preview-comment" class="comments-header hiddenBox">Previewing your Comment</h3>
+		<div class="comments-content">
+			<div class="comment">
+				<div id="comment-preview-content" class="comment-content">
+				</div>
+				<p class="comment-footer">
+					Posted by:
+					<span id="comment-preview-author"></span>&nbsp;|&nbsp;<span id="comment-preview-datetime"></span>
+				</p>
+			</div>
+		</div>
+	</div>
+	<div id="comment-preview-confirmation" class="hiddenBox yellowBox">
+		<p>This is only a preview. Your comment has not yet been posted.</p>
+		<form id="comment-preview-form"
+			method="post"
+			onsubmit="atpComments.interceptPost(commentFormNum); return false;">
+			<input type="submit" name="post" id="comment-confirm-post" value="&nbsp;Post&nbsp;" onclick="atpComments.interceptPost(commentFormNum); return false;"/>
+			<input type="submit" name="edit" id="comment-edit" value="&nbsp;&nbsp;Edit&nbsp;&nbsp;" onclick="atpComments.previewOnly(commentFormNum, 2); return false;"/>
+			<span id="previewFormSpinner" class="hiddenBox"><img src="spinner.gif" alt="Working..." /></span>
+		</form>
+	</div>
+	<div id="comment-error" class="hiddenBox redBox">
+		Your comment could not be posted. Error type: <span id="comment-error-msg"></span>
+	</div>
+	<div id="comment-complete" class="hiddenBox yellowGreenBox">
+		Your comment has been posted. <a href="javascript:void 0;" onclick="window.location.hash='#comment-form';window.location.reload(false)">Post another comment</a>
+	</div>
+	<div id="comment-captcha" class="hiddenBox yellowBox">
+		<div id="captchaText">
+			<p id="captchaFailMsg" class="captchaErrorText hiddenBox">The letters and numbers you entered did not match the image. Please try again.</p>
+			<p>As a final step before posting your comment, enter the letters and numbers you see in the image below. This prevents automated programs from posting comments.</p>
+			<p><span id="comment-captcha-viewalt">Having trouble reading this image? <a href="scaling-up-vs-scaling-out-hidden-costs.html#comment-captcha" onClick="atpComments.generateCaptcha(commentFormNum);">View an alternate.</a></span></p>
+		</div>
+		<p class=""><img id="captchaImg" /></p>
+		<form id="comment-captcha-form"
+			method="post"
+			onsubmit="atpComments.submitWithCaptcha(commentFormNum); return false;">
+			<input type="hidden" name="captcha_chal" id="comment-captcha-chal" value="" />
+			<p>
+				<input id="comment-captcha-text" name="captcha_text" size="10" />
+			</p>
+			<p>
+				<input type="submit" name="continue" id="captcha-continue" value="&nbsp;Continue&nbsp;" />
+				<span id="captchaFormSpinner" class="commentSpinner hiddenBox"><img src="spinner.gif" alt="Working..." /></span>
+			</p>
+		</form>
+	</div>
+	<div id="primary-comment-form" class="comment-form">
+		<form id="comment-form"
+			method="post">
+			<input type="hidden" name="entry_xid" id="comment-entry-xid" value="6a0120a85dcdae970b012877709470970c" />
+			<div class="comments-open">
+				<h2 class="comments-open-header" id="comment-title">Post a comment</h2>
+				<div id="comments-open-content" class="comments-open-content">
+					
+
+					
+						<p id="comments-open-login" style="display: none;">
+							
+								To comment, please <a href="https://www.typekey.com/t/typekey/login?v=1.0&t=c4e623edf6850d9652066b420d1388a8eb5e669f&lang=en_US&_return=http%3A%2F%2Fwww.codinghorror.com%2Fblog%2F2009%2F06%2Fscaling-up-vs-scaling-out-hidden-costs.html&_portal=typepad">sign in</a> using TypePad, Twitter, Facebook or OpenID.
+							
+							
+						</p>
+
+						<p id="comments-open-logout" style="display: none;">
+							You are currently signed in as
+							<span id="commenter-name">(nobody)</span>.
+							<a href="http://www.codinghorror.com/.services/sitelogout?to=https%3A%2F%2Fwww.typekey.com%2Ft%2Ftypekey%2F%3F__mode%3Dlogout%26_return%3Dhttp%253A%252F%252Fwww.codinghorror.com%252Fblog%252F2009%252F06%252Fscaling-up-vs-scaling-out-hidden-costs.html">Sign Out</a>
+						</p>
+					
+						<div id="comments-open-text" style="display:none;">
+							<textarea id="comment-text" name="text" rows="10" cols="30" onkeyup="atpComments.maxTextArea(this, 64000);"></textarea>
+							<p class="comments-open-subtext">
+								(You can use HTML tags like &lt;b&gt; &lt;i&gt; and &lt;ul&gt; to style your text.URLs automatically linked.)
+							</p>
+						</div>
+						<div id="comments-open-data" style="display:none;">
+							<p>Your Information</p>
+							<p>
+							
+								(Name is required. Email address will not be displayed with the comment.)
+							
+							
+							</p>
+							<p>
+								<input id="comment-author" at:default="Name" name="author" size="30" value="Name" onfocus="if(this.value==this.getAttribute('at:default')) this.value='';"  onBlur="if(this.value=='') this.value=this.getAttribute('at:default');" class="grayText"/>
+								<label for="comment-author" id="comment-author-error" class="comment-error hiddenBox">Name is required to post a comment</label>
+							</p>
+							<p>
+								<input id="comment-email" at:default="Email Address" name="email" size="30" value="Email Address" onfocus="if(this.value==this.getAttribute('at:default')) this.value='';"  onBlur="if(this.value=='') this.value=this.getAttribute('at:default');" class="grayText"/>
+								<label for="comment-email" id="comment-email-error" class="comment-error hiddenBox">Please enter a valid email address</label>
+							</p>
+							<p>
+								<input id="comment-url" at:default="Web Site URL" name="url" size="30" value="Web Site URL" onfocus="if(this.value==this.getAttribute('at:default')) this.value='';"  onBlur="if(this.value=='') this.value=this.getAttribute('at:default');" class="grayText"/>
+								<label for="comment-url" id="comment-url-error" class="comment-error hiddenBox">Invalid URL</label>
+							</p>
+						</div>
+				</div>
+				<div id="comments-open-footer" class="comments-open-footer" style="display:none;">
+					<input type="submit" name="post" id="comment-post-button" value="&nbsp;Post&nbsp;" onclick="atpComments.interceptPost(commentFormNum); return false;" disabled="true" />
+					<input type="submit" name="preview" id="comment-preview-button" value="&nbsp;Preview&nbsp;" onclick="atpComments.previewOnly(commentFormNum, 1); return false;" disabled="true" />
+					<span id="commentEntryFormSpinner" class="commentSpinner hiddenBox"><img src="spinner.gif" alt="Working..." /></span>
+				</div>
+			</div>
+		</form>
+		<noscript>
+			
+			<p>This weblog only allows comments from registered TypeKey users. To comment, please enable JavaScript so you can sign into TypeKey.</p>
+			
+			
+		</noscript>
+	</div>
+</div>
+
+
+
+
+
+
+
+
+</div> 
+ 
+<table width="100%"> 
+<tr> 
+<td align="left" width=50> 
+</td> 
+<td align="right" width="*"><span style="font-size:70%">Content (c) 2009 <A href="http://www.codinghorror.com/blog/archives/000021.html">Jeff Atwood</A>. Logo image used with permission of the author. (c) 1993 Steven C. McConnell. All Rights Reserved.</span></td></tr> 
+</table> 
+ 
+</div> 
+
+<div id="links"> 
+ 
+
+
+<div class="sidetitle">Newer &raquo;</div>
+<div class="side">
+<a href="http://www.codinghorror.com/blog/2009/06/the-iphone-software-revolution.html">The iPhone Software Revolution</a>
+</div>
+
+
+
+<div class="sidetitle">&laquo; Older</div> 
+<div class="side">
+<a href="http://www.codinghorror.com/blog/2009/06/monty-hall-monty-fall-monty-crawl.html">Monty Hall, Monty Fall, Monty Crawl</a>
+</div> 
+
+ 
+<p></p> 
+<p></p> 
+<p></p> 
+<div class="side"> 
+<a href="http://www.codinghorror.com/blog/">Home</a> 
+<p></p> 
+<p></p> 
+<a href="http://www.codinghorror.com/blog/archives.html">Browse All Posts</a> 
+<p></p> 
+<p></p> 
+<p></p> 
+
+ 
+
+<div class="welovecodinghorror"> 
+[ad] Is your application eating a lot of RAM? – Find out what's holding your objects in memory. <a href="http://www.red-gate.com/products/ants_memory_profiler/find_memory_leaks_fast.htm?utm_source=codinghorr&utm_medium=textad&utm_term=3229&utm_content=findmemleaksfast&utm_campaign=antsmemoryprofiler" rel="nofollow">Find memory leaks fast</a>.
+</div> 
+ 
+<div class="welovecodinghorror"> 
+[ad] Tired of endless code review emails? Ditch the emails - try peer code review with <a href="http://codecollab.com/" rel="nofollow">Code Collaborator</a>. Also learn tips and tricks with <a href="http://www.codereviewbook.com/?howheard=Coding+Horror" rel="nofollow">this free book</a>.
+</div> 
+ 
+<div class="welovecodinghorror"> 
+[ad] You've maxed out your machine. Now upgrade your career. <a href="http://careers.stackoverflow.com/">Stack Overflow Careers</a> helps the world's top developers get noticed by the world's top employers.
+</div>
+
+<!-- [ad] Got a cool product for developers? Advertise it on Coding Horror! mailto:jatwood@codinghorror.com?subject=Advertising Contact me for rates. --> 
+
+
+<div class="sidetitle">Resources</div> 
+<div class="side"> 
+<b><a href="http://www.codinghorror.com/blog/2004/02/recommended-reading-for-developers.html">Recommended Reading</a></b><br /> 
+<b><a href="http://stackoverflow.com">stackoverflow.com</a></b><br/> 
+<b><a href="http://serverfault.com">serverfault.com</a></b><br/> 
+<b><a href="http://superuser.com">superuser.com</a></b><br/> 
+<img src="favicon.ico" width="16" height="16" style="vertical-align:middle;border:0">&nbsp;&nbsp;<a href="http://www.codinghorror.com/blog/2004/02/about-me.html">About Me</a> 
+</div> 
+
+
+
+<div class="syndicate"> 
+<img src="http://feeds.feedburner.com/~fc/codinghorror?bg=EEEEEE&amp;fg=111111&amp;anim=0" height="26" width="88" style="border:0" alt="Count of RSS readers" /> 
+<br/> 
+<a href="http://my.statcounter.com/project/standard/stats.php?project_id=2600027&guest=1">Traffic Stats</a> 
+<br/> 
+<br/> 
+<a href="http://feeds.feedburner.com/codinghorror" rel="alternate" type="application/rss+xml"><img src="http://www.feedburner.com/fb/images/pub/feed-icon16x16.png" width=16 height=16 alt="" style="vertical-align:middle;border:0"/>&nbsp;Subscribe in a reader</a> 
+<br/> 
+<a href="http://www.feedburner.com/fb/a/emailverifySubmit?feedId=74729"><img src="mail.png" width=16 height=16 alt="" style="vertical-align:middle;border:0"/>&nbsp;Subscribe via email</a> 
+</div> 
+
+
+
+</div> 
+</div> 
+ 
+<script> 
+x=window.document.getElementsByTagName('div'); for(var i = 0; i < x.length; i++) { if (x[i].className == "comments-body") { if (x[i].innerHTML.search(/jeff atwood<\/a>/i) != -1) { x[i].style.backgroundColor = "#FFECC7"; } } }
+</script> 
+ 
+<script type="text/javascript" language="javascript"> 
+var sc_project=2600027; 
+var sc_invisible=0; 
+var sc_partition=25; 
+var sc_security="dcff5548"; 
+</script> 
+ 
+<script type="text/javascript" language="javascript" src="http://www.statcounter.com/counter/counter.js"></script> 
+<noscript><a href="http://www.statcounter.com/" target="_blank"><img  src="http://c26.statcounter.com/counter.php?sc_project=2600027&java=0&security=dcff5548&invisible=0" alt="web metrics" border="0"></a> </noscript> 
+ 
+<!-- Start Quantcast tag -->
+<script type="text/javascript" src="http://edge.quantserve.com/quant.js"></script>
+<script type="text/javascript">_qoptions = { tags:"typepad.extended" }; _qacct="p-fcYWUmj5YbYKM"; quantserve();</script>
+<noscript>
+<a href="http://www.quantcast.com/p-fcYWUmj5YbYKM" target="_blank"><img src="http://pixel.quantserve.com/pixel/p-fcYWUmj5YbYKM.gif?tags=typepad.extended" style="display: none" border="0" height="1" width="1" alt="Quantcast"/></a>
+</noscript>
+<!-- End Quantcast tag -->
+</body> 
+</html>
+
+<script type="text/javascript">
+var captchaImgAttempts = 0;
+var allowAnonComments = '0';
+var registrationRequired = 1;
+var registrationOptional = 0;
+var emailRequired = 0;
+var useAvatars = 0;
+
+var showSignInMessaging = 0;
+var jsonURL = "/.services/json-rpc";
+
+var captchaSrc = "/.services/captcha?code_encrypted=";
+var alertCommentCannotBeBlank = "You can not leave an empty comment. Please enter some text in the Comment field.";
+var alertEditingExpired = "Sorry, you're no longer allowed to edit this comment. You may have taken too much time before submitting your edit or someone may have already replied to it.";
+
+var alertAuthorCannotBeBlank = "Name must not be blank.";
+var alertEmailCannotBeBlank = "Email Address must not be blank.";
+var alertAuthorAndEmailCannotBeBlank = "Name and email address are both required!";
+var alertEmailIsInvalid = "The Email Address you entered is invalid. Please enter a valid email address.";
+var alertUnauthorizedAction = "The comments on this post are closed.";
+var msgPostReplyTo = "Reply to ";  
+var msgInReplyTo = "In reply to ";
+var msgPostAComment = "Post a comment ";
+var atpCommentsPath = "/.shared/js/atpcomments_yui.js?v=5";
+var hasChanged = 0;
+var hostName = ".codinghorror.com";
+var tp_comment_token = "1273007843-234a1de9236710387a4aeb1c70188eaa98a96c2d:YvVhVlO7FQf97O5Z";
+
+var isPage = 0;
+var blog_xid = "6a0120a85dcdae970b0128776faab5970c";
+var xid = "";
+var injectCode = '<div id=\"comment-preview\" class=\"hiddenBox\">\n\t<h3 id=\"header-verify-comment\" class=\"comments-header hiddenBox\">Verify your Comment<\/h3>\n    <h3 id=\"header-preview-comment\" class=\"comments-header hiddenBox\">Previewing your Comment<\/h3>\n\t<div class=\"comments-content\">\n\t\t<div class=\"comment\">\n\t\t\t<div id=\"comment-preview-content\" class=\"comment-content\">\n\t\t\t<\/div>\n\t\t\t<p class=\"comment-footer\">\n\t\t\t\tPosted by: \n\t\t\t\t<span id=\"comment-preview-author\"><\/span>&nbsp;|&nbsp;<span id=\"comment-preview-datetime\"><\/span>\n\t\t\t<\/p>\n\t\t<\/div>\n\t<\/div>\n<\/div>\n<div id=\"comment-preview-confirmation\" class=\"hiddenBox yellowBox\">\n    <p>This is only a preview. Your comment has not yet been posted.<\/p>\n   \t<form id=\"comment-preview-form\"\n   \t\tmethod=\"post\"\n   \t\tonsubmit=\"atpComments.interceptPost(); return false;\">\n\t\t<input type=\"submit\" name=\"post\" id=\"comment-confirm-post\" value=\"&nbsp;Post&nbsp;\" onclick=\"atpComments.interceptPost(); return false;\"/>\t\t    \n\t\t<input type=\"submit\" name=\"edit\" id=\"comment-edit\" value=\"&nbsp;&nbsp;Edit&nbsp;&nbsp;\" onclick=\"atpComments.previewOnly(2); return false;\"/>\n        <span id=\"previewFormSpinner\" class=\"hiddenBox\"><img src="http://www.codinghorror.com/blog/2009/06/\&quot;/.shared/images/spinner.gif\&quot;" alt=\"Working...\" /><\/span>\n\t<\/form>\n<\/div>\n<div id=\"comment-error\" class=\"hiddenBox redBox\">\t    \n   Your comment could not be posted. Error type: <span id=\"comment-error-msg\"><\/span> \n<\/div>\t\n<div id=\"comment-complete\" class=\"hiddenBox yellowGreenBox\">\n    Your comment has been posted. <a href="http://www.codinghorror.com/blog/2009/06/\&quot;javascript:void" 0;\" onclick=\"window.location.hash=\'#comment-form\';window.location.reload(false)\">Post another comment<\/a>\n<\/div>\t\n<div id=\"comment-captcha\" class=\"hiddenBox yellowBox\">\t\n    <div id=\"captchaText\">\n\t    <p id=\"captchaFailMsg\" class=\"captchaErrorText hiddenBox\">The letters and numbers you entered did not match the image. Please try again.<\/p>\t    \t        \n\t    <p>As a final step before posting your comment, enter the letters and numbers you see in the image below. This prevents automated programs from posting comments.<\/p>\n\t    <p><span id=\"comment-captcha-viewalt\">Having trouble reading this image? <a href="http://www.codinghorror.com/blog/2009/06/\&quot;#comment-captcha\"" onClick=\"atpComments.generateCaptcha();\">View an alternate.<\/a><\/span><\/p>\n    <\/div>\n    <p class=\"\"><img id=\"captchaImg\" /><\/p>\t\t\n    <form id=\"comment-captcha-form\" \n\t\t  method=\"post\"\n\t\t  onsubmit=\"atpComments.submitWithCaptcha(); return false;\">\n\t\t<input type=\"hidden\" name=\"captcha_chal\" id=\"comment-captcha-chal\" value=\"\" />\n        <p>\n\t        <input id=\"comment-captcha-text\" name=\"captcha_text\" size=\"10\" />\n        <\/p>\n        <p>\n            <input type=\"submit\" name=\"continue\" id=\"captcha-continue\" value=\"&nbsp;Continue&nbsp;\" />\n            <span id=\"captchaFormSpinner\" class=\"commentSpinner hiddenBox\"><img src="http://www.codinghorror.com/blog/2009/06/\&quot;/.shared/images/spinner.gif\&quot;" alt=\"Working...\" /><\/span>\n        <\/p>\n    <\/form>\n<\/div>\n'; 
+var entryPermalink = "http://www.codinghorror.com/blog/2009/06/scaling-up-vs-scaling-out-hidden-costs.html";
+var inlineReply = document.createElement("div");
+var commentFooterLinks;
+var commentHeader;
+var commentReplyXID;
+var commentReplyAuthor;
+var commentReplyComplete;
+var inlineReplyLoaded = 0;
+var commentFormNum = undefined; /* Deprecated but still exists in advanced template sets, so must be defined */
+
+function xidToCommentPermalink (entryUrl, xid) {
+    return entryUrl + "?cid=" + xid + "#comment-" + xid;
+}
+
+
+/* Deprecated advanced template functions */
+function handleSubmit() { return true; };
+function handleChange() { return true; };
+</script>
+<script type="text/javascript" src="yuiloader-beta-min.js"></script>
+<script type="text/javascript" src="atpcomments.js%3Fv=5"></script>
+
+
+
+ 
+
+<!-- Blogside Toolbar -->
+<script type="text/javascript">
+    var TPToolbar = {
+        src:   "http://www.typepad.com/services/toolbar?blog_id=6a0120a85dcdae970b0128776faab5970c&asset_id=6a0120a85dcdae970b012877709470970c&atype=Individual&to=http%3A%2F%2Fwww.codinghorror.com%2Fblog%2F2009%2F06%2Fscaling-up-vs-scaling-out-hidden-costs.html&autofollowed=0",
+        asset_xid: "6a0120a85dcdae970b012877709470970c",
+    
+        bookmarklet_uri: "http://static.typepad.com/.shared/js/qp/loader-combined-min.js"
+    };
+    var TYPEPAD___bookmarklet_domain = "http://www.typepad.com/";
+</script>
+<script type="text/javascript" src="blogside-toolbar-combined-min.js"></script>
+<!-- End Blogside Toolbar -->
+<!-- ph=1 -->
+<!-- nhm:from_kauri -->

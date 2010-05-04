@@ -1,0 +1,88 @@
+\documentclass[12pt]{report}
+
+%-------------------------------------------------------------------------------
+% PAKIETY
+%-------------------------------------------------------------------------------
+
+% obsluga jezyka polskiego
+\usepackage[utf8x]{inputenc}
+\usepackage[OT4]{fontenc}
+\usepackage{polski}
+
+% dzielenie wyrazow
+\usepackage{hyphenat}
+
+% dla /todo
+\usepackage{todonotes}
+
+% skorowidz
+\usepackage{makeidx}
+
+\makeindex
+
+\bibliographystyle{plain}
+
+%-------------------------------------------------------------------------------
+% Dane pracy
+%-------------------------------------------------------------------------------
+
+\author{Adam Pohorecki}
+\title{Optymalizacja wyboru środowiska realizacji baz danych dla potrzeb wysokowydajnych systemów informacyjnych}
+
+%-------------------------------------------------------------------------------
+% Treść pracy
+%-------------------------------------------------------------------------------
+
+\begin{document}
+
+% slowa, ktore nie powinny byc dzielone na koncu linii
+\hyphenation{
+Amazon
+BigTable
+Cassandra 
+Facebook
+Google
+HBase
+MySQL 
+NoSQL 
+SimpleDB
+Twitter 
+}
+
+% moje komendy
+\input{komendy}
+
+%-------------------------------------------------------------------------------
+% Część początkowa
+%-------------------------------------------------------------------------------
+
+\maketitle
+
+\tableofcontents
+
+%-------------------------------------------------------------------------------
+% Główna treść pracy
+%-------------------------------------------------------------------------------
+
+% rozdzialy pracy
+\include{chapters/definicja_problemu/definicja_problemu}
+\include{chapters/studium_literatury/studium_literatury}
+\include{chapters/opis_rozwiazan/opis_rozwiazan}
+\include{chapters/porownanie_rozwiazan/porownanie_rozwiazan}
+\include{chapters/wnioski/wnioski}
+
+\bibliography{bibliografia}
+
+%-------------------------------------------------------------------------------
+% Załączniki
+%-------------------------------------------------------------------------------
+
+\printindex
+\listoffigures
+\listoftables
+
+% na potrzeby pisania pracy
+\newpage
+\listoftodos
+
+\end{document}

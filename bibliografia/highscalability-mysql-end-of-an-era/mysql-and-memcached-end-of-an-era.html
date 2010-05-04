@@ -1,0 +1,1659 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+
+<head>
+
+   <meta name="Robots" content="index,follow" /> 
+  
+  
+  <!-- highscalability -->
+
+  <link rel="shortcut icon" href="favicon.png" type="image/png" />
+
+  <link id="primaryStylesheet" rel="stylesheet" type="text/css" href="common.css%3FstyleId=512250&amp;RK=1259252671423&amp;CE=21.css"/>
+  
+  
+  
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="http://feeds.feedburner.com/HighScalability" />
+  
+
+  <script type="text/javascript" src="yahoo-dom-event.js%3FCE=21"></script>
+<script type="text/javascript" src="connection_core-min.js%3FCE=21"></script>
+<script type="text/javascript" src="json-min.js%3FCE=21"></script>
+<script type="text/javascript" src="animation-min.js%3FCE=21"></script>
+<script type="text/javascript" src="global.js%3FCE=21"></script>
+<script type="text/javascript" src="lightbox.js%3FCE=21"></script>
+<script type="text/javascript" src="api.js%3FCE=21"></script>
+
+
+  <script type="text/javascript">
+  // <![CDATA[
+
+    Squarespace.Constants.SS_AUTHKEY = "MNBZFJDS";
+    Squarespace.Constants.WEBSITE_TITLE =  "High Scalability"; 
+    
+     Squarespace.Constants.CURRENT_MODULE_ID = "4867632"; 
+    
+    
+    
+    Squarespace.Constants.ADMINISTRATION_UI =  false; 
+    
+    
+     Squarespace.Constants.OBJECT_PERMALINK = "http://highscalability.com/blog/2010/2/26/mysql-and-memcached-end-of-an-era.html"; 
+
+    
+
+    
+
+  // ]]>
+  </script>
+
+      <title>High Scalability - High Scalability - MySQL and Memcached: End of an&nbsp;Era?</title>
+  
+
+  <!-- End Heading -->
+
+  <!-- PUT THIS TAG IN THE head SECTION -->
+<script type="text/javascript" src="http://partner.googleadservices.com/gampad/google_service.js">
+</script>
+<script type="text/javascript">
+  GS_googleAddAdSenseService("ca-pub-9451539202293335");
+  GS_googleEnableAllServices();
+</script>
+<script type="text/javascript">
+  GA_googleAddSlot("ca-pub-9451539202293335", "SS_HS_Ad1");
+  GA_googleAddSlot("ca-pub-9451539202293335", "SS_HS_Ad2");
+  GA_googleAddSlot("ca-pub-9451539202293335", "SS_HS_Ad3");
+  GA_googleAddSlot("ca-pub-9451539202293335", "SS_HS_Ad4");
+  GA_googleAddSlot("ca-pub-9451539202293335", "SS_HS_Ad5");
+  GA_googleAddSlot("ca-pub-9451539202293335", "SS_HS_Ad6");
+</script>
+<script type="text/javascript">
+  GA_googleFetchAds();
+</script>
+<meta name="google-site-verification" content="x_MfyyUSDcCHqucvw1VPsnXuw5k-hvI72Ce2LLEyrn8" />
+<!-- END OF TAG FOR head SECTION -->
+
+
+</head>
+
+<body  id="modulePage4867632"   class="objectId6844243"  >
+
+  <script type="text/javascript">
+  YAHOO.util.Event.onDOMReady(function() {
+    if (document.location.href.indexOf("SSLogoutOk=true") != -1) {
+      new Squarespace.FixedPositionTip("Logout Successful", "You have been successfully logged out.", { xMargin: 15, yMargin: 15, icon: "/universal/images/helptip-info.png", orientation: "upper-right", viewportFixed: true, autoHide: 1800 }).show();
+    }
+  });
+</script>
+
+    
+
+  <script type="text/javascript">
+    YAHOO.util.Event.addListener(document, "keyup", function (e) { if (!e) { e = event; } if (e.keyCode == 27) { document.location.href = "/login/?returnUrl=%2Fblog%2F2010%2F2%2F26%2Fmysql-and-memcached-end-of-an-era.html"; } });
+  </script>
+
+
+
+
+  
+
+  <div id="canvasWrapper"><div id="canvas">
+  
+  
+
+  <div id="pageHeaderWrapper"><div id="pageHeader">
+
+      <div id="navigationTop"><div id="navigationTop-sectionContent2191792" class="horizontalNavigationBar"><ul class="content-navigation">
+    
+  <li class="module active-module  " id="navigationTop-moduleContentWrapper4867632">
+
+    <div id="navigationTop-moduleContent4867632">
+
+              <a id="navigationTop-moduleLink4867632" class=" " href="http://highscalability.com/" ><span>Home</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationTop-moduleContentWrapper4850400">
+
+    <div id="navigationTop-moduleContent4850400">
+
+              <a id="navigationTop-moduleLink4850400" class=" " href="http://highscalability.com/start-here/" ><span>Start Here</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationTop-moduleContentWrapper4850438">
+
+    <div id="navigationTop-moduleContent4850438">
+
+              <a id="navigationTop-moduleLink4850438" class=" " href="http://highscalability.com/blog/category/example" ><span>Real Life Architectures</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationTop-moduleContentWrapper4847294">
+
+    <div id="navigationTop-moduleContent4847294">
+
+              <a id="navigationTop-moduleLink4847294" class=" " href="http://highscalability.com/all-posts/" ><span>All Posts</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationTop-moduleContentWrapper4850431">
+
+    <div id="navigationTop-moduleContent4850431">
+
+              <a id="navigationTop-moduleLink4850431" class=" " href="http://highscalability.com/advertising/" ><span>Advertising</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationTop-moduleContentWrapper4850388">
+
+    <div id="navigationTop-moduleContent4850388">
+
+              <a id="navigationTop-moduleLink4850388" class=" " href="http://highscalability.com/contact/" ><span>contact</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationTop-moduleContentWrapper5498762">
+
+    <div id="navigationTop-moduleContent5498762">
+
+              <a id="navigationTop-moduleLink5498762" class=" " href="http://astore.amazon.com/possiboutpos-20" ><span>Book Store</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationTop-moduleContentWrapper5861345">
+
+    <div id="navigationTop-moduleContent5861345">
+
+              <a id="navigationTop-moduleLink5861345" class=" " href="http://feeds.feedburner.com/HighScalability" ><span>RSS</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  </ul><br class="clearer"/></div></div>
+
+    
+        
+      
+  
+      <div id="bannerAreaWrapper"><div id="bannerArea">
+
+        
+        <div id="bannerWrapper">
+          <a href="http://highscalability.com/"><img id="banner" src="HSBannerTrebuchet.jpg" alt="High Scalability" title="High Scalability"/></a>
+        </div>  
+
+      
+      
+      </div></div>
+    
+    
+    
+
+      <div id="navigationBottom"><div id="navigationBottom-sectionContent2191792" class="horizontalNavigationBar"><ul class="content-navigation">
+    
+  <li class="module active-module  " id="navigationBottom-moduleContentWrapper4867632">
+
+    <div id="navigationBottom-moduleContent4867632">
+
+              <a id="navigationBottom-moduleLink4867632" class=" " href="http://highscalability.com/" ><span>Home</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationBottom-moduleContentWrapper4850400">
+
+    <div id="navigationBottom-moduleContent4850400">
+
+              <a id="navigationBottom-moduleLink4850400" class=" " href="http://highscalability.com/start-here/" ><span>Start Here</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationBottom-moduleContentWrapper4850438">
+
+    <div id="navigationBottom-moduleContent4850438">
+
+              <a id="navigationBottom-moduleLink4850438" class=" " href="http://highscalability.com/blog/category/example" ><span>Real Life Architectures</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationBottom-moduleContentWrapper4847294">
+
+    <div id="navigationBottom-moduleContent4847294">
+
+              <a id="navigationBottom-moduleLink4847294" class=" " href="http://highscalability.com/all-posts/" ><span>All Posts</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationBottom-moduleContentWrapper4850431">
+
+    <div id="navigationBottom-moduleContent4850431">
+
+              <a id="navigationBottom-moduleLink4850431" class=" " href="http://highscalability.com/advertising/" ><span>Advertising</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationBottom-moduleContentWrapper4850388">
+
+    <div id="navigationBottom-moduleContent4850388">
+
+              <a id="navigationBottom-moduleLink4850388" class=" " href="http://highscalability.com/contact/" ><span>contact</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationBottom-moduleContentWrapper5498762">
+
+    <div id="navigationBottom-moduleContent5498762">
+
+              <a id="navigationBottom-moduleLink5498762" class=" " href="http://astore.amazon.com/possiboutpos-20" ><span>Book Store</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationBottom-moduleContentWrapper5861345">
+
+    <div id="navigationBottom-moduleContent5861345">
+
+              <a id="navigationBottom-moduleLink5861345" class=" " href="http://feeds.feedburner.com/HighScalability" ><span>RSS</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  </ul><br class="clearer"/></div></div>
+
+
+  </div></div>
+  
+  
+
+  
+
+  
+  <div id="pageBodyWrapper"><div id="pageBody">
+  
+  <div id="sidebar1Wrapper" class="verticalNavigationBarWrapper"><div class="iw-vnb1"><div class="iw-vnb2"><div class="iw-vnb3"><div class="iw-vnb4"><div id="sidebar1" class="verticalNavigationBar">
+
+  
+
+    <div id="sectionContent2191792" class="sectionWrapper promotedContainer "><div class="iw-s1"><div class="iw-s2"><div class="iw-s3"><div class="iw-s4"><div class="section">
+
+       <div class="caption">Top</div> 
+
+      
+        
+          <ul class="content-navigation">
+  <li class="module active-module  " id="moduleContentWrapper4867632">
+
+    <div id="moduleContent4867632">
+
+              <a id="moduleLink4867632" class=" " href="http://highscalability.com/" ><span>Home</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4850400">
+
+    <div id="moduleContent4850400">
+
+              <a id="moduleLink4850400" class=" " href="http://highscalability.com/start-here/" ><span>Start Here</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4850438">
+
+    <div id="moduleContent4850438">
+
+              <a id="moduleLink4850438" class=" " href="http://highscalability.com/blog/category/example" ><span>Real Life Architectures</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4847294">
+
+    <div id="moduleContent4847294">
+
+              <a id="moduleLink4847294" class=" " href="http://highscalability.com/all-posts/" ><span>All Posts</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4850431">
+
+    <div id="moduleContent4850431">
+
+              <a id="moduleLink4850431" class=" " href="http://highscalability.com/advertising/" ><span>Advertising</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4850388">
+
+    <div id="moduleContent4850388">
+
+              <a id="moduleLink4850388" class=" " href="http://highscalability.com/contact/" ><span>contact</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper5498762">
+
+    <div id="moduleContent5498762">
+
+              <a id="moduleLink5498762" class=" " href="http://astore.amazon.com/possiboutpos-20" ><span>Book Store</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper5861345">
+
+    <div id="moduleContent5861345">
+
+              <a id="moduleLink5861345" class=" " href="http://feeds.feedburner.com/HighScalability" ><span>RSS</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+</ul>
+
+        
+
+      
+  
+    </div></div></div></div></div></div>
+
+  
+
+    <div id="sectionContent2251797" class="sectionWrapper  "><div class="iw-s1"><div class="iw-s2"><div class="iw-s3"><div class="iw-s4"><div class="section">
+
+      
+
+      
+        
+          <div class="content-passthrough"><div id="moduleContentWrapper4876569" class="widget-wrapper  widget-type-search"><div id="moduleContent4876569">
+
+
+<form method="get" action="http://highscalability.com/display/Search">
+
+<div class="search-form-pt-wrapper">
+  <div class="search-form-pt">
+    <span class="queryFieldWrapper"><input type="text" class="text queryField" name="searchQuery" value=""/></span>
+    <span class="queryButtonWrapper"><input type="submit" class="button queryButton" value="&raquo;"/></span>
+    <input type="hidden" name="moduleId" value="4876569"/>
+    <br class="clearer"/>
+  </div>
+</div> 
+
+</form></div></div></div>
+
+        
+
+      
+  
+    </div></div></div></div></div></div>
+
+  
+
+    <div id="sectionContent2248744" class="sectionWrapper  "><div class="iw-s1"><div class="iw-s2"><div class="iw-s3"><div class="iw-s4"><div class="section">
+
+       <div class="caption">Recent Posts</div> 
+
+      
+        
+          <div class="content-passthrough"><div id="moduleContentWrapper4867742" class="widget-wrapper  widget-type-journalarchive"><div id="moduleContent4867742">
+
+
+
+
+
+
+
+  <ul class="archive-item-list-pt">
+     <li><a href="http://highscalability.com/blog/2010/5/4/business-continuity-with-real-time-data-integration.html">Business continuity with real-time data integration</a></li>  <li><a href="http://highscalability.com/blog/2010/5/3/mocospace-architecture-3-billion-mobile-page-views-a-month.html">MocoSpace Architecture - 3 Billion Mobile Page Views a Month</a></li>  <li><a href="http://highscalability.com/blog/2010/5/3/100-node-hazelcast-cluster-on-amazon-ec2.html">100 Node Hazelcast cluster on Amazon EC2</a></li>  <li><a href="http://highscalability.com/blog/2010/4/30/hot-scalability-links-for-april-30-2010.html">Hot Scalability Links for April 30, 2010</a></li>  <li><a href="http://highscalability.com/blog/2010/4/30/behind-the-scenes-of-an-online-marketplace.html">Behind the scenes of an online marketplace</a></li>  <li><a href="http://highscalability.com/blog/2010/4/29/product-scidb-a-science-oriented-dbms-at-100-petabytes.html">Product: SciDB - A Science-Oriented DBMS at 100 Petabytes</a></li>  <li><a href="http://highscalability.com/blog/2010/4/28/elasticity-for-the-enterprise-ensuring-continuous-high-avail.html">Elasticity for the Enterprise -- Ensuring Continuous High Availability in a Disaster Failure Scenario</a></li>  <li><a href="http://highscalability.com/blog/2010/4/27/paper-dapper-googles-large-scale-distributed-systems-tracing.html">Paper:  Dapper, Google's Large-Scale Distributed Systems Tracing Infrastructure</a></li>  <li><a href="http://highscalability.com/blog/2010/4/20/sponsored-post-event-social-developer-summit.html">Sponsored Post: Event - Social Developer Summit</a></li>  <li><a href="http://highscalability.com/blog/2010/4/19/the-cost-of-high-availability-ha-with-oracle.html">The cost of High Availability (HA) with Oracle </a></li> 
+  </ul>
+
+
+
+</div></div></div>
+
+        
+
+      
+  
+    </div></div></div></div></div></div>
+
+  
+
+    <div id="sectionContent2248756" class="sectionWrapper  "><div class="iw-s1"><div class="iw-s2"><div class="iw-s3"><div class="iw-s4"><div class="section">
+
+       <div class="caption">All Time Favorites</div> 
+
+      
+        
+          <div class="content-passthrough"><div id="moduleContentWrapper4869720" class="widget-wrapper  widget-type-page"><div id="moduleContent4869720">
+
+
+
+
+
+  <p>&gt;&nbsp;<a href="http://highscalability.com/youtube-architecture">YouTube Architecture</a><br />&gt;&nbsp;<a href="http://highscalability.com/plentyoffish-architecture">Plenty Of Fish Architecture</a><br />&gt;&nbsp;<a href="http://highscalability.com/google-architecture">Google Architecture</a><br />&gt;&nbsp;<a href="http://highscalability.com/scaling-twitter-making-twitter-10000-percent-faster">Scaling Twitter: Making Twitter 10000 Percent Faster</a><br />&gt;&nbsp;<a href="http://highscalability.com/flickr-architecture">Flickr Architecture</a><br />&gt;&nbsp;<a href="http://highscalability.com/amazon-architecture">Amazon Architecture</a><br />&gt;&nbsp;<a href="http://highscalability.com/how-i-learned-stop-worrying-and-love-using-lot-disk-space-scale">How I Learned to Stop Worrying and Love Using a Lot of Disk Space to Scale</a><br />&gt;&nbsp;<a href="http://highscalability.com/blog/2009/8/5/stack-overflow-architecture.html">Stack Overflow Architecture</a> <br />&gt;&nbsp;<a href="http://highscalability.com/blog/category/facebook">Facebook</a><br /> &gt;&nbsp;<a href="http://highscalability.com/blog/2009/8/6/an-unorthodox-approach-to-database-design-the-coming-of-the.html">An Unorthodox Approach to Database Design : The Coming of the Shard</a>&nbsp;<br /> &gt; <a href="http://highscalability.com/blog/2009/12/16/building-super-scalable-systems-blade-runner-meets-autonomic.html">Building Super Scalable Systems: Blade Runner Meets Autonomic Computing in the Ambient&nbsp;Cloud</a><br /> &gt;&nbsp;<a href="http://highscalability.com/blog/2009/3/16/are-cloud-based-memory-architectures-the-next-big-thing.html">Are Cloud Based Memory Architectures the Next Big Thing?</a><br /> &gt;&nbsp;<a href="http://highscalability.com/blog/2009/7/25/latency-is-everywhere-and-it-costs-you-sales-how-to-crush-it.html">Latency is Everywhere and it Costs You Sales - How to Crush it</a></p>
+</div></div></div>
+
+        
+
+      
+  
+    </div></div></div></div></div></div>
+
+  
+
+    <div id="sectionContent2248734" class="sectionWrapper  "><div class="iw-s1"><div class="iw-s2"><div class="iw-s3"><div class="iw-s4"><div class="section">
+
+      
+
+      
+        
+          <div class="content-passthrough"><div id="moduleContentWrapper4867711" class="widget-wrapper  widget-type-rss-syndicate"><div id="moduleContent4867711">
+
+
+
+  <ul class="feed-list-inline">
+    
+          <li><a href="http://feeds.feedburner.com/HighScalability" class="feed-link">High Scalability RSS</a></li>
+        
+          <li><a href="http://highscalability.com/blog/rss-comments.xml" class="feed-link">High Scalability Comments RSS</a></li>
+        
+  </ul>
+
+</div></div></div>
+
+        
+
+      
+  
+    </div></div></div></div></div></div>
+
+  
+
+  
+
+</div></div></div></div></div></div>
+  <div id="sidebar2Wrapper" class="verticalNavigationBarWrapper"><div class="iw-vnb1"><div class="iw-vnb2"><div class="iw-vnb3"><div class="iw-vnb4"><div id="sidebar2" class="verticalNavigationBar">
+
+  
+
+    <div id="sectionContent2249261" class="sectionWrapper  "><div class="iw-s1"><div class="iw-s2"><div class="iw-s3"><div class="iw-s4"><div class="section">
+
+      
+
+      
+        
+          <div class="content-passthrough"><div id="moduleContentWrapper4869210" class="widget-wrapper  widget-type-page"><div id="moduleContent4869210">
+
+
+
+
+
+  <CENTER>
+  <script type="text/javascript">
+    GA_googleFillSlot("SS_HS_Ad1");
+  </script>
+  <script type="text/javascript">
+    GA_googleFillSlot("SS_HS_Ad2");
+  </script>
+  <script type="text/javascript">
+    GA_googleFillSlot("SS_HS_Ad3");
+  </script>
+  <script type="text/javascript">
+    GA_googleFillSlot("SS_HS_Ad4");
+  </script>
+  <script type="text/javascript">
+    GA_googleFillSlot("SS_HS_Ad5");
+  </script>
+  <script type="text/javascript">
+    GA_googleFillSlot("SS_HS_Ad6");
+  </script>
+  <center><a href="http://highscalability.com/advertising">advertise</A></center>
+  
+  </CENTER>
+</div></div></div>
+
+        
+
+      
+  
+    </div></div></div></div></div></div>
+
+  
+
+    <div id="sectionContent2191793" class="sectionWrapper  "><div class="iw-s1"><div class="iw-s2"><div class="iw-s3"><div class="iw-s4"><div class="section">
+
+      
+
+      
+        
+          <ul class="content-navigation">
+  <li class="module   " id="moduleContentWrapper4708561">
+
+    <div id="moduleContent4708561">
+
+              <a id="moduleLink4708561" class=" " href="http://highscalability.com/login/?returnUrl=%2Fblog%2F2010%2F2%2F26%2Fmysql-and-memcached-end-of-an-era.html" ><span>Login</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4869034">
+
+    <div id="moduleContent4869034">
+
+              <a id="moduleLink4869034" class=" " href="http://highscalability.com/register/" ><span>Register</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4870172">
+
+    <div id="moduleContent4870172">
+
+              <a id="moduleLink4870172" class=" " href="http://highscalability.squarespace.com/blog/category/product" ><span>Useful Products</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4870194">
+
+    <div id="moduleContent4870194">
+
+              <a id="moduleLink4870194" class=" " href="http://highscalability.squarespace.com/blog/category/paper" ><span>Useful Papers</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4870201">
+
+    <div id="moduleContent4870201">
+
+              <a id="moduleLink4870201" class=" " href="http://highscalability.squarespace.com/blog/category/strategy" ><span>Useful Strategies</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4885586">
+
+    <div id="moduleContent4885586">
+
+              <a id="moduleLink4885586" class=" " href="http://highscalability.com/blog/category/blog" ><span>Useful Blogs</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4920227">
+
+    <div id="moduleContent4920227">
+
+              <a id="moduleLink4920227" class=" " href="http://highscalability.com/blog/category/book" ><span>Useful Books</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4878991">
+
+    <div id="moduleContent4878991">
+
+              <a id="moduleLink4878991" class="offsite-link " href="http://astore.amazon.com/possiboutpos-20" onclick="this.target='new';"><span>Book Store</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+</ul>
+
+        
+
+      
+  
+    </div></div></div></div></div></div>
+
+  
+
+  
+
+</div></div></div></div></div></div>
+  
+  
+
+  <div id="contentWrapper"><div id="content">
+    
+          
+    
+
+
+  
+
+ 
+      
+  <div class="journal-entry-navigation">
+
+    
+       <a href="http://highscalability.com/blog/2010/3/2/using-the-ambient-cloud-as-an-application-runtime.html">&laquo; Using the Ambient Cloud as an Application Runtime</a> | 
+      <a href="http://highscalability.com/blog/">Main</a>
+       | <a href="http://highscalability.com/blog/2010/2/25/paper-high-performance-scalable-data-stores.html">Paper: High Performance Scalable Data Stores  &raquo;</a> 
+
+    
+
+  </div>
+
+
+  
+  
+  <div class="single-journal-entry-wrapper">
+    
+
+
+<div class="journal-entry-wrapper post-text authored-by-highscalability category-memcached category-mysql category-nosql">
+<div id="item6844243" class="journal-entry">
+
+  <div class="journal-entry-float-day"><span class="name">Friday</span></div><div class="journal-entry-float-date"><span class="month">Feb</span><span class="date">26</span><span class="year">2010</span></div>
+  
+  
+  
+  <div class="journal-entry-text">
+  
+      
+      <h2 class="title">
+    
+        
+    
+        <a href="mysql-and-memcached-end-of-an-era.html">MySQL and Memcached: End of an&nbsp;Era?</a>  
+     
+         
+    
+      </h2>
+      
+       <div class="journal-entry-tag journal-entry-tag-post-title"><span class="posted-on">   <img title="Date" alt="Date" class="inline-icon date-icon" src="transparent.png" />Friday, February 26, 2010 at 9:06AM</span> </div> 
+
+    
+  
+      
+      <div class="body">
+  
+        
+        
+        
+          <p><img src="http://farm3.static.flickr.com/2711/4389679059_fef885e3bc_o.jpg" alt="" align="RIGHT" /></p>
+<p>If you look at the early days of this blog, when web scalability was still in its heady bloom of youth, many of the articles had to do with leveraging <a href="http://highscalability.com/blog/category/mysql">MySQL</a> and <a href="http://highscalability.com/blog/category/memcached">memcached</a>. Exciting times. Shard MySQL to handle high write loads, cache objects in memcached to handle high read loads, and then write a lot of glue code to make it all work together. That was state of the art, that was how it was done. The architecture of many major sites still follow this pattern today, largely because with enough elbow grease, it works.</p>
+<p>This was a pre-cloud, relational database dominated world, built from parts scrounged from the remnants of enterprises and datacenters past. <a href="http://highscalability.com/blog/2009/6/27/scaling-twitter-making-twitter-10000-percent-faster.html">Twitter</a> and <a href="http://highscalability.com/blog/2009/4/4/digg-architecture.html">Digg</a> started in this era, but are evolving into something different, as scaling pressures increase and new purpose built technologies pop into being.</p>
+<p>With a little perspective, it's clear the MySQL+memcached era is passing. It will stick around for a while. Old technologies seldom fade away completely. Some still ride horses. Some still use CDs. And the Internet will not completely replace that archaic electro-magnetic broadcast technology called TV, but the majority will move on into a new era.</p>
+<p>LinkedIn has moved on with their <a href="http://blog.linkedin.com/2009/03/20/project-voldemort-scaling-simple-storage-at-linkedin/">Project Voldemort</a>. Amazon went there <a href="http://highscalability.com/blog/category/amazon">a while ago</a>.</p>
+<p>Digg declared their entrance into a new era in a post on their blog titled <a href="http://about.digg.com/blog/looking-future-cassandra">Looking to the future with Cassandra</a>, saying:</p>
+<blockquote>
+<p>The fundamental problem is endemic to the relational database mindset, which places the burden of computation on reads rather than writes. This is completely wrong for large-scale web applications, where response time is critical. It&rsquo;s made much worse by the serial nature of most applications. Each component of the page blocks on reads from the data store, as well as the completion of the operations that come before it. Non-relational data stores reverse this model completely, because they don&rsquo;t have the complex read operations of SQL.</p>
+</blockquote>
+<p>Twitter has also declared their move in the article <a title="Permalink Cassandra @ Twitter: An Interview with Ryan King" rel="permalink" href="http://nosql.mypopescu.com/post/407159447/cassandra-twitter-an-interview-with-ryan-king">Cassandra @ Twitter: An Interview with Ryan King</a>. Their reason for changing is:</p>
+<blockquote>
+<p>We have a lot of data, the growth factor in that data is huge and the rate of growth is accelerating. We have a system in place based on shared mysql + memcache but its quickly becoming prohibitively costly (in terms of manpower) to operate. We need a system that can grow in a more automated fashion and be highly available.</p>
+</blockquote>
+<p>It's clear that many of the ideas behind MySQL+memcached were on the mark, we see them preserved in the new systems, it's just that the implementation was a bit clunky. Developers have moved in, filled the gaps, sanded the corners, and made a new sturdy platform which will itself form the basis for a new ecosystem and a new era.</p>
+<p>It's always a bit sad to see an era pass, but it's not all that often we get to notice as it's happening. We can enjoy what has gone before, but we can also get pumped to jump in with both feet and create the future. And excitingly, that's what many leading edge companies are doing today.</p>
+<h2>Related Articles</h2>
+<ul>
+<li><a href="http://mysqlha.blogspot.com/2010/03/plays-well-with-others.html">Plays well with others</a> by Mark Callaghan. <em>I think that MySQL+memcached is still the default choice and I don't think it is going away in the high-scale market</em>.The death of Memcached is greatly exaggerated</li>
+<li><a href="http://www.gear6.com/death-memcached-greatly-exaggerated">The death of Memcached is greatly exaggerated</a> by <span class="submitted"> <a href="http://www.gear6.com/blog/87">Mark Atwood</a>. </span><em>Memcached is going to stick around.</em></li>
+<li><a rel="bookmark" href="http://www.dbms2.com/2010/03/02/cassandra-nosql-scalable-oltp/">Cassandra and the NoSQL scalable OLTP argument</a> by Curt Monash. Cool, Curt Monash comented on my article. He poked a little fun at me of course, but that's OK, it's Curt Monash. Love his blog.</li>
+<li><a href="http://www.yafla.com/dforbes/Getting_Real_about_NoSQL_and_the_SQL_Isnt_Scalable_Lie/">Getting Real about NoSQL and the SQL-Isn't-Scalable Lie</a> by <a href="mailto:dforbes@yafla.com">Dennis Forbes</a>.</li>
+<li> <a href="http://machinesplusminds.blogspot.com/2010/03/mysqlmemcached-is-still-workhorse.html">MySQL+Memcached is still the workhorse</a> by Mark Atwood. <em>Running a real live system is running a farm, ploughing a field. &nbsp;You want a workhorse that you know how to use, you know you can get gear for at the blacksmith and the tackle shop, and that you know you can hire field hands who know how to use it well and take of properly.</em></li>
+<li><a class="TitleLinkStyle" rel="bookmark" href="http://www.25hoursaday.com/weblog/2010/03/10/BuildingScalableDatabasesAreRelationalDatabasesCompatibleWithLargeScaleWebsites.aspx">Building Scalable Databases: Are Relational Databases Compatible with Large Scale Websites?</a> by Dare Obasanjo.<em> I expect we&rsquo;ll see more large scale websites decide that instead of treating a SQL database as a denormalized key-value pair store that they would rather use a NoSQL database</em>.</li>
+</ul>
+
+        
+  
+          
+  
+         
+  
+      </div>
+
+    
+
+  </div>
+
+      <div class="journal-entry-tag journal-entry-tag-post-body">
+      <div class="journal-entry-tag-post-body-line1"><span class="posted-by">  <a href="http://highscalability.com/blog/author/highscalability"> <img title="Author" alt="Author" class="inline-icon user-registered-icon" src="transparent.png" />Todd Hoff</a></span> |  <span class="post-comments"><a href="mysql-and-memcached-end-of-an-era.html#comments"> <img title="Comment" alt="Comment" class="inline-icon comment-icon" src="transparent.png" />17 Comments</a></span> |  <span class="permalink-item"><a class="permalink" href="mysql-and-memcached-end-of-an-era.html"> <img title="Permalink" alt="Permalink" class="inline-icon permalink-icon" src="transparent.png" />Permalink </a></span> |  <span class="share-item"><a href="javascript:noop();" onclick="Squarespace.Interaction.shareLink(this,'%2Fblog%2F2010%2F2%2F26%2Fmysql-and-memcached-end-of-an-era.html','MySQL%20and%20Memcached%3A%20End%20of%20an%20Era%3F');"> <img title="Share Article" alt="Share Article" class="inline-icon share-icon" src="transparent.png" />Share Article </a></span> <span class="print-item"><a href="http://highscalability.com/blog/2010/2/26/mysql-and-memcached-end-of-an-era.html?printerFriendly=true"> <img title="Print Article" alt="Print Article" class="inline-icon print-icon" src="transparent.png" />Print Article </a></span> <span class="email-item"><a href="http://highscalability.com/blog/recommend/6844243"> <img title="Email Article" alt="Email Article" class="inline-icon email-icon" src="transparent.png" />Email Article </a></span> </div>
+      <div class="journal-entry-tag-post-body-line2"><span class="posted-in">in <span class="tag-element"><a rel="tag" href="http://highscalability.com/blog/category/memcached"> <img title="Category" alt="Category" class="inline-icon category-icon" src="transparent.png" />Memcached</a></span>, <span class="tag-element"><a rel="tag" href="http://highscalability.com/blog/category/mysql"> <img title="Category" alt="Category" class="inline-icon category-icon" src="transparent.png" />MySQL</a></span>, <span class="tag-element"><a rel="tag" href="http://highscalability.com/blog/category/nosql"> <img title="Category" alt="Category" class="inline-icon category-icon" src="transparent.png" />nosql</a></span></span>  </div>
+      <div class="journal-entry-tag-post-body-line3"></div>
+    </div>
+  
+  
+  <div class="clearer"></div>
+
+</div>
+</div>
+
+
+
+
+
+  </div>
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class="journal-comment-area-wrapper">
+    <div id="comments" class="journal-comment-area">
+
+      <h3 class="caption">Reader Comments  (17) </h3>
+
+      
+        
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment7598645">
+
+    <div id="item7598645" class="body">
+
+      <p>This is a great summary of the &quot;state of data&quot;. MySQL+ Memcached was a great first step -- but as we've seen, sharding SQL still leaves you with all of the problems of SQL, and none of the benefits of a relational model. It simply doesn't work without exponentially more elbow grease, headaches, and anger from management :)</p><p>That's what we built our new real-time data platform at <a href="http://www.drawntoscalehq.com" rel="nofollow">Drawn to Scale</a>. We noticed that customers needed to do more than just process data with things like Hadoop (which we use and love) -- a growing number of companies need to search, query, and serve any handful of a billion records instantaneously. We built the scalable replacement for what people typically do with an RDBMS.</p>
+
+    </div>
+    <div class="signature">
+
+      February 26, 2010 | 
+  <a href="http://highscalability.com/contributor/8575233" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Bradford
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment7598872">
+
+    <div id="item7598872" class="body">
+
+      <p>While I agree that there are lots of fun and interesting and powerful new patterns and components on the current bleeding leading edge, I would not say that memcached and the things that memcache is evolving into will be soon as deadend as CDs and horseback riding.  The high performance key value store is going to be a useful pattern and component of real systems, from small to huge, for a long time to come, even as all these other evolving and becoming useful pattens and components are also showing up as well.</p>
+
+    </div>
+    <div class="signature">
+
+      February 26, 2010 | 
+  <a href="http://highscalability.com/contributor/8575460" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Mark Atwood
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment7600886">
+
+    <div id="item7600886" class="body">
+
+      <p>The Chisimba project (http://avoir.uwc.ac.za) has started looking at Cassandra as well for some modules. So far the experiments that I have done look excellent and will compliment our already rock solid scalable architecture.</p><p>I see two different ways that high scalability can be achieved:</p><p>1. Use a nosql option to scale out database and continually add more physical and virtual machines as nodes to scale your app to infinitum</p><p>2. Use linked processors and processes in &quot;web threads&quot; http://www.paulscott.za.net/index.php?module=jabberblog&amp;postid=ps123_5432_1251745446&amp;action=viewsingle to scale your app in a much more distributed pattern</p><p>There, is, of course, no reason not to do both! I think that we need to start putting &quot;web&quot; back into the web, with both data, processes, people and sites</p>
+
+    </div>
+    <div class="signature">
+
+      February 26, 2010 | 
+  <a href="http://highscalability.com/contributor/8577605" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Paul Scott
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment7601518">
+
+    <div id="item7601518" class="body">
+
+      <p>So nosql databases might replace sql databases in the area of large datasets. I guess they won't replace traditional OLTP databases, e. g. for billing applications (where people like me _WANT_ ACID and referential integrity). And you didn't say a word on memcached. What's the replacement for memcached? Even Google uses (some kind of) memcached (at least the appengine) cause on-the-fly mapreduce does not replace indices/caches (well Google could do that as well but they had to build some more power plants and datacenters ...)</p>
+
+    </div>
+    <div class="signature">
+
+      February 27, 2010 | 
+  <a href="http://highscalability.com/contributor/8578300" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>s0enke
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment7602309">
+
+    <div id="item7602309" class="body">
+
+      <p>As always, you have good commentary, Todd. :)  But I have to agree with Mark: the emergence of NoSQL/!SQL/anti-SQL/KeyValueStores/whatever isn't the marking dead of a scalability pattern with having a persistent datastiore (i.e. MySQL) and the caching of results for the purpose of offloading unnecessary computation and results-gathering (i.e. memcached)</p><p>I'll also go so far as to say that these new tools won't obviate the tools that came before it. Voldemort, Cassandra, MongoDB, CouchDB, etc...they all aim to be good for various scenarios, and some of those are absolutely places where MySQL was traditionally used. But that doesn't mean that all of MySQL (or memcached's) usefulness, availability, or performance is somehow done for. We should all worship at the Church of WhatWorks™ for our infrastructures and cultures, and I know more than a handful of large-scale websites that could (and will) continue quite fine with the MySQL/memcached approach. :)</p><p>Now, if you want to speculate that scalability patterns and tools that include completely normalized and monolithic datastores are going away, then I'll agree with you. I'll agree with you in 2003, even.</p>
+
+    </div>
+    <div class="signature">
+
+      February 27, 2010 | 
+  <a href="http://highscalability.com/contributor/8579103" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>John Allspaw
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-highscalability">
+  <div class="comment" id="comment7602626">
+
+    <div id="item7602626" class="body">
+
+      <p>John, by &quot;end of an era&quot; I didn't mean to imply that MySQL or memcached sucked in anyway. Not at all.  After the post it hit me I could come off as negative to technologies that have helped build the web, and that was not my intention.</p><p>That phrasing is supposed to be evocative of the sense of when you have a decision to make on which platform to select, M&amp;M or something else, I think the trend will be to move on to something else. And there are good reasons for choosing something else. You first find those decisions being made by people on the leading edge that have no choice but to invent something different. Playing it safe isn't an option. Then that group grows, the technologies mature, and at some point it's just as easy or even easier to pick something else and that's when the era will have changed. It hasn't  changed yet. But from where I sit it's a pattern I saw emerging and thought worth commenting on. I would never try to tell you which church to worship at :-)</p>
+
+    </div>
+    <div class="signature">
+
+      February 27, 2010 | 
+  <a href="http://highscalability.com/member/highscalability" title="Registered Commenter">
+  <img title="Registered Commenter" alt="Registered Commenter" class="inline-icon" src="user-registered.png"/>Todd Hoff
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment7602835">
+
+    <div id="item7602835" class="body">
+
+      <p>Todd, (and others commenting)<br/>When you (and others) say these NoSQL solutions will replace MySQL and Memcached, I am still unclear about one thing.  I understand that it is going to make the performance hit for fetching records from the datastore a lot faster.  But one of the things I often use Memcached for is caching entire chunks  (in rails terms, partials) of html so that that part of the page doesn't have to be dynamically generated on every request.   It seems to me that no matter how fast you can pull from your data-store, nothing will be able to keep up with just fetching a string of html from memcached.<br/>So when you say that cassandra will replace MySQL and Memecached, do you also mean this usage of memcached?</p>
+
+    </div>
+    <div class="signature">
+
+      February 27, 2010 | 
+  <a href="http://highscalability.com/contributor/8579630" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Ryan Shaw
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment7603912">
+
+    <div id="item7603912" class="body">
+
+      <p>@Ryan: hello, I'm developing Redis with your reasoning in mind. This is why Redis supports EXPIRE for instance. What I'm trying to build with Redis is something between a DB (and with Virtual Memory that 2.0 will feature, a DB that can hold more data than RAM), a cache, and a messaging system. This three components are very important for many high performance applications, and with the Redis data model they are very &quot;related&quot; so it's possible to unify them into an unique interface.</p>
+
+    </div>
+    <div class="signature">
+
+      February 27, 2010 | 
+  <a href="http://highscalability.com/contributor/8580699" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>antirez
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment7604664">
+
+    <div id="item7604664" class="body">
+
+      <p>Great commentary! I'm glad this discussion is happening. I think a lot of the NoSQL fervor came about as a reaction many frameworks and seminal web development books saying (in so many words) everything goes in mysql... normalize and it'll be alright. In that world, memcached is one of the few approaches that will alleviate pressure.</p><p>Like Cal Henderson said (way back in 2004), <a href="http://www.niallkennedy.com/blog/uploads/flickr_php.pdf" rel="nofollow">Normalized Data is for Sissies</a> (pdf link). Very often, a key to scaling is duplicating data, either for better locality, higher throughput or more balance. So what are some examples of duplicating data? Memcached is one. So is de-normalizing your data - having a piece of data appear more than once in your datastore.</p><p>Is this the end of an era? The end of scaling by using MySql and Memcached? I think it's a bit early to say that - and here's why. At each stage of development / scaling, you have to optimize between certain tradeoffs:<br/>* Development effort<br/>* Operational effort<br/>* &quot;Scalability&quot;</p><p>As long as MySql is the easiest way for someone to get up and running with their idea, it will be exceedingly popular. One day, the default will be something new, but that won't happen until there is ONE clear contender. And then frameworks that use it by default. And books / articles that walk you through getting it up and running. MySql is a great balance of the above variables -- it's like ketchup, it hits everything, without being too much of any one thing.</p><p>If you knew the app you were going to build from the moment you started, you could pick an appropriate data store (like a graph database for a social network) that will enable you to build the thing you want -- but that's not reality. You can't know what direction your app will head, so in the beginning (at the very least), development and operational effort are more important than scalability that may never be necessary (premature optimization).</p><p>Many big LAMP sites using &quot;M&amp;M&quot; are using MySql in interesting and non-relational ways: <br/><a href="http://bret.appspot.com/entry/how-friendfeed-uses-mysql" rel="nofollow">FriendFeed</a>, <br/><a href="http://code.flickr.com/blog/2010/02/08/using-abusing-and-scaling-mysql-at-flickr/" rel="nofollow">Flickr</a>, <br/><a href="http://www.infoq.com/presentations/Facebook-Software-Stack" rel="nofollow">Facebook</a></p><p>So then what about these new tools? There will always be new ways of storing and accessing data. As the big sites continue to get bigger, and have a commitment to open source, we'll see more and more interesting projects. Let's not forget where Memcached came from - live journal was having trouble, so they made an in-memory cache. Facebook was having trouble, so they made Cassandra (based on what is publicly known about BigTable and Dynamo).</p>
+
+    </div>
+    <div class="signature">
+
+      February 27, 2010 | 
+  <a href="http://highscalability.com/contributor/8581458" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Erik Kastner
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-highscalability">
+  <div class="comment" id="comment7604769">
+
+    <div id="item7604769" class="body">
+
+      <p>You are perfectly correct Ryan. I wasn't trying to say caching will go away or that MySQL will go away. I'm a big believer in the whole memory is the new disk proposition. And MySQL still meets many needs. That's why in a previous article I went out of my way to show how well StackOverflow can scale using a relational database. This isn't an either or situation.</p><p>What has passed is MySQL and memcached, which  complement each other so well, as the default platform on which to develop scalable systems. New products rollup all the techniques you would use to scale using M&amp;M in a better and easier to use package. They shard and scale out of the box. They handle schemaless data models while not leaving the data opaque. They manage shards, have indexes, support queries, keep data consistent, span data centers, map reduce, are highly availability, and all the other bullet proof features developers need to feel comfortable with before they deploy to production. All that can be done with M&amp;M, but once you start denormalizing, sharding, and playing with consistency models to scale it all becomes custom. Why do that when there are alternatives?</p>
+
+    </div>
+    <div class="signature">
+
+      February 27, 2010 | 
+  <a href="http://highscalability.com/member/highscalability" title="Registered Commenter">
+  <img title="Registered Commenter" alt="Registered Commenter" class="inline-icon" src="user-registered.png"/>Todd Hoff
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment7605105">
+
+    <div id="item7605105" class="body">
+
+      <p>Couldn't agree with you more Todd.</p><p>I recently watched a PyCon 2010 presentation about scaling at Reddit (http://pycon.blip.tv/file/3257303/). They had to write a custom ORM to shard their data that basically turned PostgreSQL into a key/value store.  While watching, I couldn't help but think that if they were building Reddit in 2010 there is just no way they would do that. They would go with Cassandra or Voldemort or MongoDB or whatever and they would save a man-year or more of development. But when they had to scale (in 2007 or 2008 or whatever)  a NoSQL DB that worked out of the box just wasn't an option.</p><p>The pattern I'm seeing forming is lots of startups are building the initial version of their app on MySQL/Memcache. Then when it's time to think about scaling, instead of pondering MySQL Master/Multiple Read Slave setups or heaven forbid sharding, people are thinking first. &quot;Well how could I use a complementary DB to offload things from MySQL that have no business being in a relational database?&quot; &quot;What write heavy tables would be better suite to Cassandra?&quot; &quot;What table is really a queue that could live in Redis?&quot; and so on. </p><p>Now some startups might have such an app where they can skip the whole MySQL step altogether and go straight to a non-relational DB pattern. Most though still have at the core of their some transaction processing needs that are happy and healthy on MySQL.</p>
+
+    </div>
+    <div class="signature">
+
+      February 27, 2010 | 
+  <a href="http://highscalability.com/contributor/8581932" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Ara Anjargolian
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment7607795">
+
+    <div id="item7607795" class="body">
+
+      <p>It's not an end of era. You're talking about an alternative method of data storage for the biggest internet players out there. Mysql/memcached still works fine for the rest of us. I mean really, do you a blog like this needs to make the move to Cassandra?</p>
+
+    </div>
+    <div class="signature">
+
+      February 28, 2010 | 
+  <a href="http://highscalability.com/contributor/8584745" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>john
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment7609109">
+
+    <div id="item7609109" class="body">
+
+      <p>John, this blog is hosted by Squarespace which uses an in-memory data grid, so I don't think it's moving :-) </p><p>A technological era in my mind is a span of time characterized by a strongly related set of practices and techniques that lay out a clear path for achieving goals. According to that definition MySQL and memcached definitely defined an era. My previous Drupal blog would not have moved to Cassandra because it was MySQL based. That's how strong the MySQL era is. </p><p>The dead ball era in baseball ended when the balls became alive again. The steroid era in baseball ended when they tested for steroids. The end of the M&amp;M era  can be marked by a shift in energy, early adopter decisions, and thought leadership. </p><p>I haven't had to make a new M&amp;M post for quite some time because that practice is well established. M&amp;M works fine because of a mass of work that has gone before. Folks like LiveJournal when faced with challenges invented incredible technologies like memcached and in the process laid out a brilliant path of practices that we've all been walking for a while. They went beyond the era of vertical scalability by spending more on ever larger centralized servers. People today are in the same position, facing similar challenges, just one era removed. In response they are inventing new solutions based on what they learned in the previous era. </p><p>The energy is shifting there. The code is shifting there. Very leading edge groups created these new technologies. Leading edge companies are making decisions to adopt those technologies based on a very careful consideration of what will get the best results. These people are not frivolous, they have very really problems that need solving. And soon, through all those efforts, that path will be just as easy to walk and more people will start walking it simply because it will become the best path to take. Just like before.</p><p>So when I read the criticism that if you aren't using MySQL that you are just a delusional fan boy trying to pretend you are Amazon, I don't think people are considering the process of how tool chains are adopted. It's not about developers trying to be Amazon, it's about developers trying to go from point A to B as quickly as possible. That's how tool chains change. </p>
+
+    </div>
+    <div class="signature">
+
+      February 28, 2010 | 
+  <a href="http://highscalability.com/contributor/8586091" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Todd Hoff
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment7617117">
+
+    <div id="item7617117" class="body">
+
+      <p>Regardless of which side of the MySQL+Memcache era passing debate you're on, it's exciting to see so much DBMS innovation and startup activity. It was focused on the data warehousing/analytics during the early-mid 2000s (I was at Vertica during that time)...and now the innovation seems to be shifting towards handling more transactional (OLTP) workloads, with the KV stores/NoSQL and some newer (mostly unlaunched) OLTP dbms architectures.</p><p>Here's some good reference material from Dr. Mike Stonebraker (founder of Ingres, Postgres, et al) on NoSQL and OLTP database architectures. It's not the SQL that's the problem...it's the legacy transaction processing overhead in MySQL, Oracle and other transactional DBMS that limits their scalability.</p><p>FYI...Mike Stonebraker has co-founded another DBMS company called <a href="http://www.voltdb.com" rel="nofollow">VoltDB</a>, which addresses the scalability issues discussed in this thread--without sacrificing SQL or ACID transactions. VoltDB is in beta at the moment.</p><p>Anyway, here's the additional reading on the topic:<br/>- <a href="http://cacm.acm.org/blogs/blog-cacm/50678-the-nosql-discussion-has-nothing-to-do-with-sql/fulltext" rel="nofollow">The NoSQL Debate has nothing to do with SQL</a><br/>- <a href="http://cs-www.cs.yale.edu/homes/dna/papers/oltpperf-sigmod08.pdf" rel="nofollow">OLTP through the Looking Glass and what we Found There</a></p><p>Thanks Todd; good stuff!</p>
+
+    </div>
+    <div class="signature">
+
+      February 28, 2010 | 
+  <a href="http://highscalability.com/contributor/8594189" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Andy Ellicott
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment7622808">
+
+    <div id="item7622808" class="body">
+
+      <p>Ian's analysis in the piece you quote was spot on: &quot;The fundamental problem is endemic to the relational database mindset, which places the burden of computation on reads rather than writes. This is completely wrong for large-scale web applications, where response time is critical.&quot;</p><p>Indexing was not performance critical in an age where bulk loading overnight was fine. But today indexing performance is a serious problem for all applications that must query live (i.e., continuously updated) data. Webcrawlers and real-time logfile analysis, for example.</p><p>We think we've got a better mousetrap: our TokuDB storage engine indexes 10x-50x faster than InnoDB and will go up from there in future releases. As Mark Callaghan observes in <a href="http://mysqlha.blogspot.com/2010/03/plays-well-with-others.html" rel="nofollow">The NoSQL Debate has nothing to do with SQL</a>, &quot;Write-optimization has finally arrived for MySQL with the availability of <a href="http://tokutek.com/" rel="nofollow">TokuDB</a>.&quot;</p><p>Whether our customers will ask for our indexing technology in a MySQL friendly form or for some other platform only time will tell but I'd hesitate to say the whole relational model is no longer useful.</p>
+
+    </div>
+    <div class="signature">
+
+      March 1, 2010 | 
+  <a href="http://highscalability.com/contributor/8599811" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>John Partridge
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment7628034">
+
+    <div id="item7628034" class="body">
+
+      <p>The 'issues' with SQL that people are moving away from with NoSQL are severalfold.</p><p>Performance/scalability is an often-cited one, but as some have mentioned in other comments, the issue there isn't so much with SQL - which is just a *protocol*, really - as with how traditional databases (which, coincidentally, happen to be SQL ones, so what we think of when we say SQL) have implemented it. ACID transactions are all well and good, but difficult to do in a distributed environment.</p><p>Now, things like being able to say &quot;UPDATE foo SET bar = bar + 1 WHERE baz = 2&quot; can be awkward to handle correctly in a distributed environment, as they kind of imply some level of ACIDity to get consistent results no matter what other queries are updating foo.bar - but the SELECT statement, which is the <strong>best bit</strong> of SQL, in no way hampers highly replicated operation; you can just run that SELECT against a nearby replica.</p><p>SQL is more limiting in the area of data models, though. There's an implicit assumption that each table has a fixed set of columns, and those columns are of non-compound types, and some applications suffer from that (a case from my own history was a hosted CRM app that let different users add different user-defined fields to tables, to reflect their particular needs). Many of the NoSQL offerings provide more flexible data models, which makes this stuff easier (and removes a lot of the pain that ORMs entail). However, again, SELECT is relatively immune to much of this; one can have an underlying data model with no schema, and have SELECT just deal with the fields it actually finds in the records, and so on.</p><p>My company (<a href="http://www.geniedb.com/" rel="nofollow">GenieDB</a>) has been working on this theme - we've written an innovative &quot;NoSQL&quot; database, then written a MySQL pluggable table storage engine that allows tables in our system to be viewed as MySQL tables. MySQL forces us to list all the columns in a CREATE TABLE statement, while our underlying DB has no schemas - so if a record lacks a field MySQL expects, we return a NULL, and if it has a field MySQL doesn't expect, we just ignore that field. We therefore support things like the UPDATE statement above, but warn users that if they run more than one such update at once, the results might not be what they expect; however, for the kinds of queries you find in most applications, we've taken pains to make sure things work as MySQL users will expect.</p><p>This means that one can fire up a MySQL server against a GenieDB installation to run some ad-hoc SELECT statements, or one can build an app on top of GenieDB+MySQL, then rewrite the bottlenecks to use the native API for better performance as required, and various other exciting possibilities.</p>
+
+    </div>
+    <div class="signature">
+
+      March 2, 2010 | 
+  <a href="http://highscalability.com/contributor/8605286" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Alaric Snell-Pym
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment7719168">
+
+    <div id="item7719168" class="body">
+
+      <p>I completely think that a lot of databases will start to make the migration over to Cassandra.  It's a fantastic database and is powering a lot of the heavy hitters in the industry.  My only problem with it is the lack of tools that exist right now for it.  MySQL has such a vast amount of tools that allow developers to develop for and in it.  It's just a matter of time though before tools become readily available and more importantly frameworks (CakePHP, CodeIgniter, ect) pick it up as well to have it be accessed instead along with MySQL and the other databases out there.</p><p>We thought of using it for <a href="http://theeasyapi.com" title="The Easy API" rel="nofollow">http://theeasyapi.com</a> but ended up not using it because cakePHP doesn't have any help on how to implement it.  We are working on creating our own DB classes for CakePHP that would allow us to use that database instead of MySQL because of the flexibility and resources that it offers.</p><p>This is a great article, well written.</p>
+
+    </div>
+    <div class="signature">
+
+      March 9, 2010 | 
+  <a href="http://highscalability.com/contributor/8697134" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Chad R. Smith
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+
+        
+
+      
+
+    </div>
+    </div>
+
+    
+      <div class="journal-add-comment-area-wrapper">
+  
+          
+            
+            
+  <script type="text/javascript">
+  // <![CDATA[
+
+    var isAddCommentsVisible = true;
+
+    function toggleReferenceMode() {
+      if (isAddCommentsVisible) {
+        hideObject(document.getElementById("add-comment-area"));
+        showObject(document.getElementById("add-reference-area"));
+      } else {
+        showObject(document.getElementById("add-comment-area"));
+        hideObject(document.getElementById("add-reference-area"));
+      }
+      isAddCommentsVisible = !isAddCommentsVisible;
+    }
+
+  // ]]>
+  </script>
+
+  <form method="post" style="margin: 0; padding: 0;" name="postform" id="postform" action="http://highscalability.com/process/CreateJournalEntryComment?moduleId=4867632&amp;entryId=6844243">
+
+     <input type="hidden" name="currentPage" value="1"/> 
+ 
+    <div class="notice-box" style="margin-top: 2em;" id="add-comment-area">
+
+      
+                              <h3 class="caption"><img title="Post" alt="Post" class="inline-icon" src="comment.png"/>Post a New Comment</h3>
+          
+        
+
+        <div class="caption-text">
+
+          Enter your information below to add a new comment.
+
+          
+
+        </div>
+
+        
+
+        <script type="text/javascript" src="storable-fields.js%3FCE=21"></script>
+
+        
+          <div class="input-field">
+            
+            <div id="authorName_title" class="title">
+               Author: 
+
+              &nbsp;<a id="storedFieldControls" style="display: none; font-size: 9px;" href="javascript:forgetSavedFields();">(forget stored information)</a>
+            </div>
+            <input class="text" type="text" style="width: 200px;" name="authorName" id="authorName" value="" maxlength="50" tabindex="2"/>
+          </div>
+
+          <div class="input-field">
+            
+            <div id="authorEmail_title" class="title"> Author Email (optional): 
+</div>
+            <input class="text" type="text" style="width: 200px;" name="authorEmail" id="authorEmail" value="" maxlength="255" tabindex="3"/>
+          </div>
+
+          <div class="input-field">
+            
+            <div id="authorUrl_title" class="title"> Author URL (optional): 
+</div>
+            <input class="text" type="text" style="width: 200px;" name="authorUrl" id="authorUrl" value="" maxlength="255" tabindex="4"/>
+          </div>
+
+          <script type="text/javascript">
+
+            YAHOO.util.Event.addListener(window, "load", function() {
+
+              document.getElementById("storedFieldControls").style.display = (Squarespace.StorableFields.isDataSaved("authorName", "authorEmail", "authorUrl") ? "inline" : "none");
+              Squarespace.StorableFields.recall("authorName", "authorEmail", "authorUrl");
+
+            });
+
+            function forgetSavedFields() {
+
+              Squarespace.StorableFields.forget("authorName", "authorEmail", "authorUrl");
+              document.getElementById("storedFieldControls").style.display = "none";
+
+            }
+
+          </script>
+
+        
+
+        <script type="text/javascript">
+          function expandBody() { b = document.getElementById("body"); b.style.height = (b.offsetHeight + 40) + "px"; }
+          function shrinkBody() { b = document.getElementById("body"); b.style.height = (b.offsetHeight - 40) + "px"; }
+        </script>
+
+        
+        <div id="body_title" style="padding-bottom: 5px; float: left;"> Post: 
+</div>
+        <div style="padding-bottom: 5px; float: right;"><a title="Increase the size of the comment area." href="javascript:expandBody();">&#8595;</a> | <a title="Decrease the size of the comment area." href="javascript:shrinkBody();">&#8593;</a></div>
+        <div class="clearer">&nbsp;</div>
+        <div style="padding-bottom: 5px;"><textarea rows="15" cols="60" name="body" id="body" tabindex="5"></textarea></div>
+        <div style="padding-bottom: 5px;">Some HTML allowed: &lt;a href=&quot;&quot; title=&quot;&quot;&gt; &lt;abbr title=&quot;&quot;&gt; &lt;acronym title=&quot;&quot;&gt; &lt;b&gt; &lt;blockquote cite=&quot;&quot;&gt; &lt;code&gt; &lt;em&gt; &lt;i&gt; &lt;strike&gt; &lt;strong&gt;</div>
+
+        
+
+        <div class="footer">
+
+                      <div class="notice-box-alert">
+              <div class="icon"><img title="Alert" alt="Alert" class="inline-icon" src="alert.png"/></div>
+              <div class="text">
+                <strong>Comment Moderation Enabled</strong><br/>
+                Your comment will not appear until it has been cleared by a website editor.
+              </div>
+            </div>
+          
+
+          
+
+          <input type="hidden" name="finalize" id="finalize" value="false"/>
+
+          <input style="width: 150px;" tabindex="6" class="button" type="button" name="createPostButton"  id="createPostButton"  value="Create Post"  onclick="submitContent(true);"/> &nbsp;&nbsp;
+          <input style="width: 150px;" tabindex="7" class="button" type="button" name="previewPostButton" id="previewPostButton" value="Preview Post" onclick="submitContent(false);"/>
+
+        </div>
+
+      
+
+    </div>
+
+  </form>
+
+  <script type="text/javascript">
+  // <![CDATA[
+
+    function submitContent(isFinal) {
+      if (isFinal) {
+        document.getElementById("finalize").value = "true";
+        Squarespace.StorableFields.save("authorName", "authorEmail", "authorUrl");
+      }
+      Squarespace.Form.smartSubmit("postform");
+    }
+
+  // ]]>
+  </script>
+
+  
+
+
+  
+            
+  
+          
+  
+        
+  
+      
+
+    </div>
+  
+  
+  
+
+  
+
+
+  
+
+  
+
+  
+  
+
+</div></div> <!-- Content -->
+  
+    
+  
+    </div></div> <!-- Page Body -->
+
+    
+    
+    <div id="pageFooterWrapper"><div id="pageFooter">
+  
+              Copyright &copy; 2010, Possibility Outpost.  All rights reserved.
+      
+  
+      
+  
+    </div></div>
+  
+  </div></div> <!-- Canvas -->
+  
+   
+
+
+  <div class="clearer" id="bodyClearer"></div>
+
+  
+</body>
+</html>

@@ -7,3 +7,10 @@
 *.backup
 *.blg
 .idea/*
+*.idx
+*.ilg
+*.ind
+*.lof
+*.lot
+*.tdo
+*.toc

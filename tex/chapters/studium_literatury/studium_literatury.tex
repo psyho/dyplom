@@ -1,117 +1,58 @@
-\documentclass[a4paper,11pt]{article}
-\usepackage[utf8x]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{polski}
-\usepackage{hyphenat}
-\usepackage{todonotes}
+\chapter{Studium Literatury}
 
-%opening
-\title{Studium Literatury}
-\author{Adam Pohorecki}
+\section*{Streszczenie}
 
-\begin{document}
-
-\bibliographystyle{plain}
-\hyphenation{MySQL NoSQL Cassandra Twitter Facebook Google Amazon BigTable
-HBase SimpleDB}
-
-\maketitle
+W studium literatury zajmę się opisaniem teorii CAP\cite{brewers-conjecture} (\emph{Consistency, Availability, Partition Tolerance}), zwanej również teorią Brewer'a od nazwiska jej autora. 
+Teoria ta twierdzi, że rozproszony system nie jest w stanie zapewnić równocześnie wszystkich trzech gwarancji: konsystencji danych widzianych przez węzły systemu, odporności całości systemu na awarie poszczególnych jego węzłów oraz odporności systemu na utratę połączenia pomiędzy poszczególnymi węzłami lub ich grupami. 
+Przedstawię także zasady działania Google BigTable\cite{google-bigtable} oraz Amazon Dynamo\cite{amazon-dynamo}, które bardzo istotnie wpłynęły na architekturę systemów NoSQL. 
+Porównam także semantykę BASE (\emph{Basically Available, Soft-state, Eventually-consistent}) z ACID (\emph{Atomicity, Consistency, Isolation, Durability}).
 
 \section{Teoria CAP}
 
-Teoria CAP (\emph{Consistency, Availability, Partition Tolerance}) zwana
-również teorią Brewera od nazwiska jej autora została po raz pierwszy
-zaprezentowana podczas prezentacji profesora Uniwersytetu Berkley Eryka Brewera
-19 czerwca 2000r. na konferencji \emph{ACM Symposium on the Principles of
-Distributed Computing}\cite{podc-keynote}. W około dwa lata później, w 2002
-roku, teoria ta (pod nazwą \emph{Brewer's Conjecture} - Domysł Brewera) została
-formalnie udowodniona przez Nancy Lynch oraz Setha Gilberta z
-MIT\cite{brewers-conjecture}.
+Teoria CAP (\emph{Consistency, Availability, Partition Tolerance}) zwana również teorią Brewera od nazwiska jej autora została po raz pierwszy zaprezentowana podczas prezentacji profesora Uniwersytetu Berkley Eryka Brewera 19 czerwca 2000r. na konferencji \emph{ACM Symposium on the Principles of Distributed Computing}\cite{podc-keynote}. 
+W około dwa lata później, w 2002 roku, teoria ta (pod nazwą \emph{Brewer's Conjecture} - Domysł Brewera) została formalnie udowodniona przez Nancy Lynch oraz Setha Gilberta z MIT\cite{brewers-conjecture}.
 
-Teoria CAP powstała jako efekt doświadczeń Brewera w firmie Inktomi oraz jego
-prac badawczych nad systemami rozproszonymi na Uniwersytecie w Berkley. Mówi
-ona, że z trzech pożądanych właściwości systemu rozproszonego: Konsystencji
-(ang. \emph{Consistency}), Wysokiej Dostępności (ang. \emph{Availability}) oraz
-Odporności na Podział Sieci (ang. \emph{Partition Tolerance}) możliwe jest
-zapewnienie co najwyżej dwóch z nich.\cite{browne-cap-theorem}
+Teoria CAP powstała jako efekt doświadczeń Brewera w firmie Inktomi oraz jego prac badawczych nad systemami rozproszonymi na Uniwersytecie w Berkley. 
+Mówi ona, że z trzech pożądanych właściwości systemu rozproszonego: Konsystencji (ang. \emph{Consistency}), Wysokiej Dostępności (ang. \emph{Availability}) oraz Odporności na Podział Sieci (ang. \emph{Partition Tolerance}) możliwe jest zapewnienie co najwyżej dwóch z nich\cite{browne-cap-theorem}.
 
 \subsection*{Konsystencja}
 
-Termin ,,Konsystencja'' w Teorii CAP ma nieco inne znaczenie niż w ACID, gdzie
-oznacza on, iż zapisywane dane nie mogą złamać pewnych określonych reguł
-integralności. W Teorii CAP \emph{Consistency} jest dużo bardziej zbliżone do
-\emph{Atomicity} z ACID, oznacza ono bowiem, że gdy dokonamy operacji zapisu
-$x=x_0$ każdy kolejny odczyt $x$, niezależnie do którego węzła byłby skierowany,
-zwróci wartość $x_0$.
+Termin ,,Konsystencja'' w Teorii CAP ma nieco inne znaczenie niż w ACID, gdzie oznacza on, iż zapisywane dane nie mogą złamać pewnych określonych reguł integralności. 
+W Teorii CAP \emph{Consistency} jest dużo bardziej zbliżone do \emph{Atomicity} z ACID, oznacza ono bowiem, że gdy dokonamy operacji zapisu $x=x_0$ każdy kolejny odczyt $x$, niezależnie do którego węzła byłby skierowany, zwróci wartość $x_0$.
 
 \subsection*{Wysoka Dostępność}
 
 Wysoka dostępność jest najbardziej pożądaną właściwością z trzech wymienionych.
-Oznacza ona, jak sama nazwa wskazuje, że system powinien udostępniać swoje
-usługi w pełni przez cały czas, wliczając w to awarie poszczególnych węzłów,
-aktualizacje oprogramowania czy awarie sieci. Bardziej formalnie: jeżeli
-operacja dotrze do nie ulegającego właśnie awarii węzła, to w pewnym skończonym
-czasie zwróci wynik do klienta. Warto przy tym zwrócić uwagę (za
-\cite{brewers-conjecture}), że dostępność zawodzi najczęściej właśnie wtedy, gdy
-jest najbardziej potrzebna, czyli w okresach największego obciążenia systemu.
+Oznacza ona, jak sama nazwa wskazuje, że system powinien udostępniać swoje usługi w pełni przez cały czas, wliczając w to awarie poszczególnych węzłów, aktualizacje oprogramowania czy awarie sieci. 
+Bardziej formalnie: jeżeli operacja dotrze do nie ulegającego właśnie awarii węzła, to w pewnym skończonym czasie zwróci wynik do klienta.
+Warto przy tym zwrócić uwagę (za \cite{brewers-conjecture}), że dostępność zawodzi najczęściej właśnie wtedy, gdy jest najbardziej potrzebna, czyli w okresach największego obciążenia systemu.
 
 \subsection*{Odporność na Podział Sieci}
 
-W systemach rozproszonych, działających na tysiącach węzłów, często rozsianych
-w centrach danych\todo{Data Centers - jak się tłumaczy?}\ na wielu kontynentach
-utrata połączenia pomiędzy grupami węzłów jest oczekiwanym, codziennym
-problemem. Wyobraźmy sobie bazę danych replikowaną w systemie master-master.
-Jeżeli połączenie między węzłami zostanie zerwane, modyfikacje dokonane na
-jednym z nich nie będą widoczne na drugim. Z kolei w sytuacji gdy mamy bazę
-danych z horyzontalnym podziałem danych (ang. \emph{sharded}), ponieważ każdy z
-serwerów zawiera informacje dotyczące tylko części danych i z góry wiadomo do
-którego z nich należy się zwrócić aby otrzymać informacje dotyczące dowolnego
-klucza, nawet w przypadku utraty połączenia między nimi, o ile klient ma dostęp
-do obu serwerów, ciągłość dostarczanych usług jest zapewniona.
+W systemach rozproszonych, działających na tysiącach węzłów, często rozsianych w centrach danych\todo{Data Centers - jak się tłumaczy?}\ na wielu kontynentach utrata połączenia pomiędzy grupami węzłów jest oczekiwanym, codziennym problemem. 
+Wyobraźmy sobie bazę danych replikowaną w systemie master-master.
+Jeżeli połączenie między węzłami zostanie zerwane, modyfikacje dokonane na jednym z nich nie będą widoczne na drugim. 
+Z kolei w sytuacji gdy mamy bazę danych z horyzontalnym podziałem danych (ang. \emph{sharded}), ponieważ każdy z serwerów zawiera informacje dotyczące tylko części danych i z góry wiadomo do którego z nich należy się zwrócić aby otrzymać informacje dotyczące dowolnego klucza, nawet w przypadku utraty połączenia między nimi, o ile klient ma dostęp do obu serwerów, ciągłość dostarczanych usług jest zapewniona.
 
 \subsection*{Znaczenie Teorii}
 
-Teoria CAP nabiera znaczenia w miarę wzrostu wielkości systemu. Gdy dysponujemy
-bazą rozsianą na kilku maszynach, narzut czasowy replikacji danych pomiędzy nimi
-jest akceptowalny dla większości zastosowań, nie musimy się też zbytnio martwić
-o podział sieci, gdyż zazwyczaj jest tak, że maszyny zlokalizowane w jednej
-szafie (ang. \emph{rack}) będą albo działać wszystkie, albo żadna. Kiedy jednak
-zajmujemy się jednak usługami rozproszonymi na tysiącach węzłów, nawet gdybyśmy
-dysponowali 10000 maszynami o niezawodności MTBF 30 lat, każdego dnia
-następowałaby awaria którejś z nich\cite{google-lessons}. W przypadku tak dużych
-systemów, czas jakiego wymaga replikacja danych aby doprowadzić aby każdy
-węzeł widział ten sam stan, czy to jak system reaguje na podziały sieci nabiera
-o wiele większego znaczenia.
+Teoria CAP nabiera znaczenia w miarę wzrostu wielkości systemu. 
+Gdy dysponujemy bazą rozsianą na kilku maszynach, narzut czasowy replikacji danych pomiędzy nimi jest akceptowalny dla większości zastosowań, nie musimy się też zbytnio martwić o podział sieci, gdyż zazwyczaj jest tak, że maszyny zlokalizowane w jednej szafie (ang. \emph{rack}) będą albo działać wszystkie, albo żadna. 
+Kiedy jednak zajmujemy się jednak usługami rozproszonymi na tysiącach węzłów, nawet gdybyśmy dysponowali 10000 maszynami o niezawodności MTBF 30 lat, każdego dnia następowałaby awaria którejś z nich\cite{google-lessons}. 
+W przypadku tak dużych systemów, czas jakiego wymaga replikacja danych aby doprowadzić aby każdy węzeł widział ten sam stan, czy to jak system reaguje na podziały sieci nabiera o wiele większego znaczenia.
 
 \subsubsection*{Podział systemów}
 
-Teoria CAP mówi, że nie możemy zapewnić równocześnie wszystkich trzech
-gwarancji, dlatego skalowalne systemy muszą porzucić jedną z nich. Ze względu
-na to dzielimy je na:
+Teoria CAP mówi, że nie możemy zapewnić równocześnie wszystkich trzech gwarancji, dlatego skalowalne systemy muszą porzucić jedną z nich. 
+Ze względu na to dzielimy je na:
 
 \begin{enumerate}
- \item \emph{CA} - (Consistent, Available) te systemy mają problemy z podziałem
-sieci, wymagając zazwyczaj aby operacje dotyczące poszczególnych transakcji
-trafiały do pojedynczej grupy węzłów, które podlegają awarii ,,atomowo'' -
-albo wszystkie działają, albo żaden. To podejście zazwyczaj wiąże się z
-problemami dla skalowalności.
- \item \emph{AP} - (Available, Partition-Tolerant) te systemy zapewniają
-największą odporność na awarie wynikające z rozproszonego środowiska,
-jednocześnie jednak stawiając twórców aplikacji przed trudnym zadaniem radzenia
-sobie z problemami wynikającymi z niespójności danych widzianych przez klientów
-bazy.
- \item \emph{AP} - (Consistent, Partition-Tolerant) te systemy w wypadku
-podziału oczekują na przywrócenie połączenia, ograniczając w ten sposób
-dostępność.
+ \item \emph{CA} - (Consistent, Available) te systemy mają problemy z podziałem sieci, wymagając zazwyczaj aby operacje dotyczące poszczególnych transakcji trafiały do pojedynczej grupy węzłów, które podlegają awarii ,,atomowo'' - albo wszystkie działają, albo żaden. 
+ To podejście zazwyczaj wiąże się z problemami dla skalowalności.
+ \item \emph{AP} - (Available, Partition-Tolerant) te systemy zapewniają największą odporność na awarie wynikające z rozproszonego środowiska, jednocześnie jednak stawiając twórców aplikacji przed trudnym zadaniem radzenia sobie z problemami wynikającymi z niespójności danych widzianych przez klientów bazy.
+ \item \emph{AP} - (Consistent, Partition-Tolerant) te systemy w wypadku podziału oczekują na przywrócenie połączenia, ograniczając w ten sposób dostępność.
 \end{enumerate}
 
-W praktyce systemy omawiane w tej pracy zazwyczaj zadowalają się częściowym
-zapewnieniem wszystkich wymienionych gwarancji, przy czym wysoka dostępność
-odgrywa główną rolę, a poświęcana jest albo odporność na podziały, albo
-konsystencja. Dlatego systemy te należą albo do grupy CA (Google BigTable,
-HBase, Cassandra), albo do grupy AP (Amazon SimpleDB).\todo{Podział na CA, AP,
-CP - po lepszym poznaniu poszczególnych rozwiązań} 
-
-\bibliography{bibliografia}
-
-\end{document}
+W praktyce systemy omawiane w tej pracy zazwyczaj zadowalają się częściowym zapewnieniem wszystkich wymienionych gwarancji, przy czym wysoka dostępność odgrywa główną rolę, a poświęcana jest albo odporność na podziały, albo konsystencja. 
+Dlatego systemy te należą albo do grupy CA (Google BigTable, HBase, Cassandra), albo do grupy AP (Amazon SimpleDB).
+\todo{Podział na CA, AP, CP - po lepszym poznaniu poszczególnych rozwiązań} 

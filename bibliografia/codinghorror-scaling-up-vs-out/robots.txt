@@ -1,0 +1,23 @@
+User-agent: *
+Disallow: /t/trackback
+Disallow: /t/comments
+Disallow: /t/stats
+Disallow: /t/app
+Disallow: /.m/
+
+User-agent: Googlebot-Mobile
+Disallow: /
+Allow: /.m/
+
+User-agent: Y!J-SRD
+Disallow: /
+Allow: /.m/
+
+User-agent: Y!J-MBS
+Disallow: /
+Allow: /.m/
+
+# weird MSIE thing that keeps hammering
+User-agent: Active Cache Request
+Disallow: *
+
