@@ -25,11 +25,15 @@ Warunkiem koniecznym jest także to, aby czas potrzebny na wykonanie operacji na
 Dotychczas najczęściej stosowanym rozwiązaniem problemów skalowalności było zastosowanie bazy danych takiej jak MySQL połączonej z Memcached jako przechowywany w pamięci operacyjnej, rozproszony cache\cite{highscalability-mysql-end-of-an-era}.
 Opiszmy pokrótce, jak takie skalowanie aplikacji w uproszczeniu wygląda.
 
-\subsection{Replikacja Master-Slave}
+\subsection{Replikacja}
 Początkowo cała baza danych mieści się na jednej maszynie i jest w stanie poradzić sobie ze wszystkimi operacjami odczytu i zapisu jakich dokonuje aplikacja.
-Wraz ze wzrostem liczby użytkowników, serwer zaczyna docierać do granic swojej przepustowości. 
-Ponieważ aplikacje internetowe wykonują zazwyczaj dużo więcej odczytów niż zapisów, dodajemy stopniowo kilka kolejnych serwerów replikowanych w konfiguracji master-slave, zwiększając w ten sposób liczbę równoczesnych odczytów, jednak nie zwiększając (a nawet zmniejszając) liczbę możliwych zapisów.
-Warto zwrócić uwagę, na to jak szybko takie rozwiązanie się degraduje.
+Wraz ze wzrostem liczby użytkowników serwer zaczyna docierać do granic swojej przepustowości. 
+Ponieważ aplikacje internetowe wykonują zazwyczaj dużo więcej odczytów niż zapisów, dodajemy stopniowo kilka kolejnych serwerów replikowanych w konfiguracji master-slave, zwiększając w ten sposób liczbę równoczesnych odczytów, jednak nie zwiększając (a nawet zmniejszając) liczby możliwych zapisów.
+Alternatywą jest dodawanie kolejnych serwerów w konfiguracji master-master, która jest zazwyczaj trudniejsza do poprawnego skonfigurowania, ale za to w przypadku gdy jeden z serwerów master zawiedzie, inny z łatwością przejmie jego rolę.
+
+\missingfigure{replikacje master-slave}
+
+Warto jednak zwrócić uwagę, na to jak szybko takie rozwiązanie się degraduje.
 Załóżmy, że początkowo serwer \emph{master} jest obciążony w 50\% zapisami.
 Oznacza to, że każdy z węzłów \emph{slave} musi także poświęcić 50\% zasobów na radzenie sobie z replikacją zapisów\footnote{Zakładam, że wszystkie serwery są identyczne}, a resztę może poświęcić na przetwarzanie odczytów.
 Wraz ze wzrostem obciążenia serwera \emph{master}, serwery \emph{slave} muszą coraz więcej zasobów poświęcać na replikację zapisów, co zmniejsza ogólną przepustowość systemu.
@@ -39,13 +43,41 @@ Wymaga to dodatkowej pracy ze strony programisty\cite{zaitsev-scaling-mysql}.
 
 \subsection{Partycjonowanie}
 Kiedy oczywiste staje się, że nasz serwer nie jest w stanie sobie poradzić z obciążeniem wynikającym z zapisów, mamy dwie drogi do wyboru: wymienić maszynę na mocniejszą, albo zacząć przetrzymywać tylko część danych na pojedynczym serwerze.
-Pierwsza opcja ma pewne zalety: nie wymaga zmian w aplikacji i jej nie komplikuje.
+Pierwsza opcja, nazywana \emph{skalowaniem wzwyż}, ma pewne zalety: nie wymaga zmian w aplikacji i jej nie komplikuje.
 Wadą tego rozwiązania jest jednak cena w porównaniu do możliwości.
 Cytując za artykułem na blogu \emph{Coding Horror}\cite{codinghorror-scaling-up-vs-out}: za cenę stu tysięcy dolarów możemy albo kupić jeden potężny serwer z 32 procesorami, 512GB RAM i 4TB przestrzeni dyskowej, albo 83 mniejsze serwery posiadające łącznie 332 rdzenie, 664GB RAM i 40,5TB przestrzeni dyskowej.
 Oczywiście nie można w ten sposób skalować aplikacji wzwyż w nieskończoność, ale warto pamiętać, że tylko nieliczne strony mogą konkurować rozmiarami z takimi gigantami jak Facebook.
 Większość aplikacji nigdy nie wyrośnie ponad rozmiar, w którym superkomputer nie wystarcza już do utrzymania ich obciążenia.
 
-Z drugiej strony mamy partycjonowanie danych, czyli skalowanie aplikacji wszerz.\todo{tutaj skończyłem} 
+\missingfigure{super komputer}
+
+Z drugiej strony mamy partycjonowanie danych, czyli \emph{skalowanie aplikacji wszerz}.
+W tym rozwiązaniu wraz ze wzrostem liczby użytkowników zamiast wymieniać serwer na większy i mocniejszy dodajemy kolejne maszyny.
+Nie możemy jednak całości bazy danych przechowywać na każdym z serwerów - problemy z tym związane zostały opisane powyżej.
+W związku z tym, dokonuje się podziału danych (partycjonowania) poziomego, pionowego albo obu równocześnie.
+
+Kiedy mowa o pojedynczej bazie danych, horyzontalne partycjonowanie oznacza, że rzędy na podstawie jakiegoś kryterium trafiają do różnych tabel.
+Dla przykładu: tabela użytkowników może być podzielona w taki sposób, że użytkownicy z Polski trafiają do tabeli \verb=polish_users=, natomiast użytkownicy z Niemiec do tabeli \verb=german_users=.
+Tego rodzaju partycjonowania dokonuje się zazwyczaj w celu zwiększenia wydajności i niektóre bazy danych (w tym MySQL\footnote{http://dev.mysql.com/tech-resources/articles/performance-partitioning.html}) pozwalają na definiowanie partycjonowania w schemacie bazy danych.
+W przypadku rozproszonych baz danych, mówimy zamiennie o partycjonowaniu horyzontalnym bądź shardowaniu (ang. \emph{sharding}).
+Różni się ono od partycjonowania poziomego dla pojedynczej bazy tym, że dane zamiast trafiać do różnych tabel, trafiają do tej samej tabeli, ale na różne węzły bazy danych.
+
+\missingfigure{shardownie}
+
+Partycjonowanie pionowe (wertykalne) podobnie ma dwa znaczenia w zależności od kontekstu.
+Dla pojedynczej bazy polega ono na podziale tabel na mniejsze (zawierające tylko część kolumn).
+Przypomina to normalizację bazy, ale dzielimy także już znormalizowane tabele, np. po to aby aby część kolumn umieścić na innym dysku, albo aby oddzielić częściej odczytywane dane od rzadziej odczytywanych.
+W rozproszonym systemie partycjonowanie pionowe oznacza, że nie połączone ze sobą tabele mogą być umieszczone na różnych węzłach bazy danych.
+W ten sposób zapis do jednej tabeli nie obciąża dwóch, tylko jeden serwer.
+Oczywiście bardzo często nie jest możliwe znalezienie tabel, które nie są za sobą połączone pośrednio lub bezpośrednio.
+Dlatego często takie partycjonowanie wymaga zduplikowania części tabel na obu węzłach.
+
+Opisane wyżej formy partycjonowania systemów rozproszonych najczęściej muszą być obsługiwane przez warstwę aplikacji.
+Z tego względu praktycznie niemożliwe jest zapewnienie transakcyjności pomiędzy poszczególnymi węzłami.
+Kosztowne i trudne są także operacje joinowania pomiędzy serwerami.
+
+\subsection{Memcached}
+\todo{tu skończyłem}
 
 \section{NoSQL}
 Powszechny i darmowy dostęp do produktów bazodanowych obiecujących wysoką skalowalność zaowocował powstaniem ruchu określanego popularnie mianem NoSQL (\emph{Not only SQL} - nie tylko SQL). 
