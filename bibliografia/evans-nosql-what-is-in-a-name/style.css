@@ -1,0 +1,122 @@
+
+html {
+  font: small "Lucida Grande","Lucida Sans Unicode",geneva,verdana,sans-serif;
+  background-color: #f9f9e4;
+}
+
+body {
+  background-color: #fbfbff;
+  margin: 20px;
+  border: 1px solid #aaa;
+}
+
+fieldset {
+  margin: 0 0 1em 0;
+}
+
+th,td {
+  text-align: left;
+  padding-right: 1em;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+blockquote {
+  background-color: transparent;
+  background-image: url('blockquote.gif');
+  background-repeat: no-repeat;
+  background-attachment: scroll;
+  background-position: left top;
+  margin: 1em;
+  padding: 0 0 0 3em;
+  min-height: 18px;
+}
+
+#header {
+  background-color: #2626a6;
+  color: #ccc;
+  padding: 2em;
+}
+
+#header h1 {
+  margin: 0 0 .1em 0;
+}
+
+#header a {
+  text-decoration: none;
+  color: #ccc;
+}
+
+#container {
+  padding: 2em;
+}
+
+.articles {
+}
+
+.article {
+  padding: 0 0 0 0;
+  margin: 0 0 2em 0;
+}
+
+.article h1 { margin: 0 0 0 0; }
+
+.article a.title, a.title:hover, a.title:visited {
+  color: #000;
+  text-decoration: none;
+}
+
+.articlemeta {
+  font-size: 85%;
+  color: #666;
+  margin: .5em 0 .5em 0;
+}
+
+#sidebar {
+  width: 15em;
+  border: 1px solid #999;
+  text-align: left;
+  float: right;
+  margin: 0 0 1em 1.5em;
+  padding: 0 1em 0 1em;
+  font-size: 85%;
+}
+
+/* temporary (needs classing?) */
+#sidebar li {
+  margin-left: .75em;
+  text-indent: 0;
+}
+
+#sidebar ul {
+  margin: .25em 0 1em .75em;
+  padding-left: 0;
+}
+
+#sidebar h2 {
+  margin: .5em 0 .25em 0;
+}
+/* temporary (needs classing?) */
+
+#preview {
+  background: #fff url("draft.png") repeat scroll 0%;
+}
+
+input[type="text"], textarea {
+  border: 1px solid #aaa;
+}
+
+#footer {
+  font-size: 80%;
+  color: #999;
+  clear: both;
+  border-top: 1px solid #aaa;
+  text-align: center;
+
+}

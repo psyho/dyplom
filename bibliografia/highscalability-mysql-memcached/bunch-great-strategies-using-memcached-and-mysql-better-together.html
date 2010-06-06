@@ -1,0 +1,2061 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+
+<head>
+
+   <meta name="Robots" content="index,follow" /> 
+  
+  
+  <!-- highscalability -->
+
+  <link rel="shortcut icon" href="favicon.png" type="image/png" />
+
+  <link id="primaryStylesheet" rel="stylesheet" type="text/css" href="common.css%3FstyleId=512250&amp;RK=1259252671423&amp;CE=21.css"/>
+  
+  
+  
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="http://feeds.feedburner.com/HighScalability" />
+  
+
+  <script type="text/javascript" src="yahoo-dom-event.js%3FCE=21"></script>
+<script type="text/javascript" src="connection_core-min.js%3FCE=21"></script>
+<script type="text/javascript" src="json-min.js%3FCE=21"></script>
+<script type="text/javascript" src="animation-min.js%3FCE=21"></script>
+<script type="text/javascript" src="global.js%3FCE=21"></script>
+<script type="text/javascript" src="lightbox.js%3FCE=21"></script>
+<script type="text/javascript" src="api.js%3FCE=21"></script>
+
+
+  <script type="text/javascript">
+  // <![CDATA[
+
+    Squarespace.Constants.SS_AUTHKEY = "MNBZFJDS";
+    Squarespace.Constants.WEBSITE_TITLE =  "High Scalability"; 
+    
+     Squarespace.Constants.CURRENT_MODULE_ID = "4867632"; 
+    
+    
+    
+    Squarespace.Constants.ADMINISTRATION_UI =  false; 
+    
+    
+     Squarespace.Constants.OBJECT_PERMALINK = "http://highscalability.com/blog/a-bunch-of-great-strategies-for-using-memcached-and-mysql-be.html"; 
+
+    
+
+    
+
+  // ]]>
+  </script>
+
+      <title>High Scalability - High Scalability - A Bunch of Great Strategies for Using Memcached and MySQL Better&nbsp;Together</title>
+  
+
+  <!-- End Heading -->
+
+  <!-- PUT THIS TAG IN THE head SECTION -->
+<script type="text/javascript" src="http://partner.googleadservices.com/gampad/google_service.js">
+</script>
+<script type="text/javascript">
+  GS_googleAddAdSenseService("ca-pub-9451539202293335");
+  GS_googleEnableAllServices();
+</script>
+<script type="text/javascript">
+  GA_googleAddSlot("ca-pub-9451539202293335", "SS_HS_Ad1");
+  GA_googleAddSlot("ca-pub-9451539202293335", "SS_HS_Ad2");
+  GA_googleAddSlot("ca-pub-9451539202293335", "SS_HS_Ad3");
+  GA_googleAddSlot("ca-pub-9451539202293335", "SS_HS_Ad4");
+  GA_googleAddSlot("ca-pub-9451539202293335", "SS_HS_Ad5");
+  GA_googleAddSlot("ca-pub-9451539202293335", "SS_HS_Ad6");
+  GA_googleAddSlot("ca-pub-9451539202293335", "SS_HS_ad7");
+</script>
+<script type="text/javascript">
+  GA_googleFetchAds();
+</script>
+<meta name="google-site-verification" content="x_MfyyUSDcCHqucvw1VPsnXuw5k-hvI72Ce2LLEyrn8" />
+<!-- END OF TAG FOR head SECTION -->
+
+</head>
+
+<body  id="modulePage4867632"   class="objectId5337386"  >
+
+  <script type="text/javascript">
+  YAHOO.util.Event.onDOMReady(function() {
+    if (document.location.href.indexOf("SSLogoutOk=true") != -1) {
+      new Squarespace.FixedPositionTip("Logout Successful", "You have been successfully logged out.", { xMargin: 15, yMargin: 15, icon: "/universal/images/helptip-info.png", orientation: "upper-right", viewportFixed: true, autoHide: 1800 }).show();
+    }
+  });
+</script>
+
+    
+
+  <script type="text/javascript">
+    YAHOO.util.Event.addListener(document, "keyup", function (e) { if (!e) { e = event; } if (e.keyCode == 27) { document.location.href = "/login/?returnUrl=%2Fbunch-great-strategies-using-memcached-and-mysql-better-together"; } });
+  </script>
+
+
+
+
+  
+
+  <div id="canvasWrapper"><div id="canvas">
+  
+  
+
+  <div id="pageHeaderWrapper"><div id="pageHeader">
+
+      <div id="navigationTop"><div id="navigationTop-sectionContent2191792" class="horizontalNavigationBar"><ul class="content-navigation">
+    
+  <li class="module active-module  " id="navigationTop-moduleContentWrapper4867632">
+
+    <div id="navigationTop-moduleContent4867632">
+
+              <a id="navigationTop-moduleLink4867632" class=" " href="http://highscalability.com/" ><span>Home</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationTop-moduleContentWrapper4850400">
+
+    <div id="navigationTop-moduleContent4850400">
+
+              <a id="navigationTop-moduleLink4850400" class=" " href="http://highscalability.com/start-here/" ><span>Start Here</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationTop-moduleContentWrapper4850438">
+
+    <div id="navigationTop-moduleContent4850438">
+
+              <a id="navigationTop-moduleLink4850438" class=" " href="http://highscalability.com/blog/category/example" ><span>Real Life Architectures</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationTop-moduleContentWrapper4847294">
+
+    <div id="navigationTop-moduleContent4847294">
+
+              <a id="navigationTop-moduleLink4847294" class=" " href="http://highscalability.com/all-posts/" ><span>All Posts</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationTop-moduleContentWrapper4850431">
+
+    <div id="navigationTop-moduleContent4850431">
+
+              <a id="navigationTop-moduleLink4850431" class=" " href="http://highscalability.com/advertising/" ><span>Advertising</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationTop-moduleContentWrapper4850388">
+
+    <div id="navigationTop-moduleContent4850388">
+
+              <a id="navigationTop-moduleLink4850388" class=" " href="http://highscalability.com/contact/" ><span>contact</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationTop-moduleContentWrapper5498762">
+
+    <div id="navigationTop-moduleContent5498762">
+
+              <a id="navigationTop-moduleLink5498762" class=" " href="http://astore.amazon.com/possiboutpos-20" ><span>Book Store</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationTop-moduleContentWrapper5861345">
+
+    <div id="navigationTop-moduleContent5861345">
+
+              <a id="navigationTop-moduleLink5861345" class=" " href="http://feeds.feedburner.com/HighScalability" ><span>RSS</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  </ul><br class="clearer"/></div></div>
+
+    
+        
+      
+  
+      <div id="bannerAreaWrapper"><div id="bannerArea">
+
+        
+        <div id="bannerWrapper">
+          <a href="http://highscalability.com/"><img id="banner" src="HSBannerTrebuchet.jpg" alt="High Scalability" title="High Scalability"/></a>
+        </div>  
+
+      
+      
+      </div></div>
+    
+    
+    
+
+      <div id="navigationBottom"><div id="navigationBottom-sectionContent2191792" class="horizontalNavigationBar"><ul class="content-navigation">
+    
+  <li class="module active-module  " id="navigationBottom-moduleContentWrapper4867632">
+
+    <div id="navigationBottom-moduleContent4867632">
+
+              <a id="navigationBottom-moduleLink4867632" class=" " href="http://highscalability.com/" ><span>Home</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationBottom-moduleContentWrapper4850400">
+
+    <div id="navigationBottom-moduleContent4850400">
+
+              <a id="navigationBottom-moduleLink4850400" class=" " href="http://highscalability.com/start-here/" ><span>Start Here</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationBottom-moduleContentWrapper4850438">
+
+    <div id="navigationBottom-moduleContent4850438">
+
+              <a id="navigationBottom-moduleLink4850438" class=" " href="http://highscalability.com/blog/category/example" ><span>Real Life Architectures</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationBottom-moduleContentWrapper4847294">
+
+    <div id="navigationBottom-moduleContent4847294">
+
+              <a id="navigationBottom-moduleLink4847294" class=" " href="http://highscalability.com/all-posts/" ><span>All Posts</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationBottom-moduleContentWrapper4850431">
+
+    <div id="navigationBottom-moduleContent4850431">
+
+              <a id="navigationBottom-moduleLink4850431" class=" " href="http://highscalability.com/advertising/" ><span>Advertising</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationBottom-moduleContentWrapper4850388">
+
+    <div id="navigationBottom-moduleContent4850388">
+
+              <a id="navigationBottom-moduleLink4850388" class=" " href="http://highscalability.com/contact/" ><span>contact</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationBottom-moduleContentWrapper5498762">
+
+    <div id="navigationBottom-moduleContent5498762">
+
+              <a id="navigationBottom-moduleLink5498762" class=" " href="http://astore.amazon.com/possiboutpos-20" ><span>Book Store</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="navigationBottom-moduleContentWrapper5861345">
+
+    <div id="navigationBottom-moduleContent5861345">
+
+              <a id="navigationBottom-moduleLink5861345" class=" " href="http://feeds.feedburner.com/HighScalability" ><span>RSS</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  </ul><br class="clearer"/></div></div>
+
+
+  </div></div>
+  
+  
+
+  
+
+  
+  <div id="pageBodyWrapper"><div id="pageBody">
+  
+  <div id="sidebar1Wrapper" class="verticalNavigationBarWrapper"><div class="iw-vnb1"><div class="iw-vnb2"><div class="iw-vnb3"><div class="iw-vnb4"><div id="sidebar1" class="verticalNavigationBar">
+
+  
+
+    <div id="sectionContent2191792" class="sectionWrapper promotedContainer "><div class="iw-s1"><div class="iw-s2"><div class="iw-s3"><div class="iw-s4"><div class="section">
+
+       <div class="caption">Top</div> 
+
+      
+        
+          <ul class="content-navigation">
+  <li class="module active-module  " id="moduleContentWrapper4867632">
+
+    <div id="moduleContent4867632">
+
+              <a id="moduleLink4867632" class=" " href="http://highscalability.com/" ><span>Home</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4850400">
+
+    <div id="moduleContent4850400">
+
+              <a id="moduleLink4850400" class=" " href="http://highscalability.com/start-here/" ><span>Start Here</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4850438">
+
+    <div id="moduleContent4850438">
+
+              <a id="moduleLink4850438" class=" " href="http://highscalability.com/blog/category/example" ><span>Real Life Architectures</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4847294">
+
+    <div id="moduleContent4847294">
+
+              <a id="moduleLink4847294" class=" " href="http://highscalability.com/all-posts/" ><span>All Posts</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4850431">
+
+    <div id="moduleContent4850431">
+
+              <a id="moduleLink4850431" class=" " href="http://highscalability.com/advertising/" ><span>Advertising</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4850388">
+
+    <div id="moduleContent4850388">
+
+              <a id="moduleLink4850388" class=" " href="http://highscalability.com/contact/" ><span>contact</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper5498762">
+
+    <div id="moduleContent5498762">
+
+              <a id="moduleLink5498762" class=" " href="http://astore.amazon.com/possiboutpos-20" ><span>Book Store</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper5861345">
+
+    <div id="moduleContent5861345">
+
+              <a id="moduleLink5861345" class=" " href="http://feeds.feedburner.com/HighScalability" ><span>RSS</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+</ul>
+
+        
+
+      
+  
+    </div></div></div></div></div></div>
+
+  
+
+    <div id="sectionContent2248744" class="sectionWrapper  "><div class="iw-s1"><div class="iw-s2"><div class="iw-s3"><div class="iw-s4"><div class="section">
+
+       <div class="caption">Recent Posts</div> 
+
+      
+        
+          <div class="content-passthrough"><div id="moduleContentWrapper4867742" class="widget-wrapper  widget-type-journalarchive"><div id="moduleContent4867742">
+
+
+
+
+
+
+
+  <ul class="archive-item-list-pt">
+     <li><a href="http://highscalability.com/blog/2010/6/4/strategy-cache-larger-chunks-cache-hit-rate-is-a-bad-indicat.html">Strategy: Cache Larger Chunks - Cache Hit Rate is a Bad Indicator</a></li>  <li><a href="http://highscalability.com/blog/2010/6/3/hot-scalability-links-for-june-3-2010.html">Hot Scalability Links for June 3, 2010</a></li>  <li><a href="http://highscalability.com/blog/2010/6/1/web-speed-can-push-you-off-of-google-search-rankings-what-ca.html">Web Speed Can Push You Off of Google Search Rankings! What Can You Do?</a></li>  <li><a href="http://highscalability.com/blog/2010/6/1/sponsored-post-get-your-high-scalability-fix-at-digg.html">Sponsored Post: Get Your High Scalability Fix at Digg</a></li>  <li><a href="http://highscalability.com/blog/2010/5/31/scalable-federated-security-with-kerberos.html">Scalable federated security with Kerberos </a></li>  <li><a href="http://highscalability.com/blog/2010/5/26/end-to-end-performance-study-of-cloud-services.html">End-To-End Performance Study of Cloud Services</a></li>  <li><a href="http://highscalability.com/blog/2010/5/25/strategy-rule-of-3-admins-to-save-your-sanity.html">Strategy: Rule of 3 Admins to Save Your Sanity</a></li>  <li><a href="http://highscalability.com/blog/2010/5/20/strategy-scale-writes-to-734-million-records-per-day-using-t.html">Strategy: Scale Writes to 734 Million Records Per Day Using Time Partitioning</a></li>  <li><a href="http://highscalability.com/blog/2010/5/17/7-lessons-learned-while-building-reddit-to-270-million-page.html">7 Lessons Learned While Building Reddit to 270 Million Page Views a Month</a></li>  <li><a href="http://highscalability.com/blog/2010/5/14/hot-scalability-links-for-may-14-2010.html">Hot Scalability Links for May 14, 2010</a></li> 
+  </ul>
+
+
+
+</div></div></div>
+
+        
+
+      
+  
+    </div></div></div></div></div></div>
+
+  
+
+    <div id="sectionContent2251797" class="sectionWrapper  "><div class="iw-s1"><div class="iw-s2"><div class="iw-s3"><div class="iw-s4"><div class="section">
+
+      
+
+      
+        
+          <div class="content-passthrough"><div id="moduleContentWrapper4876569" class="widget-wrapper  widget-type-search"><div id="moduleContent4876569">
+
+
+<form method="get" action="http://highscalability.com/display/Search">
+
+<div class="search-form-pt-wrapper">
+  <div class="search-form-pt">
+    <span class="queryFieldWrapper"><input type="text" class="text queryField" name="searchQuery" value=""/></span>
+    <span class="queryButtonWrapper"><input type="submit" class="button queryButton" value="&raquo;"/></span>
+    <input type="hidden" name="moduleId" value="4876569"/>
+    <br class="clearer"/>
+  </div>
+</div> 
+
+</form></div></div></div>
+
+        
+
+      
+  
+    </div></div></div></div></div></div>
+
+  
+
+    <div id="sectionContent2248756" class="sectionWrapper  "><div class="iw-s1"><div class="iw-s2"><div class="iw-s3"><div class="iw-s4"><div class="section">
+
+       <div class="caption">All Time Favorites</div> 
+
+      
+        
+          <div class="content-passthrough"><div id="moduleContentWrapper4869720" class="widget-wrapper  widget-type-page"><div id="moduleContent4869720">
+
+
+
+
+
+  <p>&gt;&nbsp;<a href="http://highscalability.com/youtube-architecture">YouTube Architecture</a><br />&gt;&nbsp;<a href="http://highscalability.com/plentyoffish-architecture">Plenty Of Fish Architecture</a><br />&gt;&nbsp;<a href="http://highscalability.com/google-architecture">Google Architecture</a><br />&gt;&nbsp;<a href="http://highscalability.com/scaling-twitter-making-twitter-10000-percent-faster">Scaling Twitter: Making Twitter 10000 Percent Faster</a><br />&gt;&nbsp;<a href="http://highscalability.com/flickr-architecture">Flickr Architecture</a><br />&gt;&nbsp;<a href="http://highscalability.com/amazon-architecture">Amazon Architecture</a><br />&gt;&nbsp;<a href="http://highscalability.com/how-i-learned-stop-worrying-and-love-using-lot-disk-space-scale">How I Learned to Stop Worrying and Love Using a Lot of Disk Space to Scale</a><br />&gt;&nbsp;<a href="http://highscalability.com/blog/2009/8/5/stack-overflow-architecture.html">Stack Overflow Architecture</a> <br />&gt;&nbsp;<a href="http://highscalability.com/blog/category/facebook">Facebook</a><br /> &gt;&nbsp;<a href="http://highscalability.com/blog/2009/8/6/an-unorthodox-approach-to-database-design-the-coming-of-the.html">An Unorthodox Approach to Database Design : The Coming of the Shard</a>&nbsp;<br /> &gt; <a href="http://highscalability.com/blog/2009/12/16/building-super-scalable-systems-blade-runner-meets-autonomic.html">Building Super Scalable Systems: Blade Runner Meets Autonomic Computing in the Ambient&nbsp;Cloud</a><br /> &gt;&nbsp;<a href="http://highscalability.com/blog/2009/3/16/are-cloud-based-memory-architectures-the-next-big-thing.html">Are Cloud Based Memory Architectures the Next Big Thing?</a><br /> &gt;&nbsp;<a href="http://highscalability.com/blog/2009/7/25/latency-is-everywhere-and-it-costs-you-sales-how-to-crush-it.html">Latency is Everywhere and it Costs You Sales - How to Crush it</a></p>
+</div></div></div>
+
+        
+
+      
+  
+    </div></div></div></div></div></div>
+
+  
+
+    <div id="sectionContent2248734" class="sectionWrapper  "><div class="iw-s1"><div class="iw-s2"><div class="iw-s3"><div class="iw-s4"><div class="section">
+
+      
+
+      
+        
+          <div class="content-passthrough"><div id="moduleContentWrapper4867711" class="widget-wrapper  widget-type-rss-syndicate"><div id="moduleContent4867711">
+
+
+
+  <ul class="feed-list-inline">
+    
+          <li><a href="http://feeds.feedburner.com/HighScalability" class="feed-link">High Scalability RSS</a></li>
+        
+          <li><a href="http://highscalability.com/blog/rss-comments.xml" class="feed-link">High Scalability Comments RSS</a></li>
+        
+  </ul>
+
+</div></div></div>
+
+        
+
+      
+  
+    </div></div></div></div></div></div>
+
+  
+
+  
+
+</div></div></div></div></div></div>
+  <div id="sidebar2Wrapper" class="verticalNavigationBarWrapper"><div class="iw-vnb1"><div class="iw-vnb2"><div class="iw-vnb3"><div class="iw-vnb4"><div id="sidebar2" class="verticalNavigationBar">
+
+  
+
+    <div id="sectionContent2249261" class="sectionWrapper  "><div class="iw-s1"><div class="iw-s2"><div class="iw-s3"><div class="iw-s4"><div class="section">
+
+      
+
+      
+        
+          <div class="content-passthrough"><div id="moduleContentWrapper4869210" class="widget-wrapper  widget-type-page"><div id="moduleContent4869210">
+
+
+
+
+
+  <CENTER>
+  <script type="text/javascript">
+    GA_googleFillSlot("SS_HS_Ad1");
+  </script>
+  <script type="text/javascript">
+    GA_googleFillSlot("SS_HS_Ad2");
+  </script>
+  <script type="text/javascript">
+    GA_googleFillSlot("SS_HS_Ad3");
+  </script>
+  <script type="text/javascript">
+    GA_googleFillSlot("SS_HS_Ad4");
+  </script>
+  <script type="text/javascript">
+    GA_googleFillSlot("SS_HS_Ad5");
+  </script>
+  <script type="text/javascript">
+    GA_googleFillSlot("SS_HS_Ad6");
+  </script>
+  <script type="text/javascript">
+    GA_googleFillSlot("SS_HS_ad7");
+  </script>
+  <center><a href="http://highscalability.com/advertising">advertise</A></center>
+  
+  </CENTER>
+</div></div></div>
+
+        
+
+      
+  
+    </div></div></div></div></div></div>
+
+  
+
+    <div id="sectionContent2191793" class="sectionWrapper  "><div class="iw-s1"><div class="iw-s2"><div class="iw-s3"><div class="iw-s4"><div class="section">
+
+      
+
+      
+        
+          <ul class="content-navigation">
+  <li class="module   " id="moduleContentWrapper4708561">
+
+    <div id="moduleContent4708561">
+
+              <a id="moduleLink4708561" class=" " href="http://highscalability.com/login/?returnUrl=%2Fbunch-great-strategies-using-memcached-and-mysql-better-together" ><span>Login</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4869034">
+
+    <div id="moduleContent4869034">
+
+              <a id="moduleLink4869034" class=" " href="http://highscalability.com/register/" ><span>Register</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4870172">
+
+    <div id="moduleContent4870172">
+
+              <a id="moduleLink4870172" class=" " href="http://highscalability.squarespace.com/blog/category/product" ><span>Useful Products</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4870194">
+
+    <div id="moduleContent4870194">
+
+              <a id="moduleLink4870194" class=" " href="http://highscalability.squarespace.com/blog/category/paper" ><span>Useful Papers</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4870201">
+
+    <div id="moduleContent4870201">
+
+              <a id="moduleLink4870201" class=" " href="http://highscalability.squarespace.com/blog/category/strategy" ><span>Useful Strategies</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4885586">
+
+    <div id="moduleContent4885586">
+
+              <a id="moduleLink4885586" class=" " href="http://highscalability.com/blog/category/blog" ><span>Useful Blogs</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4920227">
+
+    <div id="moduleContent4920227">
+
+              <a id="moduleLink4920227" class=" " href="http://highscalability.com/blog/category/book" ><span>Useful Books</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+
+  <li class="module   " id="moduleContentWrapper4878991">
+
+    <div id="moduleContent4878991">
+
+              <a id="moduleLink4878991" class="offsite-link " href="http://astore.amazon.com/possiboutpos-20" onclick="this.target='new';"><span>Book Store</span></a>
+      
+
+      
+
+    </div>
+
+  </li>
+
+</ul>
+
+        
+
+      
+  
+    </div></div></div></div></div></div>
+
+  
+
+  
+
+</div></div></div></div></div></div>
+  
+  
+
+  <div id="contentWrapper"><div id="content">
+    
+          
+    
+
+
+  
+
+ 
+      
+  <div class="journal-entry-navigation">
+
+    
+       <a href="http://highscalability.com/blog/2008/8/8/separation-into-readwrite-only-databases.html">&laquo; Separation into read/write only databases</a> | 
+      <a href="http://highscalability.com/blog/">Main</a>
+       | <a href="http://highscalability.com/blog/2008/7/29/ehcache-a-java-distributed-cache.html">Ehcache - A Java Distributed Cache  &raquo;</a> 
+
+    
+
+  </div>
+
+
+  
+  
+  <div class="single-journal-entry-wrapper">
+    
+
+
+<div class="journal-entry-wrapper post-text authored-by-toddhoff category-memcached category-mysql category-strategy">
+<div id="item5337386" class="journal-entry">
+
+  <div class="journal-entry-float-day"><span class="name">Monday</span></div><div class="journal-entry-float-date"><span class="month">Aug</span><span class="date">04</span><span class="year">2008</span></div>
+  
+  
+  
+  <div class="journal-entry-text">
+  
+      
+      <h2 class="title">
+    
+        
+    
+        <a class="journal-entry-navigation-current" href="http://highscalability.com/blog/a-bunch-of-great-strategies-for-using-memcached-and-mysql-be.html">A Bunch of Great Strategies for Using Memcached and MySQL Better&nbsp;Together</a>  
+     
+         
+    
+      </h2>
+      
+       <div class="journal-entry-tag journal-entry-tag-post-title"><span class="posted-on">   <img title="Date" alt="Date" class="inline-icon date-icon" src="transparent.png" />Monday, August 4, 2008 at 5:06PM</span> </div> 
+
+    
+  
+      
+      <div class="body">
+  
+        
+        
+        
+          <p>The primero recommendation for speeding up a website is almost always to add cache and more cache. And after that add a little more cache just in case. Memcached is almost always given as the recommended cache to use. What we don't often hear is how to effectively use a cache in our own products. MySQL hosted two excellent webinars (referenced below) on the subject of how to deploy and use memcached. The star of the show, other than MySQL of course, is Farhan Mashraqi of Fotolog. You may recall we did an earlier article on Fotolog in <a href="http://highscalability.com/secrets-fotologs-scaling-success">Secrets to Fotolog's Scaling Success</a>, which was one of my personal favorites.<br /><br />Fotolog, as they themselves point out, is probably the largest site nobody has ever heard of, pulling in more page views than even Flickr. Fotolog has 51 instances of memcached on 21 servers with 175G in use and 254G available. As a large successful photo-blogging site they have very demanding performance and scaling requirements. To meet those requirements they've developed a sophisticated approach to using memcached  that others can learn from and emulate. We'll cover some of the highlightable strategies from the webinar down below the fold.</p>
+<!--break-->
+<p>&nbsp;</p>
+<h2>What is Memcached?</h2>
+<p><br /><br />The first part of the first webinar gives a good overview of memcached. Just in case the rock you've been hiding under recently disintegrated, you may not have heard about memcached (as if). Memached is: <em>A high-performance, distributed memory object caching system, generic in nature, but intended for use in speeding up dynamic web applications by alleviating database load</em>. Memcached essentially creates an in-memory shard on top of a pool of servers from which an application can easily get and set up to 1MB of unstructured data. Memcached is two hash tables, one from the client to the server and another one inside the server. The magic is that none of the memcached servers need know about each other. To scale up you just add more servers and the key hashing algorithm makes it all work out right. Memcached is not redundant, has no failover, and has no authentication. It's simple server for storing and getting data, the complex bits must be implemented by applications.<br /><br />The rest of the first webinar is Farhan explaining in wonderful detail how they use memcached at Fotolog. The beginning of the second seminar covers much of the same ground as the first. In the last half of the second seminar Farhan gives a number of excellent code examples showing how memcached is installed, used, and managed. If you've never used memcached before there's a lot of good stuff presented.<br /></p>
+<h2>Memcached and MySQL Go Better Together</h2>
+<p><br /><br />There's a little embrace and extend in the webinar as MySQL cluster is presented several times as doing much the same job as memcached, but more reliably. However, the recommended approach for using memcached and MySQL is:</p>
+<li> <strong>Write scale the database by sharding</strong>. Partition data across multiple servers so more data can be written in parallel. This avoids a single server becoming the bottleneck.</li>
+<li> <strong>Front MySQL with a memcached farm to scale reads</strong>. Applications access memcached first for data and if the data is not in memcached then the application tries the database. This removes a great deal of the load on a database so it can continue to perform it's transactional duties for writes. In this architecture the database is still the system of record for the true value of data.</li>
+<li> <strong>Use MySQL replication for reliability and read query scaling</strong>. There's an effective limit to the number of slaves that can be supported so just adding slaves won't work as scaling strategy for larger sites.<br /><br />Using this approach you get scalable reads and writes along with high availability.<br /><br />Given that MySQL has a cache, why is memcached needed at all?</li>
+<li><strong>The MySQL cache is associated with just one instance</strong>. This limits the cache to the maximum address of one server. If your system is larger than the memory for one server then using the MySQL cache won't work. And if the same object is read from another instance its not cached.</li>
+<li><strong>The query cache invalidates on writes</strong>. You build up all that cache and it goes away when someone writes to it. Your cache may not be much of a cache at all depending on usage patterns.</li>
+<li><strong>The query cache is row based</strong>. Memcached can cache any type of data you want and it isn't limited to caching database rows. Memcached can cache complex complex objects that are directly usable without a join. <br /><br /><br />
+<h2>Cache everything that is slow to query, fetch, or calculate.</h2>
+<br /><br />This is Fotolog's rule of deciding what to cache. What is considered slow depends on your requirements. But when something becomes slow it's a candidate for caching.<br /><br />
+<h2>Fotolog's Caching Typology</h2>
+<br /><br />Fotolog has come up with an interesting typology of their different caching strategies:</li>
+<li><strong>Non-Deterministic Cache</strong> - the classic memcached model of reading through the cache and writing to the database.</li>
+<li><strong>State Cache</strong> - maintain current application state in cache.</li>
+<li><strong>Proactive Cache</strong> - push changes from the database directly to the cache.</li>
+<li><strong>File System Cache</strong> - save NFS load by serving files from the cache instead of the file system.</li>
+<li><strong>Partial Page Cache</strong> - cache displayable page elements, not just data.</li>
+<li><strong>Application Based Replication</strong> - use a client side API to hide all the low level details of interacting with the cache.<br /><br />
+<h2>Non-Deterministic Cache</h2>
+<br /><br />This is the typical way of using memcached. I think the non-determinism comes in because an application can't depend on data being in the cache. The data may have been evicted because a slab is full or because the data simply hasn't been added yet. Other Fotolog strategies are deterministic, which means the application can assume the data is always present.<br /><br />
+<h3>Useful For</h3>
+<br /><br /></li>
+<li> Ideal for complex objects that are read several times. Especially for sharded environments where you need to collect data from multiple shards. </li>
+<li> Good replacement for MySQL query cache</li>
+<li> Caching relationships and other lists</li>
+<li> Slow data that&rsquo;s used across many pages</li>
+<li> Don&rsquo;t cache if its more taxing to cache than you&rsquo;ll save</li>
+<li> Tag clouds and auto-suggest lists<br /><br />For example, when a photo is uploaded the photo is uploaded on the page of every friend. These lists are taxing to calculate so they are cached.<br /><br />
+<h3>Usage Steps</h3>
+<br /><br /></li>
+<li> Check memcached for your data key.</li>
+<li> If the data doesn't exist in the cache then check database.</li>
+<li> If the data exists in the database then populate memcached.<br /><br />
+<h3>Stats</h3>
+<br /><br /></li>
+<li>45 memcached instances dedicated to nondeterministic cache</li>
+<li> Each instance (on average):<br />* ~440 gets per second<br />* ~40 sets per second<br />* ~11 gets/set<br /><br />Fotolog likes to characterize their caching policy in terms of the ratio of gets to sets.<br /><br />
+<h3>Potential Problems</h3>
+<br /><br /></li>
+<li> While memcached is usually a light CPU user, Fotolog ran their cache on their application servers and found some problems:<br />* 90% CPU usage<br />* Memory garbage collected nearly once a minute<br />* Experienced blocking on memcached on app servers</li>
+<li>Operations are not transactional. One work around is to set expirations so stale data doesn't stay around long.<br /><br /><br />
+<h2>State Cache</h2>
+<br /><br />Keeps the current state of an application in cache.<br /><br />
+<h3>Useful For</h3>
+<br /><br /></li>
+<li> Expensive operations.</li>
+<li> Sessions. If a memcached server goes down just make people login again.</li>
+<li> Keep track of who's online and their current status, especially for IM applications. Use memcached or the load would cripple the database.<br /><br />
+<h3>Usage Steps</h3>
+<br /><br />It's a form of non-deterministic caching so the same steps apply.<br /><br />
+<h3>Stats</h3>
+<br /><br /></li>
+<li> 9G dedicated. Depending on the number users all the users can keep in cache. <br /><br /><br />
+<h2>Deterministic Cache</h2>
+<br /><br />Keep all data for particular database tables in the cache.  An application always assumes that the data they need is in the cache (deterministic), applications never go to the database for data. Applications don't have to check memcached before accessing the data. The data will exist in the cache because the database is essentially loaded into the cache and is always kept in sync.<br /><br />
+<h3>Useful For</h3>
+<br /><br /></li>
+<li> Read scalability. All reads go through the cache and the database is completely offloaded.</li>
+<li> Ideal for caching things that have no expiration. </li>
+<li> Heavily accessed data/objects/lists</li>
+<li> User credentials</li>
+<li> User profiles</li>
+<li> User preferences</li>
+<li> Active media belonging to users, like photo lists.</li>
+<li> Outsourcing logins to memcached. Don't hit database on login. All logins are processed through the cache.<br /><br />
+<h3>Usage Steps</h3>
+<br /><br /></li>
+<li> Multiple dedicated cache pools are maintained. Instead of one large pool make separate standalone pools. Multiple pools are necessary for high availability. If a cache pool goes down then applications switch over to the next pool. If a multiple pools did not exist and a pool did go down then the database would be swamped with the load. </li>
+<li> All cache pools are maintained by the application. A write to the database means writing to multiple memcache pools. When an update to a user profile happens, for example, the update has to replicated to multiple caches from that point onwards.</li>
+<li> When the site starts after a shutdown then when it comes up the deterministic cache is populated before the site is up. The site is rarely rebooted so this is rare occurrence.</li>
+<li> Reads could also be load balanced against the cache pools for better performance and higher scalability.<br /><br />
+<h3>Stats</h3>
+<br /><br /></li>
+<li> ~ 90,000 gets / second across cache cluster</li>
+<li> ~ 300 sets / second</li>
+<li> get/set ratio of ~ 300<br /><br />
+<h3>Potential Problems</h3>
+<br /><br /></li>
+<li> Must have enough memory to hold everything.</li>
+<li> The database has rows and the cache may have objects. The database caching logic must know enough to create objects from the database schema.</li>
+<li> Maintaining the multiple caches seems complex. Fotolog uses Java and Hibernate. They wrote their own client to handle rotation through pools.</li>
+<li> Maintaining multiple caches adds a lot of overhead to the application. In practice there's little replication overhead compared to benefit.<br /><br />
+<h2>Proactive Caching</h2>
+<br /><br />Data magically shows up in the cache. As updates happen to the database the cache is populated based on the database change. Since the cache is updated as the database is updated the chances of data being in cache are high.  It's non-deterministic caching with a twist.<br /><br />
+<h3>Useful For</h3>
+<br /><br /></li>
+<li> Pre-Populating Cache: Keeping memcached updated minimizes calls to database if object not present.</li>
+<li> &ldquo;Warm up&rdquo; cache in cases of cross data-center replication.<br /><br />
+<h3>Usage Steps</h3>
+<br /><br />There are typically three implementation approaches:</li>
+<li> Parse binary log for updates. When an update is found perform the same operation on the cache.</li>
+<li> Implement user defined functions.  Setup triggers that call UDF to update the cache. See http://tangent.org/586/Memcached_Functions_for_MySQL.html for more details.</li>
+<li> Use the Blackhole gambit. Facebook is rumored to use the Blackhole storage engine to populate cache. Data written to a Blackhole table is replicated to cache. Facebook uses it more to invalidate data and for cross country replication. The advantage of this approach is the data is not replicated through MySQL which means there are no binary logs for the data and it's not CPU intensive.<br /><br /><br />
+<h2>File System Caching</h2>
+<br /><br />NFS has significant overhead when used with a large number of servers. Fotolog originally stored XML files on a SAN and exposed them using NFS. They saw contention on these files so they put files in memcached. Big<br />performance improvements were seen and it kept NFS mounts open for other requests. Smaller media can also be stored in the cache.<br /><br />
+<h2>Partial Page Caching</h2>
+<br /><br />Cache directly displayable page elements. The other caching strategies cache data used to create pages, but some things are still compute intensive and require a lot of work. So instead of just caching objects, prepare and cache entire page elements for reuse. For page elements that are accessed many times per second this can be a big win. For example: calculating top users in a region, popular photo list, and featured photo list. Especially when using sharding it can take some time to calculate these lists, so caching the resulting page elements makes a lot of sense.<br /><br />
+<h2>Application Based Replication</h2>
+<br /><br />Write data to the cache through your own API. The API hides implementation details like:</li>
+<li>An application writes to one memcached client which writes to multiple memcached instances.</li>
+<li>Where the cache pools are and how many their are.</li>
+<li>Writing to multiple pools at the same time.</li>
+<li>Rotating to another pool on a pool failure until another pool is brought up and updated with data.<br /><br />This approach is very fast if not network bound and very cost effective. <br /><br />
+<h2>Miscellaneous</h2>
+<br /><br />There were a few suggestions on using memcached that didn't fit in any other section, so they're gathered here for posterity:</li>
+<li> Have a  lot of nodes to handle loss. Losing a node with a few nodes will cause a spike on the database as everything reloads. Having more servers means less database load on failure.</li>
+<li> Use a warm standby that takes over IP of a memcached server that fails. This means you clients will not have to update their cache lists.</li>
+<li> Memcached can operate with UDP and TCP. Persistence connections are better because there's less overhead. Cache designed to use 1000s of connections.</li>
+<li> Use separate memcached servers to reduce contention with applications.</li>
+<li> Check that your slab sizes match the size of the data you are allocating or you could be wasting a lot of memory.<br /><br />Here are some additional strategies from <a href="http://download.tangent.org/talks/Memcached%20Study.pdf">Memcached and MySQL tutorial</a>:</li>
+<li> Don't think row-level (database) caching, think complex objects.</li>
+<li> Don't run memcached on your database server, give your database all the memory it can get.</li>
+<li> Don't obsess about TCP latency - localhost TCP/IP is optimized down to an in-memory copy.</li>
+<li> Think multi-get - run things in parallel whenever you can.</li>
+<li> Not all memcached client libraries are made equal, do some research on yours.</li>
+<li> Instead of invalidating your data, expire it whenever you can - memcached will do all the work</li>
+<li> Generate smart keys - ex. on update, increment a version number, which will become part of the key</li>
+<li> For bonus points, store the version number in memcached - call it generation</li>
+<li> The latter will be added to Memcached soon - as soon as Brian gets around to it<br /><br />
+<h2>Final Thoughts</h2>
+<br /><br />Fotolog has obviously put a great deal of thought and effort into creating sophisticated scaling strategies using memcached and MySQL. What I'm struck with is the enormous amount of effort that goes into syncing rows and objects back and forth between the cache and the database. Shouldn't it be easier? What role is the database playing when the application makes such constant use of the object cache? Wouldn't  more memory make the disk based storage unnecessary?<br /><br />
+<h2>Related Articles</h2>
+<br /><br /></li>
+<li><a href="http://www.mysql.com/news-and-events/on-demand-webinars/display-od-142.html">Designing and Implementing Scalable Applications with Memcached and MySQL</a> by Farhan Mashraqi from Fotolog, Monty Taylor from Sun, and Jimmy Guerrero from Sun</li>
+<li><a href="http://mashraqi.com/2008/07/memcached-for-mysql-advanced-use-cases_09.html">Memcached for Mysql Advanced Use Cases</a> by Farhan Mashraqi of Fotolog</li>
+<li><a href="http://download.tangent.org/talks/Memcached%20Study.pdf">Memcached and MySQL tutorial</a> by Brian Aker, Alan Kasindorf - Overview with examples of how a few companies use memcached. Good presentation notes by <a href="http://www.bytebot.net/blog/archives/2008/04/14/memcached-and-mysql-tutorial">Colin Charles</a>.</li>
+<li>Strategy:  <a href="http://highscalability.com/strategy-break-memcache-dog-pile">Break Up the Memcache Dog Pile</a></li>
+<li><a href="http://highscalability.com/secrets-fotologs-scaling-success">Secrets to Fotolog's Scaling Success</a></li>
+<li><a href="http://www.mysql.com/products/enterprise/memcached.html">Memcached for MySQL</a></li>
+
+        
+  
+          
+  
+         
+  
+      </div>
+
+    
+
+  </div>
+
+      <div class="journal-entry-tag journal-entry-tag-post-body">
+      <div class="journal-entry-tag-post-body-line1"><span class="posted-by">  <a href="http://highscalability.com/blog/author/toddhoff"> <img title="Author" alt="Author" class="inline-icon user-registered-icon" src="transparent.png" />Todd Hoff</a></span> |  <span class="post-comments"><a href="http://highscalability.com/blog/a-bunch-of-great-strategies-for-using-memcached-and-mysql-be.html#comments"> <img title="Comment" alt="Comment" class="inline-icon comment-icon" src="transparent.png" />27 Comments</a></span> |  <span class="permalink-item"><a class="permalink" href="http://highscalability.com/blog/a-bunch-of-great-strategies-for-using-memcached-and-mysql-be.html"> <img title="Permalink" alt="Permalink" class="inline-icon permalink-icon" src="transparent.png" />Permalink </a></span> |  <span class="share-item"><a href="javascript:noop();" onclick="Squarespace.Interaction.shareLink(this,'%2Fblog%2Fa-bunch-of-great-strategies-for-using-memcached-and-mysql-be.html','A%20Bunch%20of%20Great%20Strategies%20for%20Using%20Memcached%20and%20MySQL%20Better%20Together');"> <img title="Share Article" alt="Share Article" class="inline-icon share-icon" src="transparent.png" />Share Article </a></span> <span class="print-item"><a href="http://highscalability.com/blog/a-bunch-of-great-strategies-for-using-memcached-and-mysql-be.html?printerFriendly=true"> <img title="Print Article" alt="Print Article" class="inline-icon print-icon" src="transparent.png" />Print Article </a></span> <span class="email-item"><a href="http://highscalability.com/blog/recommend/5337386"> <img title="Email Article" alt="Email Article" class="inline-icon email-icon" src="transparent.png" />Email Article </a></span> </div>
+      <div class="journal-entry-tag-post-body-line2"><span class="posted-in">in <span class="tag-element"><a rel="tag" href="http://highscalability.com/blog/category/memcached"> <img title="Category" alt="Category" class="inline-icon category-icon" src="transparent.png" />Memcached</a></span>, <span class="tag-element"><a rel="tag" href="http://highscalability.com/blog/category/mysql"> <img title="Category" alt="Category" class="inline-icon category-icon" src="transparent.png" />MySQL</a></span>, <span class="tag-element"><a rel="tag" href="http://highscalability.com/blog/category/strategy"> <img title="Category" alt="Category" class="inline-icon category-icon" src="transparent.png" />Strategy</a></span></span>  </div>
+      <div class="journal-entry-tag-post-body-line3"></div>
+    </div>
+  
+  
+  <div class="clearer"></div>
+
+</div>
+</div>
+
+
+
+
+
+  </div>
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class="journal-comment-area-wrapper">
+    <div id="comments" class="journal-comment-area">
+
+      <h3 class="caption">Reader Comments  (27) </h3>
+
+      
+        
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663539">
+
+    <div id="item5663539" class="body">
+
+      <p>Hi Todd, Thanks your awesome post!</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614771" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Anonymous
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663540">
+
+    <div id="item5663540" class="body">
+
+      <p>Love the article.  I have a hard time explaining these concepts to people at times.  It's nice to see it written down in a fairly compact form so people can read it without getting too overloaded.  :)</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614772" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Jon
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663541">
+
+    <div id="item5663541" class="body">
+
+      <p>François Schiettecatte’s (<a rel="nofollow" href="http://fschiettecatte.wordpress.com/2008/08/07/memcached-again/)">http://fschiettecatte.wordpress.com/2008/08/07/memcached-again/)</a> wonders if Fotolog's 21 memcached servers wouldn't be better used to further partition the data and adding more MySQL servers. He mentions Feedster didn't need memcached once they partitioned across more servers. The algorithm seems to be partition until all your data resides in memory and then you won't need an additional cache layer.</p><p>What do you think: Is partitioning better than using memcached?</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614773" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Todd Hoff
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663542">
+
+    <div id="item5663542" class="body">
+
+      <p>Hello owner,</p><p>Oncely your site is looks so nice for guests and have informations much more than the other blogs<a href="http://highscalability.com/&lt;a&#32;rel="nofollow" href="http://www.msnprogramlari.org"">http://www.msnprogramlari.org"</a> title="msn ifadeleri">.</a> I want to meet or conversation</p><p>you with msn, gtalk etc<a href="http://highscalability.com/&lt;a&#32;rel="nofollow" href="http://www.problemcocuk.com"">http://www.problemcocuk.com"</a> title="youtube">.</a></p><p>I think I have take so many informations from you.</p><p>Have a nice days :) </p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614774" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>sohbet
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663543">
+
+    <div id="item5663543" class="body">
+
+      <p>Generally speaking I would say yes, partitioning is better than using memcached. When you partition you gain performance at a much lower level, therefore any performance increase you see should last longer. Additionally you always still have the option of throwing Memached on top of your extra partitioned system.</p><p>One factor that turns this into a "it depends" scenario is when assuming the pattern of the access to your database works well with the way you partitioned the system. These are the pieces/scenarios that make each system/site different from the next. </p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614775" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Ryan Schneider
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663544">
+
+    <div id="item5663544" class="body">
+
+      <p>Excellent article. We are currently integrating memcaching in a Mysql / PHP data send between two websites. Memcaching will allow us to keep the last known data information for business listings and will only draw the information from SQL when it is determined that the data has been updated.</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614776" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>hair loss products
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663545">
+
+    <div id="item5663545" class="body">
+
+      <p>Love the article. I have a hard time explaining these concepts to people at times. It's nice to see it written down in a fairly compact form so people can read it without getting too overloaded. :)</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614777" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>sohbet
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663546">
+
+    <div id="item5663546" class="body">
+
+      <p>thank you</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614778" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Sohbet 
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663547">
+
+    <div id="item5663547" class="body">
+
+      <p>Love the article. I have a hard time explaining these concepts to people at times. It's nice to see it written down in a fairly compact form so people can read it without getting too overloaded  thank you </p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614779" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>sohbet
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663548">
+
+    <div id="item5663548" class="body">
+
+      <p>thanks for this writting..</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614780" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>manavgat
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663549">
+
+    <div id="item5663549" class="body">
+
+      <p>We were sold on using Memcached for our Server - to server data fetching, but actually found that the latency time was quite large - too large to be acceptable. We are now wondering if this was an issue with code itself. Memcached, by nature, should speed up retrieval and not slow down response times, but in fact this is what it did.</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614781" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>memory foam mattress
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663550">
+
+    <div id="item5663550" class="body">
+
+      <p>Nice article, but I still think that partitioning gives a better performance than using memcached..</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614782" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Adjustable Bed
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663551">
+
+    <div id="item5663551" class="body">
+
+      <p>Thanx Admin .</p><p><a href="http://highscalability.com/&lt;a&#32;rel="nofollow" href="http://www.trkelebek.net"">http://www.trkelebek.net"</a> rel="nofollow">kelebek</a></p><p><a href="http://highscalability.com/&lt;a&#32;rel="nofollow" href="http://www.trkelebek.net"">http://www.trkelebek.net"</a> rel="nofollow">kelebek script</a><br/></p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614783" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>kelebek
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663552">
+
+    <div id="item5663552" class="body">
+
+      <p>Generally speaking I would say yes, partitioning is better than using memcached. When you partition you gain performance at a much lower level, therefore any performance increase you see should last longer. Additionally you always still have the option of throwing Memached on top of your extra partitioned system.</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614784" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>battery
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663553">
+
+    <div id="item5663553" class="body">
+
+      <p>Great article.  To comment on the latency comment for memcache, it really depends on what is unacceptable wait times for your specific needs.  For us, memcache was just n easy way to decrease load.  Very ingenuitive.</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614785" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>speeding ticket
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663554">
+
+    <div id="item5663554" class="body">
+
+      <p>The list of strings I have put up is only a sample. I am aware that you will get false positives with it. If you look at the comments in the scripts it will give you some suggestions around this. Do note that this is a quick fix to get you up and running. What you really want to do is use a combination of whitelist/blacklist along with parameterized SQL.</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614786" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>oyun oyna
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663555">
+
+    <div id="item5663555" class="body">
+
+      <p>Generally speaking I would say yes, partitioning is better than using memcached. When you partition you gain performa<a href="http://highscalability.com/&lt;a&#32;rel="nofollow" href="http://www.pornovideolarim.net"">http://www.pornovideolarim.net"</a> title="porno izle" target="_blank">porno izle</a>-<a href="http://highscalability.com/&lt;a&#32;rel="nofollow" href="http://www.pornovideolarim.net"">http://www.pornovideolarim.net"</a> title="porno izle" target="_blank">porno</a></p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614787" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>yemek
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663556">
+
+    <div id="item5663556" class="body">
+
+      <p>"Great article. To comment on the latency comment for memcache, it really depends on what is unacceptable wait times for your specific needs. For us, memcache was just n easy way to decrease load. Very ingenuitive."</p><p>Agreed, ingenuity like this is great and works for some - and maybe not for others depending on their specific needs.</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614788" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>FTA Files
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663557">
+
+    <div id="item5663557" class="body">
+
+      <p>Generally speaking I would say yes, partitioning is better than using memcached</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614789" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>toki konutları
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663558">
+
+    <div id="item5663558" class="body">
+
+      <p>Partitioning will make your computer run faster, I am sure of that.</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614790" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>errorsmart
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663559">
+
+    <div id="item5663559" class="body">
+
+      <p>One factor that turns this into a "it depends" scenario is when assuming the pattern of the access to your database works well with the way you partitioned the system. These are the pieces/scenarios that make each system/site different from the next.</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614791" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>GG
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663560">
+
+    <div id="item5663560" class="body">
+
+      <p>Generally speaking I would say yes, partitioning is better than using memcached. When you partition you gain performance at a much lower level, therefore any performance increase you see should last longer. Additionally you always still have the option of throwing Memached on top of your extra partitioned system.</p><p>One factor that turns this into a "it depends" scenario is when assuming the pattern of the access to your database works well with the way you partitioned the system. These are the pieces/scenarios that make each system/site different from the next.</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614792" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>sbs sonuçları
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663561">
+
+    <div id="item5663561" class="body">
+
+      <p>One factor that turns this into a "it depends" scenario is when assuming the pattern of the access to your database works well with the way you partitioned the system. These are the pieces/scenarios that make each system/site different from the next.</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614793" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>travesti
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663562">
+
+    <div id="item5663562" class="body">
+
+      <p>I am aware that you will get false positives with it. If you look at the comments in the scripts it will give you some suggestions around this. Do note that this is a quick fix to get you up and running. What you really want to do is use a combination of whitelist/blacklist along with parameterized SQL.</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614794" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Lys
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+  <div class="comment-wrapper authored-by-None">
+  <div class="comment" id="comment5663563">
+
+    <div id="item5663563" class="body">
+
+      <p>Great article. Distributed caching is my favorite topic these days as a large part of making high traffic websites is making them scalable, high performance and reliable. I do have a beef with Memcached besides what was mentioned in this article though? It does not replicate data for failsafe purposes. I needed this feature badly and ended up using another popular and free caching solution called <a href="http://highscalability.com/&lt;a&#32;rel="nofollow" href="http://www.alachisoft.com/ncache/ncache_express.html"">http://www.alachisoft.com/ncache/ncache_express.html"</a>>NCache Express</a>.</p><p>Cheers,</p><p>Domino.</p>
+
+    </div>
+    <div class="signature">
+
+      November 29, 1990 | 
+  <a href="http://highscalability.com/contributor/6614795" title="Unregistered Commenter">
+  <img title="Unregistered Commenter" alt="Unregistered Commenter" class="inline-icon" src="user-unregistered.png"/>Distributed caching geek
+  
+  </a>
+
+
+
+      
+        
+
+        
+
+      
+
+    </div>
+
+  </div>
+  </div>
+
+
+
+        
+  <div  class="paginationControlWrapper footer" >
+
+    <!-- 1 - 25 of 27 (page 1 of 2) -->
+
+    <span class="paginationControlPrefix">
+      
+              Page
+       
+    </span>
+    
+    
+
+    
+              <a class="paginationPageNumber activePage" href="javascript:noop();">1</a>
+      
+    
+              <a class="paginationPageNumber"  href="http://highscalability.com/bunch-great-strategies-using-memcached-and-mysql-better-together?currentPage=2#comments" >2</a>
+      
+     
+
+    
+
+          <span class="paginationControlNextPageSuffix">
+        <a  href="http://highscalability.com/bunch-great-strategies-using-memcached-and-mysql-better-together?currentPage=2#comments" >
+          Next 25 Comments
+        </a>
+      </span>
+    
+    
+          <span class="paginationControlLastPageSuffix">
+        <a  href="http://highscalability.com/bunch-great-strategies-using-memcached-and-mysql-better-together?currentPage=2#comments" >
+          Most Recent Comment » 
+        </a>
+      </span>
+    
+
+  </div>
+
+
+
+      
+
+    </div>
+    </div>
+
+    
+      <div class="journal-add-comment-area-wrapper">
+  
+          
+            
+            
+  <script type="text/javascript">
+  // <![CDATA[
+
+    var isAddCommentsVisible = true;
+
+    function toggleReferenceMode() {
+      if (isAddCommentsVisible) {
+        hideObject(document.getElementById("add-comment-area"));
+        showObject(document.getElementById("add-reference-area"));
+      } else {
+        showObject(document.getElementById("add-comment-area"));
+        hideObject(document.getElementById("add-reference-area"));
+      }
+      isAddCommentsVisible = !isAddCommentsVisible;
+    }
+
+  // ]]>
+  </script>
+
+  <form method="post" style="margin: 0; padding: 0;" name="postform" id="postform" action="http://highscalability.com/process/CreateJournalEntryComment?moduleId=4867632&amp;entryId=5337386">
+
+     <input type="hidden" name="currentPage" value="1"/> 
+ 
+    <div class="notice-box" style="margin-top: 2em;" id="add-comment-area">
+
+      
+                              <h3 class="caption"><img title="Post" alt="Post" class="inline-icon" src="comment.png"/>Post a New Comment</h3>
+          
+        
+
+        <div class="caption-text">
+
+          Enter your information below to add a new comment.
+
+          
+
+        </div>
+
+        
+
+        <script type="text/javascript" src="storable-fields.js%3FCE=21"></script>
+
+        
+          <div class="input-field">
+            
+            <div id="authorName_title" class="title">
+               Author: 
+
+              &nbsp;<a id="storedFieldControls" style="display: none; font-size: 9px;" href="javascript:forgetSavedFields();">(forget stored information)</a>
+            </div>
+            <input class="text" type="text" style="width: 200px;" name="authorName" id="authorName" value="" maxlength="50" tabindex="2"/>
+          </div>
+
+          <div class="input-field">
+            
+            <div id="authorEmail_title" class="title"> Author Email (optional): 
+</div>
+            <input class="text" type="text" style="width: 200px;" name="authorEmail" id="authorEmail" value="" maxlength="255" tabindex="3"/>
+          </div>
+
+          <div class="input-field">
+            
+            <div id="authorUrl_title" class="title"> Author URL (optional): 
+</div>
+            <input class="text" type="text" style="width: 200px;" name="authorUrl" id="authorUrl" value="" maxlength="255" tabindex="4"/>
+          </div>
+
+          <script type="text/javascript">
+
+            YAHOO.util.Event.addListener(window, "load", function() {
+
+              document.getElementById("storedFieldControls").style.display = (Squarespace.StorableFields.isDataSaved("authorName", "authorEmail", "authorUrl") ? "inline" : "none");
+              Squarespace.StorableFields.recall("authorName", "authorEmail", "authorUrl");
+
+            });
+
+            function forgetSavedFields() {
+
+              Squarespace.StorableFields.forget("authorName", "authorEmail", "authorUrl");
+              document.getElementById("storedFieldControls").style.display = "none";
+
+            }
+
+          </script>
+
+        
+
+        <script type="text/javascript">
+          function expandBody() { b = document.getElementById("body"); b.style.height = (b.offsetHeight + 40) + "px"; }
+          function shrinkBody() { b = document.getElementById("body"); b.style.height = (b.offsetHeight - 40) + "px"; }
+        </script>
+
+        
+        <div id="body_title" style="padding-bottom: 5px; float: left;"> Post: 
+</div>
+        <div style="padding-bottom: 5px; float: right;"><a title="Increase the size of the comment area." href="javascript:expandBody();">&#8595;</a> | <a title="Decrease the size of the comment area." href="javascript:shrinkBody();">&#8593;</a></div>
+        <div class="clearer">&nbsp;</div>
+        <div style="padding-bottom: 5px;"><textarea rows="15" cols="60" name="body" id="body" tabindex="5"></textarea></div>
+        <div style="padding-bottom: 5px;">Some HTML allowed: &lt;a href=&quot;&quot; title=&quot;&quot;&gt; &lt;abbr title=&quot;&quot;&gt; &lt;acronym title=&quot;&quot;&gt; &lt;b&gt; &lt;blockquote cite=&quot;&quot;&gt; &lt;code&gt; &lt;em&gt; &lt;i&gt; &lt;strike&gt; &lt;strong&gt;</div>
+
+        
+
+        <div class="footer">
+
+                      <div class="notice-box-alert">
+              <div class="icon"><img title="Alert" alt="Alert" class="inline-icon" src="alert.png"/></div>
+              <div class="text">
+                <strong>Comment Moderation Enabled</strong><br/>
+                Your comment will not appear until it has been cleared by a website editor.
+              </div>
+            </div>
+          
+
+          
+
+          <input type="hidden" name="finalize" id="finalize" value="false"/>
+
+          <input style="width: 150px;" tabindex="6" class="button" type="button" name="createPostButton"  id="createPostButton"  value="Create Post"  onclick="submitContent(true);"/> &nbsp;&nbsp;
+          <input style="width: 150px;" tabindex="7" class="button" type="button" name="previewPostButton" id="previewPostButton" value="Preview Post" onclick="submitContent(false);"/>
+
+        </div>
+
+      
+
+    </div>
+
+  </form>
+
+  <script type="text/javascript">
+  // <![CDATA[
+
+    function submitContent(isFinal) {
+      if (isFinal) {
+        document.getElementById("finalize").value = "true";
+        Squarespace.StorableFields.save("authorName", "authorEmail", "authorUrl");
+      }
+      Squarespace.Form.smartSubmit("postform");
+    }
+
+  // ]]>
+  </script>
+
+  
+
+
+  
+            
+  
+          
+  
+        
+  
+      
+
+    </div>
+  
+  
+  
+
+  
+
+
+  
+
+  
+
+  
+  
+
+</div></div> <!-- Content -->
+  
+    
+  
+    </div></div> <!-- Page Body -->
+
+    
+    
+    <div id="pageFooterWrapper"><div id="pageFooter">
+  
+              Copyright &copy; 2010, Possibility Outpost.  All rights reserved.
+      
+  
+      
+  
+    </div></div>
+  
+  </div></div> <!-- Canvas -->
+  
+   
+
+
+  <div class="clearer" id="bodyClearer"></div>
+
+  
+</body>
+</html>
