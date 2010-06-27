@@ -56,3 +56,47 @@ Ze względu na to dzielimy je na:
 W praktyce systemy omawiane w tej pracy zazwyczaj zadowalają się częściowym zapewnieniem wszystkich wymienionych gwarancji, przy czym wysoka dostępność odgrywa główną rolę, a poświęcana jest albo odporność na podziały, albo konsystencja. 
 Dlatego systemy te należą albo do grupy CA (Google BigTable, HBase, Cassandra), albo do grupy AP (Amazon SimpleDB).
 \todo{Podział na CA, AP, CP - po lepszym poznaniu poszczególnych rozwiązań} 
+
+\section{BASE}
+
+BASE (\emph{Basically Available, Soft state, Eventual consistency}) to model konsystencji, który jest zazwyczaj przeciwstawiany modelowi ACID (\emph{Atomicity, Consistency, Isolation, Durability}). 
+Jak już sama nazwa wskazuje (ang. \emph{acid} - kwas, \emph{base} - zasada), model ten znajduje się po przeciwnej stronie spektrum w stosunku do ACID.
+
+Producenci relacyjnych baz danych od dawna już byli świadomi potrzeby partycjonowania danych na wiele węzłów.
+Aby zapewnić semantykę ACID w kontekście rozproszonych transakcji stosuje się technikę 2PC (ang. \emph{2 Phase Commit}).
+Protokół 2PC działa dwustopniowo:
+
+\begin{enumerate}
+ \item Najpierw koordynator transakcji żąda od wszystkich węzłów biorących udział w operacji aby wstępnie zcommitowały\todo{skomitowały?} transakcję i potwierdziły możliwość wykonania tej operacji.
+ Jeżeli wszystkie węzły dokonały tego potwierdzenia, przechodzi się do drugiego kroku.
+ \item W drugim kroku koordynator żąda od wszystkich zainteresowanych węzłów dokonania operacji commit.
+ Jeżeli którakolwiek z baz zawetuje tą operację, wszystkie muszą wycofać transakcję.
+\end{enumerate}
+
+Problem, na jaki napotykamy w tym podejściu, to ograniczenie dostępności systemu (A w CAP).
+Dostępność w kontekście transakcji staje się iloczynem dostępności poszczególnych węzłów systemu.
+Jeżeli mamy zatem węzły o indywidualnej dostępności 99.9\% to transakcja, która obejmuje trzy z nich będzie miała dostępność ok. 99.7\% - czyli o ok. 90 minut mniejszy \emph{uptime} w skali miesiąca.\cite{base-an-acid-alternative}
+
+Jeżeli zatem ACID oferuje nam poziom konsystencji, który można byłoby określić mianem Strong Consistency, ale kosztem dostępności, to BASE oferuje w zamian wysoką dostępność kosztem konsystencji. 
+
+\subsection{Eventual Consistency}
+
+Eventual Consistency (w wolnym tłumaczeniu: konsystencja po pewnym czasie, ostatecznie) to słaba forma gwarancji konsystencji, która gwarantuje jedynie, że po pewnym, możliwym do przewidzenia czasie od momentu wykonania operacji, jej efekty będą widziane przez klientów systemu, niezależnie od tego, do którego z węzłów systemu się zwrócą z zapytaniem.
+Okno czasowe między operacją a propagacją jej efektów do wszystkich zainteresowanych węzłów w systemie nazywamy oknem niespójności (ang. \emph{inconsistency window}).
+
+Choć początkowo może się wydawać, że tego typu model sprawia duże trudności w implementacji aplikacji korzystających z baz danych, które go zapewniają, w rzeczywistości tego typu interakcje napotykamy każdego dnia.
+Kiedy w systemie bankowym dokonujemy przelewu z konta na konto, pieniądze znikają z bilansu jednego z nich, ale na drugim pojawiają się z pewnym opóźnieniem.
+Innym przykładem może być system DNS, gdzie zmiana jest propagowana w systemie stopniowo, często oczekując na przeterminowanie cache, ale po jakimś czasie jest zauważalna u każdego klienta.
+
+Artykuł\cite{vogels-eventually-consistent} wprowadza ponadto kilka rodzajów Eventual Consistency:
+
+\begin{enumerate}
+ \item \emph{Causal Consistency} - Jeżeli proces A wykonał jakąś operację, a następnie zakomunikował ten fakt procesowi B, to proces B będzie widział zmienione dane w taki sam sposób jak proces A, a jego zapisy nie będą wchodzić w konflikt z tą operacją.
+ Proces C, któremu ta informacja nie została przekazana, będzie podlegał normalnym regułom.
+ \item \emph{Read-your-writes Consistency} - Proces dokonujący operacji w kolejnych operacjach zawsze widzi rezultaty tej operacji.
+ \item \emph{Session Consistency} - To praktyczna realizacja poprzedniego rodzaju konsystencji.
+ W tym przypadku proces komunikuje się z systemem w kontekście sesji, w ramach której ma zapewnioną gwarancję odczytu swoich operacji.
+ W przypadku awarii i konieczności nawiązania nowej sesji, gwarancje te nie przechodzą na nowo nawiązaną sesję.
+ \item \emph{Monotonic Write Consistency} - W tym przypadku system gwarantuje, że operacje zostaną wykonane w tej samej kolejności, w jakiej żądania ich wykonania zostały wysłane.
+ Systemy które nie oferują tej gwarancji są bardzo trudne w użyciu.
+\end{enumerate}

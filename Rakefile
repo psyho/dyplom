@@ -70,7 +70,8 @@ def download_entry(entry_key)
   return unless (entry = get_bib_entry_by_key(entry_key))
   return unless (entry_url = check_url(entry))
   entry_dir = make_entry_dir(entry_key)
-  system("wget -P #{entry_dir} -k -p -E -N -nd #{entry_url}")
+  puts "wget -P '#{entry_dir}' -k -p -E -N -nd '#{entry_url}'"
+  system("wget -P '#{entry_dir}' -k -p -E -N -nd '#{entry_url}'")
 end
 
 desc "downloads html document specified in the ENTRY parameter"
