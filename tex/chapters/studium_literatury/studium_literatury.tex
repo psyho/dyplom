@@ -74,6 +74,7 @@ Protokół 2PC działa dwustopniowo:
 \end{enumerate}
 
 Problem, na jaki napotykamy w tym podejściu, to ograniczenie dostępności systemu (A w CAP).
+Wystarczy aby jeden z węzłów systemu podległ awarii, aby cały system stał się niedostępny dla zapisów.
 Dostępność w kontekście transakcji staje się iloczynem dostępności poszczególnych węzłów systemu.
 Jeżeli mamy zatem węzły o indywidualnej dostępności 99.9\% to transakcja, która obejmuje trzy z nich będzie miała dostępność ok. 99.7\% - czyli o ok. 90 minut mniejszy \emph{uptime} w skali miesiąca.\cite{base-an-acid-alternative}
 
@@ -100,3 +101,36 @@ Artykuł\cite{vogels-eventually-consistent} wprowadza ponadto kilka rodzajów Ev
  \item \emph{Monotonic Write Consistency} - W tym przypadku system gwarantuje, że operacje zostaną wykonane w tej samej kolejności, w jakiej żądania ich wykonania zostały wysłane.
  Systemy które nie oferują tej gwarancji są bardzo trudne w użyciu.
 \end{enumerate}
+
+\subsubsection*{Konfiguracja Eventual Consistency}
+
+Powyższy artykuł\cite{vogels-eventually-consistent} wprowadził nomenklaturę stosowaną w konfiguracji konsystencji wielu systemów NoSQL (np. Cassandra, Riak).
+Konfigurację tą opisują zazwyczaj trzy liczby:
+
+\begin{enumerate}
+ \item \emph{N} - liczba węzłów systemu na które zostanie zreplikowany pojedynczy rekord.
+ Liczba ta jest zazwyczaj określana jako parametr konfiguracji systemu, lub podczas wydawania polecenia utworzenia ``tabeli'' (nazwanego zbioru rekordów).
+ Niektóre systemy pozwalają na zmianę tej wartości w trakcie działania systemu (np. Riak), ale większość wymaga ponownego uruchomienia aplikacji w celu zastosowania tej zmiany.
+ \item \emph{R} - liczba węzłów systemu, które muszą dokonać odczytu zanim wartość zostanie zwrócona do klienta.
+ Czasem wartości zwrócone przez poszczególne węzły będą różne.
+ Wtedy system  odpowiada albo za rozwiązanie konfliktu, albo za przekazanie wielu wersji klientowi.
+ Parametr R jest najczęściej określany z osobna dla każdego zapytania.
+ \item \emph{W} - liczba węzłów systemu, które muszą potwierdzić zapis aby operacja została zakończyła się sukcesem.
+ Podobnie jak R jest to parametr przekazywany dla każdego zapytania.
+\end{enumerate}
+
+Jeżeli $R+W>N$, to mamy do czynienia z silną konsystencją (ang. \emph{Strong Consistency}) - każdy odczyt zwróci ostatnią zapisaną wartość.
+Jeżeli $W = 0$, to zapis jest dokonywany asynchronicznie.
+
+\subsubsection*{Znaczenie}
+
+Eventual Consistency opisuje problem dotykający każdej rozproszonej bazy danych, niezależnie od tego czy jest to baza relacyjna, sieciowy system plików czy baza NoSQL.
+Tradycyjne podejście do konsystencji w kontekście replikacji jest ograniczające.
+Systemy bazodanowe najczęściej implementują rozwiązanie typu wszystko-albo-nic: operacja zapisu musi się powieść na wszystkich węzłach albo zostać cofnięta.
+Podejście takie nie tylko ogranicza dostępność systemu, powoduje ono także ograniczenie możliwości decyzyjnych autorów aplikacji korzystających z tych systemów.
+Nawet jeżeli system umożliwia asynchroniczną replikację, zazwyczaj jest to bardzo prymitywny mechanizm, który nie bierze pod uwagę wersjonowania rekordów i sprowadza bazę do konfiguracji R=1, W=1.
+
+Z drugiej strony systemy takie jak Amazon Dynamo pozwalają swoim użytkownikom na pełną dowolność w konfiguracji mechanizmów persystencji.
+Nawet przy $R+W>N$ mamy możliwość sterowania zachowaniem systemu: czy zapisy powinny być szybsze kosztem odczytów, czy na odwrót, czy też może gdzieś pomiędzy.
+Wiele z tych systemów zapewnia \emph{Read-your-writes Consistency} co stanowi dodatkowe ułatwienie.
+Możliwość konfiguracji parametrów R, W i N stopniowo staje się standardem wśród systemów NoSQL obsługujących partycjonowanie danych.
