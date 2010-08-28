@@ -134,3 +134,140 @@ Z drugiej strony systemy takie jak Amazon Dynamo pozwalają swoim użytkownikom 
 Nawet przy $R+W>N$ mamy możliwość sterowania zachowaniem systemu: czy zapisy powinny być szybsze kosztem odczytów, czy na odwrót, czy też może gdzieś pomiędzy.
 Wiele z tych systemów zapewnia \emph{Read-your-writes Consistency} co stanowi dodatkowe ułatwienie.
 Możliwość konfiguracji parametrów R, W i N stopniowo staje się standardem wśród systemów NoSQL obsługujących partycjonowanie danych.
+
+\section{Google MapReduce}
+
+Google MapReduce\cite{google-mapreduce} jest biblioteką wykorzystywaną do przetwarzania dużych zbiorów danych w środowisku rozproszonym.
+Użytkownik biblioteki specyfikuje dwie funkcje nazywane \emph{map} i \emph{reduce} oraz kilka innych parametrów konfiguracyjnych.
+Następnie biblioteka dba o to aby dane wejściowe zostały podzielone, na poszczególnych rekordach została wykonana funkcja \emph{map}, a jej wyniki zostały zagregowane przy pomocy funkcji \emph{reduce}.
+
+Operacje \emph{map} i \emph{reduce} są powszechnie spotykane w językach funkcyjnych, takich jak na przykład LISP.
+\emph{Map} na wejściu otrzymuje parę $(k, v): k \in K_1, v \in V_1$ a na wyjściu emituje listę par $(k, v): k \in K_2, v \in V_2$.
+\emph{Reduce} na wejściu otrzymuje parę $(k, (v_1, ..., v_n)): k \in K_2, v_1...v_n \in V_2$ i na wyjściu emituje $v: v \in V_2$.
+
+\subsection*{Przykład}
+
+Poniżej przedstawiam przykładowy kod funkcji \emph{map} i \emph{reduce} w języku Python dla problemu zliczania wystąpień słów w zbiorze tekstów. 
+Jak widzimy funkcja \emph{map} przyjmuje pary (klucz, wartość) z przestrzeni (Nazwy Dokumentów, Treść Dokumentów), zwracając pary z innej przestrzeni (Słowa, Liczby Naturalne).
+Funkcja \emph{reduce} w przykładzie przyjmuje pary gdzie kluczem jest słowo, natomiast wartością jest lista liczb naturalnych określająca liczby wystąpień tego słowa w różnych dokumentach (albo wielokrotnie w tym samym dokumencie).
+
+\begin{verbatim}
+def map(document_name, document_value):
+  """ funkcja mapujaca dokumenty na pary (slowo, 1)  """
+  for word in words(document_value):
+    yield (word, 1) # emit word
+
+def reduce(word, counts):
+  """ 
+  funkcja redukujaca, przyjmuje slowo 
+  i liste (iterator) po liczbie jego wystapien
+  zwrace sumaryczna liczbe wystapien danego slowa
+  """
+  sum = 0
+  for value in counts:
+    sum += value
+    # sum += 1
+    # tak tez mozna byloby zapisac, 
+    # ale wtedy funkcja nie bylaby laczna     
+  return sum 
+\end{verbatim}
+
+
+\subsection*{Opis działania}
+
+Użytkownik tworzy aplikację, w której specyfikuje dwie funkcje \emph{map} i \emph{reduce}, oraz dwa parametry konfiguracyjne: \emph{M} i \emph{R}:
+
+\begin{itemize}
+ \item \emph{M} - określa na ile części ma zostać podzielony plik wejściowy.
+ Zazwyczaj wybiera się taką liczbę aby wielkość plików wejściowych zawierała się między 16MB a 64MB.
+ Ponieważ GFS dzieli pliki na kawałki (ang. \emph{chunks}) wielkości 64MB, jest dość istotne aby pliki wejściowe nie przekraczały tej wielkości, gdyż w przeciwnym przypadku mogłaby występować konieczność komunikacji sieciowej w celu odczytania danych z pliku wejściowego.
+ \emph{M} określa ponadto liczbę zadań \emph{map}.
+ \item \emph{R} - określa liczbę zadań \emph{reduce}.
+\end{itemize}
+
+\missingfigure{schemat działania map reduce}
+
+\begin{enumerate}
+ \item Biblioteka MapReduce dzieli plik wejściowy na \emph{M} części.
+ \item Program użytkownika zostaje wysłany i uruchomiony na maszynach klastra.
+ Jedna z tych maszyn przyjmuje specjalną rolę \emph{master}, pozostałe zaś mają rolę \emph{worker}\todo{może powinienem zamienić master na zarządca/nadzorca a worker na pracownik?}.
+ \item \emph{master} przypisuje poszczególnym \emph{workerom} po jednym zadaniu do wykonania.
+ Kolejne są przydzielane w miarę jak węzły kończą przydzieloną im pracę.
+ Zadanie \emph{map} zostanie przydzielone w pierwszej kolejności maszynie która jest równocześnie \emph{chunkserverem} przechowującym odpowiedni plik wejściowy.
+ Pozwala to uniknąć komunikacji sieciowej w celu odczytania pliku.
+ \item \emph{Worker} przetwarza plik wejściowy rekord po rekordzie wywołując funkcję \emph{map} i zapisując jej wynik w pamięci.
+ \item Co pewien czas dane zapisane w pamięci są zrzucane na dysk do plików lokalnych.
+ W tym procesie dane są rozdzielane do \emph{R} plików poprzez funkcję partycjonującą, domyślnie $hash(key) mod R$.
+ Lokacje tych plików są przekazywane do węzła \emph{master}, który z kolei jest odpowiedzialny za przekazanie ich do węzła wykonującego operację \emph{reduce} na odpowiednim fragmencie danych.
+ \item Węzeł wykonujący operację \emph{reduce} po otrzymaniu takiego powiadomienia pobiera odpowiednie pliki bezpośrednio od węzła, który je przechowuje.
+ Po otrzymaniu wszystkich potrzebnych plików, \emph{worker} sortuje otrzymane dane po kluczu, tak aby wartości dla danego klucza sąsiadowały ze sobą w pliku.
+ \item Po posortowaniu plików wejściowych węzeł iteruje po kluczach i dla każdego z nich przekazuje klucz oraz listę wszystkich przypisanych mu wartości do funkcji \emph{reduce}, zapisując następnie jej wynik w pliku wyjściowym.
+ \item Kiedy wszystkie operacje \emph{reduce} zakończą się, \emph{master} budzi program użytkownika i wywołanie funkcji \emph{MapReduce} kończy się.
+\end{enumerate}
+
+Wynikiem operacji jest \emph{R} plików wynikowych.
+W większości przypadków konsumentem tych danych są inne operacje MapReduce, bądź aplikacje rozproszone, więc nie ma potrzeby łączenia tych plików w jedną całość.
+
+\subsection*{Optymalizacje}
+
+W artykule\cite{google-mapreduce} zostało opisanych kilka istotnych optymalizacji i ulepszeń:
+
+\begin{enumerate}
+ \item Operacja \emph{map} na pliku wejściowym jest wykonywana na tym samym serwerze, który przechowuje ten plik.
+ \item Operacja \emph{map} może zwrócić bardzo wiele wartości dla danego klucza pośredniego.
+ Z tego względu biblioteka wprowadza pojęcie funkcji łączącej (ang. \emph{combiner}).
+ Funkcja ta dokonuje wstępnej redukcji przed wysłaniem wartości przez sieć do węzła wykonującego operację \emph{reduce}.
+ Najczęściej stosuje się w tym miejscu tą samą funkcję co w operacji \emph{reduce}, ale aby to było możliwe, funkcja ta musi być łączna i przemienna, co czasem wymaga wprowadzenia pewnych zmian.
+ Dla przykładu: przedstawiona wcześniej funkcja map emitująca wszystkie słowa w danym dokumencie emituje powtarzające się słowa wielokrotnie.
+ Poprzez zsumowanie wystąpień przed przesłaniem znacznie zmniejszamy ilość danych do wysłania.
+ \item Funkcja partycjonująca może być wyspecyfikowana przez użytkownika, dzięki czemu potencjalnie możliwe jest takie jej określenie, aby dane powiązane ze sobą znalazły się w jednym pliku wynikowym (aczkolwiek kosztem ryzyka nierównomiernego podziału kluczy między partycje).
+ \item Dzięki sortowaniu kluczy pośrednich, pliki wynikowe są łatwiejsze do przetwarzania, umożliwiając na przykład wyszukiwanie binarne.
+ \item Kiedy zbliża się koniec operacji, zadania \emph{reduce} są zlecane do wykonania przez dodatkowe węzły.
+ Dzięki temu uszkodzone, nadmiernie obciążone przez inne procesy albo wadliwie skonfigurowane maszyny nie powodują nadmiernego wydłużenia całości operacji MapReduce.
+\end{enumerate}
+
+\subsection*{Odporność na awarie}
+
+Ponieważ biblioteka MapReduce służy do wykonywania operacji w rozproszonym środowisku, często nawet na tysiącach węzłów, konieczne jest aby była ona odporna na awarie części z węzłów.
+Rozróżniamy dwa typy awarii: awaria węzła \emph{master} i awarie węzłów typu \emph{worker}.
+
+\subsubsection*{Awaria węzła master}
+
+Ponieważ \emph{master} przechowuje między innymi informacje o zrealizowanych zadaniach i lokalizacji plików wynikowych.
+\emph{Master} musi działać aby operacja MapReduce się zakończyła powodzeniem, ale możliwe jest aby jego struktury danych były zapisywane w GFS, albo replikowane do zapasowego węzła.
+W opisanym systemie awaria węzła master zawsze kończy się niepowodzeniem całości operacji MapReduce i koniecznością jej ponownego uruchomienia.
+Jest to dopuszczalne ponieważ czas trwania operacji jest liczony w minutach, więc awaria tego konkretnego węzła jest mało prawdopodobna (w odróżnieniu od np. BigTable, który jest systemem, który działa bez przerwy).
+
+\subsubsection*{Awaria węzła slave}
+
+\emph{Master} regularnie komunikuje się z węzłami \emph{slave} w celu ustalenia ich stanu.
+W przypadku gdy węzeł przestaje odpowiadać jest uznawany za ,,martwy'', w związku z czym \emph{master} oznacza zadanie aktualnie przez niego wykonywane jako przeznaczone to przydziału, tak samo wszystkie wykonane przez niego zadania \emph{map}.
+Zadania \emph{map} muszą być wykonane ponownie, ponieważ ich wyniki zostały zapisane w lokalnych plikach i przez to są niedostępne do odczytu.
+Zadania \emph{reduce} zapisują swoje wyniki w GFS, w związku z tym nie muszą być powtarzane. 
+
+\subsection*{Znaczenie}
+
+Większość systemów opisanych w niniejszej pracy nie dysponuje zaawansowanymi metodami wykonywania zapytań, a w szczególności zapytań agregujących czy zliczających takich jak funkcje COUNT, SUM, AVG i operator GROUP BY w relacyjnych bazach danych.
+Operacje tego typu są szczególnie trudne w kontekście systemów rozproszonych, gdzie wykonanie zapytań tego typu w trybie on-line przy zachowaniu odpowiedniego czasu odpowiedzi jest często wręcz niemożliwe.
+Dlatego najczęściej wykonywanie tego typu operacji jest dokonywane co pewien czas, lub zlecane przy zapisie danych, a jego wyniki są przechowywane w systemie.
+
+W przeważającej większości obliczenia te są wykonywane przy zastosowaniu algorytmu MapReduce.
+Wiele systemów, tak jak MongoDB czy Riak, zapewnia taką funkcjonalność, inne wymagają zastosowania zewnętrznych narzędzi.
+Wierną implementacją Google MapReduce jest Hadoop, który opiszemy nieco bliżej przy okazji Hbase.
+Bardzo ciekawe podejście do MapReduce prezentuje CouchDB, która przechowuje wyniki funkcji map, dzięki czemu umożliwia dokonywanie zapytań opartych o MapReduce w trybie on-line.
+CouchDB zostanie opisane bliżej w kolejnym rozdziale.
+
+Algorytm MapReduce ma duże znaczenie w systemach NoSQL, gdyż stanowi surogat dla wykonywania skomplikowanych zapytań.
+Stanowi on jedno z podstawowych narzędzi dla praktyki prostych odczytów, ale złożonych zapisów.
+
+\section{Amazon Dynamo}
+
+W tym rozdziale opiszę Amazon Dynamo\cite{amazon-dynamo} - bazę typu klucz-wartość zaprojektowaną z myślą o skalowalności i wysokiej dostępności.
+Amazon Dynamo jest dobrym przykładem systemów AP (\emph{Available, Partition Tolerant}).
+W oparciu o techniki opisane w tym artykule powstał darmowy system open-source o nazwie Riak.
+
+\section{Google BigTable}
+
+W kolejnym rozdziale opiszę Google BigTable\cite{google-bigtable} - bazę stosowaną w Google, przewyższającą Amazon Dynamo o rząd wielkości pod względem możliwej liczby węzłów, opartą na rozproszonym systemie plików GFS.
+Google BigTable jest przykładem bazy CA (\emph{Consistent, Avaliable}).
+W rozdziale opisującym dostępne systemy opiszę Hbase - bazę silnie wzorowaną na BigTable, ale opartą na Hadoop Core zamiast GFS, oraz Apache Cassandra, która łączy w sobie cechy Amazon Dynamo i Google BigTable.
