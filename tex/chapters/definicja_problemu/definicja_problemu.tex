@@ -22,7 +22,7 @@ System bazodanowy jest skalowalny w rozumieniu tej pracy, jeżeli koszty jego ut
 Warunkiem koniecznym jest także to, aby czas potrzebny na wykonanie operacji na rzecz użytkownika aplikacji (zapisy, odczyty), nie degradował się znacznie wraz ze wzrostem ilości danych, którymi system zarządza.
 
 \section{Tradycyjne rozwiązania}
-Dotychczas najczęściej stosowanym rozwiązaniem problemów skalowalności było zastosowanie bazy danych takiej jak MySQL połączonej z Memcached jako przechowywany w pamięci operacyjnej, rozproszony cache\cite{highscalability-mysql-end-of-an-era}.
+Dotychczas najczęściej stosowanym rozwiązaniem problemów skalowalności było zastosowanie bazy danych takiej jak MySQL połączonej z Memcached jako przechowywany w pamięci operacyjnej, rozproszony cache \cite{highscalability-mysql-end-of-an-era}.
 Opiszmy pokrótce, jak takie skalowanie aplikacji w uproszczeniu wygląda.
 
 \subsection{Replikacja}
@@ -39,13 +39,13 @@ Oznacza to, że każdy z węzłów \emph{slave} musi także poświęcić 50\% za
 Wraz ze wzrostem obciążenia serwera \emph{master}, serwery \emph{slave} muszą coraz więcej zasobów poświęcać na replikację zapisów, co zmniejsza ogólną przepustowość systemu.
 Ponadto problemem może być także to, że niektóre systemy baz danych, tak jak, np. MySQL dokonują replikacji asynchronicznie.
 Powoduje to, że po dokonaniu operacji zapisu, odczyt może zwrócić wartość niezgodą z zapisaną.
-Wymaga to dodatkowej pracy ze strony programisty\cite{zaitsev-scaling-mysql}.
+Wymaga to dodatkowej pracy ze strony programisty \cite{zaitsev-scaling-mysql}.
 
 \subsection{Partycjonowanie}
 Kiedy oczywiste staje się, że nasz serwer nie jest w stanie sobie poradzić z obciążeniem wynikającym z zapisów, mamy dwie drogi do wyboru: wymienić maszynę na mocniejszą, albo zacząć przetrzymywać tylko część danych na pojedynczym serwerze.
 Pierwsza opcja, nazywana \emph{skalowaniem wzwyż}, ma pewne zalety: nie wymaga zmian w aplikacji i jej nie komplikuje.
 Wadą tego rozwiązania jest jednak cena w porównaniu do możliwości.
-Cytując za artykułem na blogu \emph{Coding Horror}\cite{codinghorror-scaling-up-vs-out}: za cenę stu tysięcy dolarów możemy albo kupić jeden potężny serwer z 32 procesorami, 512GB RAM i 4TB przestrzeni dyskowej, albo 83 mniejsze serwery posiadające łącznie 332 rdzenie, 664GB RAM i 40,5TB przestrzeni dyskowej.
+Cytując za artykułem na blogu \emph{Coding Horror} \cite{codinghorror-scaling-up-vs-out}: za cenę stu tysięcy dolarów możemy albo kupić jeden potężny serwer z 32 procesorami, 512GB RAM i 4TB przestrzeni dyskowej, albo 83 mniejsze serwery posiadające łącznie 332 rdzenie, 664GB RAM i 40,5TB przestrzeni dyskowej.
 Oczywiście nie można w ten sposób skalować aplikacji wzwyż w nieskończoność, ale warto pamiętać, że tylko nieliczne strony mogą konkurować rozmiarami z takimi gigantami jak Facebook.
 Większość aplikacji nigdy nie wyrośnie ponad rozmiar, w którym superkomputer nie wystarcza już do utrzymania ich obciążenia.
 
@@ -87,7 +87,7 @@ Dla porównania nad Memcached mamy o wiele większą kontrolę i większą swobo
 Możemy cacheować pojedyncze rzędy tabel bazy danych, całe tabele, wyniki zapytań wymagających skomplikowanych obliczeń, pliki, fragmenty wygenerowanych stron HTML i wiele innych obiektów.
 
 W architekturach wielu wysokowydajnych aplikacjach internetowych Memcached odgrywa centralną rolę.
-W artykule\cite{highscalability-mysql-memcached} czytelnik znajdzie interesujący opis strategii wykorzystania Memcached w serwisie Fotolog.
+W artykule \cite{highscalability-mysql-memcached} czytelnik znajdzie interesujący opis strategii wykorzystania Memcached w serwisie Fotolog.
 Szczególnie warta uwagi jest złożoność zaprojektowanego tam systemu, oraz to że fragmenty aplikacji wymagające największej wydajności komunikują się nie z bazą danych bezpośrednio, ale z serwerami cache w których część tabel jest w całości odwzorowana.
 
 \subsection{Problemy z tradycyjnymi rozwiązaniami}
@@ -105,7 +105,7 @@ Noszą one wspólną nazwę systemów NoSQL.
 \section{NoSQL}
 Powszechny i darmowy dostęp do produktów bazodanowych obiecujących wysoką skalowalność zaowocował powstaniem ruchu określanego popularnie mianem NoSQL (\emph{Not only SQL} - nie tylko SQL).
 Termin ten powstał początkowo jako nazwa grupy użytkowników rozproszonych baz danych udostępnionych na licencji open source.
-Ze względu na to, że nazwa ta umożliwia bardzo szeroką gamę interpretacji, pod metką NoSQL znajdujemy dziś systemy zaprojektowane w celu rozwiązywanie diametralnie różnych problemów\cite{evans-nosql-what-is-in-a-name}. 
+Ze względu na to, że nazwa ta umożliwia bardzo szeroką gamę interpretacji, pod metką NoSQL znajdujemy dziś systemy zaprojektowane w celu rozwiązywanie diametralnie różnych problemów \cite{evans-nosql-what-is-in-a-name}. 
 Ze względu na to, że większość nowych produktów bazodanowych stworzonych z myślą o wysokiej skalowalności nie dysponuje możliwością zadawania zapytań w języku SQL, niezależnie od tego czy są to bazy grafowe, oparte na dokumentach czy nawet proste kontenery klucz-wartość, wszystkie one noszą wspólną nazwę systemów NoSQL.
 
 W literaturze trudno znaleźć nazwę problemu, który próbuje rozwiązać ruch NoSQL. 

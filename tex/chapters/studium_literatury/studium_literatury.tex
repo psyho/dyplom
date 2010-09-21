@@ -2,18 +2,18 @@
 
 \section*{Streszczenie}
 
-W studium literatury zajmę się opisaniem teorii CAP\cite{brewers-conjecture} (\emph{Consistency, Availability, Partition Tolerance}), zwanej również teorią Brewer'a od nazwiska jej autora. 
+W studium literatury zajmę się opisaniem teorii CAP \cite{brewers-conjecture} (\emph{Consistency, Availability, Partition Tolerance}), zwanej również teorią Brewer'a od nazwiska jej autora. 
 Teoria ta twierdzi, że rozproszony system nie jest w stanie zapewnić równocześnie wszystkich trzech gwarancji: konsystencji danych widzianych przez węzły systemu, odporności całości systemu na awarie poszczególnych jego węzłów oraz odporności systemu na utratę połączenia pomiędzy poszczególnymi węzłami lub ich grupami. 
-Przedstawię także zasady działania Google BigTable\cite{google-bigtable} oraz Amazon Dynamo\cite{amazon-dynamo}, które bardzo istotnie wpłynęły na architekturę systemów NoSQL. 
+Przedstawię także zasady działania Google BigTable \cite{google-bigtable} oraz Amazon Dynamo \cite{amazon-dynamo}, które bardzo istotnie wpłynęły na architekturę systemów NoSQL. 
 Porównam także semantykę BASE (\emph{Basically Available, Soft-state, Eventually-consistent}) z ACID (\emph{Atomicity, Consistency, Isolation, Durability}).
 
 \section{Teoria CAP}
 
-Teoria CAP (\emph{Consistency, Availability, Partition Tolerance}) zwana również teorią Brewera od nazwiska jej autora została po raz pierwszy zaprezentowana podczas prezentacji profesora Uniwersytetu Berkley Eryka Brewera 19 czerwca 2000r. na konferencji \emph{ACM Symposium on the Principles of Distributed Computing}\cite{podc-keynote}. 
-W około dwa lata później, w 2002 roku, teoria ta (pod nazwą \emph{Brewer's Conjecture} - Domysł Brewera) została formalnie udowodniona przez Nancy Lynch oraz Setha Gilberta z MIT\cite{brewers-conjecture}.
+Teoria CAP (\emph{Consistency, Availability, Partition Tolerance}) zwana również teorią Brewera od nazwiska jej autora została po raz pierwszy zaprezentowana podczas prezentacji profesora Uniwersytetu Berkley Eryka Brewera 19 czerwca 2000r. na konferencji \emph{ACM Symposium on the Principles of Distributed Computing} \cite{podc-keynote}. 
+W około dwa lata później, w 2002 roku, teoria ta (pod nazwą \emph{Brewer's Conjecture} - Domysł Brewera) została formalnie udowodniona przez Nancy Lynch oraz Setha Gilberta z MIT \cite{brewers-conjecture}.
 
 Teoria CAP powstała jako efekt doświadczeń Brewera w firmie Inktomi oraz jego prac badawczych nad systemami rozproszonymi na Uniwersytecie w Berkley. 
-Mówi ona, że z trzech pożądanych właściwości systemu rozproszonego: Konsystencji (ang. \emph{Consistency}), Wysokiej Dostępności (ang. \emph{Availability}) oraz Odporności na Podział Sieci (ang. \emph{Partition Tolerance}) możliwe jest zapewnienie co najwyżej dwóch z nich\cite{browne-cap-theorem}.
+Mówi ona, że z trzech pożądanych właściwości systemu rozproszonego: Konsystencji (ang. \emph{Consistency}), Wysokiej Dostępności (ang. \emph{Availability}) oraz Odporności na Podział Sieci (ang. \emph{Partition Tolerance}) możliwe jest zapewnienie co najwyżej dwóch z nich \cite{browne-cap-theorem}.
 
 \subsection*{Konsystencja}
 
@@ -25,7 +25,7 @@ W Teorii CAP \emph{Consistency} jest dużo bardziej zbliżone do \emph{Atomicity
 Wysoka dostępność jest najbardziej pożądaną właściwością z trzech wymienionych.
 Oznacza ona, jak sama nazwa wskazuje, że system powinien udostępniać swoje usługi w pełni przez cały czas, wliczając w to awarie poszczególnych węzłów, aktualizacje oprogramowania czy awarie sieci. 
 Bardziej formalnie: jeżeli operacja dotrze do nie ulegającego właśnie awarii węzła, to w pewnym skończonym czasie zwróci wynik do klienta.
-Warto przy tym zwrócić uwagę (za \cite{brewers-conjecture}), że dostępność zawodzi najczęściej właśnie wtedy, gdy jest najbardziej potrzebna, czyli w okresach największego obciążenia systemu.
+Warto przy tym zwrócić uwagę (za  \cite{brewers-conjecture}), że dostępność zawodzi najczęściej właśnie wtedy, gdy jest najbardziej potrzebna, czyli w okresach największego obciążenia systemu.
 
 \subsection*{Odporność na Podział Sieci}
 
@@ -38,7 +38,7 @@ Z kolei w sytuacji gdy mamy bazę danych z horyzontalnym podziałem danych (ang.
 
 Teoria CAP nabiera znaczenia w miarę wzrostu wielkości systemu. 
 Gdy dysponujemy bazą rozsianą na kilku maszynach, narzut czasowy replikacji danych pomiędzy nimi jest akceptowalny dla większości zastosowań, nie musimy się też zbytnio martwić o podział sieci, gdyż zazwyczaj jest tak, że maszyny zlokalizowane w jednej szafie (ang. \emph{rack}) będą albo działać wszystkie, albo żadna. 
-Kiedy jednak zajmujemy się jednak usługami rozproszonymi na tysiącach węzłów, nawet gdybyśmy dysponowali 10000 maszynami o niezawodności MTBF 30 lat, każdego dnia następowałaby awaria którejś z nich\cite{google-lessons}. 
+Kiedy jednak zajmujemy się jednak usługami rozproszonymi na tysiącach węzłów, nawet gdybyśmy dysponowali 10000 maszynami o niezawodności MTBF 30 lat, każdego dnia następowałaby awaria którejś z nich \cite{google-lessons}. 
 W przypadku tak dużych systemów, czas jakiego wymaga replikacja danych aby doprowadzić aby każdy węzeł widział ten sam stan, czy to jak system reaguje na podziały sieci nabiera o wiele większego znaczenia.
 
 \subsubsection*{Podział systemów}
@@ -76,7 +76,7 @@ Protokół 2PC działa dwustopniowo:
 Problem, na jaki napotykamy w tym podejściu, to ograniczenie dostępności systemu (A w CAP).
 Wystarczy aby jeden z węzłów systemu podległ awarii, aby cały system stał się niedostępny dla zapisów.
 Dostępność w kontekście transakcji staje się iloczynem dostępności poszczególnych węzłów systemu.
-Jeżeli mamy zatem węzły o indywidualnej dostępności 99.9\% to transakcja, która obejmuje trzy z nich będzie miała dostępność ok. 99.7\% - czyli o ok. 90 minut mniejszy \emph{uptime} w skali miesiąca.\cite{base-an-acid-alternative}
+Jeżeli mamy zatem węzły o indywidualnej dostępności 99.9\% to transakcja, która obejmuje trzy z nich będzie miała dostępność ok. 99.7\% - czyli o ok. 90 minut mniejszy \emph{uptime} w skali miesiąca \cite{base-an-acid-alternative}.
 
 Jeżeli zatem ACID oferuje nam poziom konsystencji, który można byłoby określić mianem Strong Consistency, ale kosztem dostępności, to BASE oferuje w zamian wysoką dostępność kosztem konsystencji. 
 
@@ -89,7 +89,7 @@ Choć początkowo może się wydawać, że tego typu model sprawia duże trudno�
 Kiedy w systemie bankowym dokonujemy przelewu z konta na konto, pieniądze znikają z bilansu jednego z nich, ale na drugim pojawiają się z pewnym opóźnieniem.
 Innym przykładem może być system DNS, gdzie zmiana jest propagowana w systemie stopniowo, często oczekując na przeterminowanie cache, ale po jakimś czasie jest zauważalna u każdego klienta.
 
-Artykuł\cite{vogels-eventually-consistent} wprowadza ponadto kilka rodzajów Eventual Consistency:
+Artykuł \cite{vogels-eventually-consistent} wprowadza ponadto kilka rodzajów Eventual Consistency:
 
 \begin{enumerate}
  \item \emph{Causal Consistency} - Jeżeli proces A wykonał jakąś operację, a następnie zakomunikował ten fakt procesowi B, to proces B będzie widział zmienione dane w taki sam sposób jak proces A, a jego zapisy nie będą wchodzić w konflikt z tą operacją.
@@ -104,7 +104,7 @@ Artykuł\cite{vogels-eventually-consistent} wprowadza ponadto kilka rodzajów Ev
 
 \subsubsection*{Konfiguracja Eventual Consistency}
 
-Powyższy artykuł\cite{vogels-eventually-consistent} wprowadził nomenklaturę stosowaną w konfiguracji konsystencji wielu systemów NoSQL (np. Cassandra, Riak).
+Powyższy artykuł \cite{vogels-eventually-consistent} wprowadził nomenklaturę stosowaną w konfiguracji konsystencji wielu systemów NoSQL (np. Cassandra, Riak).
 Konfigurację tą opisują zazwyczaj trzy liczby:
 
 \begin{enumerate}
@@ -137,7 +137,7 @@ Możliwość konfiguracji parametrów R, W i N stopniowo staje się standardem w
 
 \section{Google MapReduce}
 
-Google MapReduce\cite{google-mapreduce} jest biblioteką wykorzystywaną do przetwarzania dużych zbiorów danych w środowisku rozproszonym.
+Google MapReduce \cite{google-mapreduce} jest biblioteką wykorzystywaną do przetwarzania dużych zbiorów danych w środowisku rozproszonym.
 Użytkownik biblioteki specyfikuje dwie funkcje nazywane \emph{map} i \emph{reduce} oraz kilka innych parametrów konfiguracyjnych.
 Następnie biblioteka dba o to aby dane wejściowe zostały podzielone, na poszczególnych rekordach została wykonana funkcja \emph{map}, a jej wyniki zostały zagregowane przy pomocy funkcji \emph{reduce}.
 
@@ -210,7 +210,7 @@ W większości przypadków konsumentem tych danych są inne operacje MapReduce, 
 
 \subsection*{Optymalizacje}
 
-W artykule\cite{google-mapreduce} zostało opisanych kilka istotnych optymalizacji i ulepszeń:
+W artykule \cite{google-mapreduce} zostało opisanych kilka istotnych optymalizacji i ulepszeń:
 
 \begin{enumerate}
  \item Operacja \emph{map} na pliku wejściowym jest wykonywana na tym samym serwerze, który przechowuje ten plik.
@@ -262,12 +262,12 @@ Stanowi on jedno z podstawowych narzędzi dla praktyki prostych odczytów, ale z
 
 \section{Amazon Dynamo}
 
-W tym rozdziale opiszę Amazon Dynamo\cite{amazon-dynamo} - bazę typu klucz-wartość zaprojektowaną z myślą o skalowalności i wysokiej dostępności.
+W tym rozdziale opiszę Amazon Dynamo \cite{amazon-dynamo} - bazę typu klucz-wartość zaprojektowaną z myślą o skalowalności i wysokiej dostępności.
 Amazon Dynamo jest dobrym przykładem systemów AP (\emph{Available, Partition Tolerant}).
 W oparciu o techniki opisane w tym artykule powstał darmowy system open-source o nazwie Riak.
 
 \section{Google BigTable}
 
-W kolejnym rozdziale opiszę Google BigTable\cite{google-bigtable} - bazę stosowaną w Google, przewyższającą Amazon Dynamo o rząd wielkości pod względem możliwej liczby węzłów, opartą na rozproszonym systemie plików GFS.
+W kolejnym rozdziale opiszę Google BigTable \cite{google-bigtable} - bazę stosowaną w Google, przewyższającą Amazon Dynamo o rząd wielkości pod względem możliwej liczby węzłów, opartą na rozproszonym systemie plików GFS.
 Google BigTable jest przykładem bazy CA (\emph{Consistent, Avaliable}).
 W rozdziale opisującym dostępne systemy opiszę Hbase - bazę silnie wzorowaną na BigTable, ale opartą na Hadoop Core zamiast GFS, oraz Apache Cassandra, która łączy w sobie cechy Amazon Dynamo i Google BigTable.
