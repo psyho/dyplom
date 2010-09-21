@@ -5,7 +5,7 @@
 W studium literatury zajmę się opisaniem teorii CAP \cite{brewers-conjecture} (\emph{Consistency, Availability, Partition Tolerance}), zwanej również teorią Brewer'a od nazwiska jej autora. 
 Teoria ta twierdzi, że rozproszony system nie jest w stanie zapewnić równocześnie wszystkich trzech gwarancji: konsystencji danych widzianych przez węzły systemu, odporności całości systemu na awarie poszczególnych jego węzłów oraz odporności systemu na utratę połączenia pomiędzy poszczególnymi węzłami lub ich grupami. 
 Przedstawię także zasady działania Google BigTable \cite{google-bigtable} oraz Amazon Dynamo \cite{amazon-dynamo}, które bardzo istotnie wpłynęły na architekturę systemów NoSQL. 
-Porównam także semantykę BASE (\emph{Basically Available, Soft-state, Eventually-consistent}) z ACID (\emph{Atomicity, Consistency, Isolation, Durability}).
+Porównam także semantykę BASE (\emph{Basically Available, Soft-state, Eventually-consistent}) z ACID (\emph{Atomicity, Consistency, Isolation, Durability}).\todo{napisać dlaczego, uporządkować}
 
 \section{Teoria CAP}
 
@@ -29,8 +29,11 @@ Warto przy tym zwrócić uwagę (za  \cite{brewers-conjecture}), że dostępnoś
 
 \subsection*{Odporność na Podział Sieci}
 
-W systemach rozproszonych, działających na tysiącach węzłów, często rozsianych w centrach danych\todo{Data Centers - jak się tłumaczy?}\ na wielu kontynentach utrata połączenia pomiędzy grupami węzłów jest oczekiwanym, codziennym problemem. 
-Wyobraźmy sobie bazę danych replikowaną w systemie master-master.
+W systemach rozproszonych, działających na tysiącach węzłów, często rozsianych w centrach obliczeniowych na wielu kontynentach utrata połączenia pomiędzy grupami węzłów jest oczekiwanym, codziennym problemem.
+Podział sieci, rozumiany tu właśnie jako utrata połączenia między dowolnymi dwoma lub więcej węzłami systemu, przy zachowaniu połączenia tych węzłów z klientem, może nastąpić z wielu powodów: awarie switchy lub routerów, utrata połączenia między centrami obliczeniowymi, dokonywane naprawy.
+W przypadku kiedy węzeł lub ich grupa zostanie całkowicie odcięty od klientów i innych węzłów systemu, możemy traktować te węzły tak samo jak gdyby na przykład odcięto im nagle zasilanie, dlatego definicja podziału takiego przypadku nie obejmuje.
+
+Dla przykładu wyobraźmy sobie bazę danych replikowaną w systemie master-master.
 Jeżeli połączenie między węzłami zostanie zerwane, modyfikacje dokonane na jednym z nich nie będą widoczne na drugim. 
 Z kolei w sytuacji gdy mamy bazę danych z horyzontalnym podziałem danych (ang. \emph{sharded}), ponieważ każdy z serwerów zawiera informacje dotyczące tylko części danych i z góry wiadomo do którego z nich należy się zwrócić aby otrzymać informacje dotyczące dowolnego klucza, nawet w przypadku utraty połączenia między nimi, o ile klient ma dostęp do obu serwerów, ciągłość dostarczanych usług jest zapewniona.
 
@@ -38,7 +41,7 @@ Z kolei w sytuacji gdy mamy bazę danych z horyzontalnym podziałem danych (ang.
 
 Teoria CAP nabiera znaczenia w miarę wzrostu wielkości systemu. 
 Gdy dysponujemy bazą rozsianą na kilku maszynach, narzut czasowy replikacji danych pomiędzy nimi jest akceptowalny dla większości zastosowań, nie musimy się też zbytnio martwić o podział sieci, gdyż zazwyczaj jest tak, że maszyny zlokalizowane w jednej szafie (ang. \emph{rack}) będą albo działać wszystkie, albo żadna. 
-Kiedy jednak zajmujemy się jednak usługami rozproszonymi na tysiącach węzłów, nawet gdybyśmy dysponowali 10000 maszynami o niezawodności MTBF 30 lat, każdego dnia następowałaby awaria którejś z nich \cite{google-lessons}. 
+Kiedy jednak zajmujemy się usługami rozproszonymi na tysiącach węzłów, nawet gdybyśmy dysponowali 10000 maszynami o niezawodności MTBF 30 lat, każdego dnia następowałaby awaria którejś z nich \cite{google-lessons}. 
 W przypadku tak dużych systemów, czas jakiego wymaga replikacja danych aby doprowadzić aby każdy węzeł widział ten sam stan, czy to jak system reaguje na podziały sieci nabiera o wiele większego znaczenia.
 
 \subsubsection*{Podział systemów}
@@ -50,24 +53,28 @@ Ze względu na to dzielimy je na:
  \item \emph{CA} - (Consistent, Available) te systemy mają problemy z podziałem sieci, wymagając zazwyczaj aby operacje dotyczące poszczególnych transakcji trafiały do pojedynczej grupy węzłów, które podlegają awarii ,,atomowo'' - albo wszystkie działają, albo żaden. 
  To podejście zazwyczaj wiąże się z problemami dla skalowalności.
  \item \emph{AP} - (Available, Partition-Tolerant) te systemy zapewniają największą odporność na awarie wynikające z rozproszonego środowiska, jednocześnie jednak stawiając twórców aplikacji przed trudnym zadaniem radzenia sobie z problemami wynikającymi z niespójności danych widzianych przez klientów bazy.
- \item \emph{AP} - (Consistent, Partition-Tolerant) te systemy w wypadku podziału oczekują na przywrócenie połączenia, ograniczając w ten sposób dostępność.
+ \item \emph{CP} - (Consistent, Partition-Tolerant) te systemy w wypadku podziału oczekują na przywrócenie połączenia, ograniczając w ten sposób dostępność.
 \end{enumerate}
 
 W praktyce systemy omawiane w tej pracy zazwyczaj zadowalają się częściowym zapewnieniem wszystkich wymienionych gwarancji, przy czym wysoka dostępność odgrywa główną rolę, a poświęcana jest albo odporność na podziały, albo konsystencja. 
-Dlatego systemy te należą albo do grupy CA (Google BigTable, HBase, Cassandra), albo do grupy AP (Amazon SimpleDB).
+Dlatego systemy te należą albo do grupy CA (Google BigTable, HBase), albo do grupy AP (Amazon Dynamo, Riak).
 \todo{Podział na CA, AP, CP - po lepszym poznaniu poszczególnych rozwiązań} 
 
 \section{BASE}
 
-BASE (\emph{Basically Available, Soft state, Eventual consistency}) to model konsystencji, który jest zazwyczaj przeciwstawiany modelowi ACID (\emph{Atomicity, Consistency, Isolation, Durability}). 
-Jak już sama nazwa wskazuje (ang. \emph{acid} - kwas, \emph{base} - zasada), model ten znajduje się po przeciwnej stronie spektrum w stosunku do ACID.
+BASE (\emph{Basically Available, Soft state, Eventual consistency}) to model konsystencji, który jest przeciwstawiany modelowi ACID (\emph{Atomicity, Consistency, Isolation, Durability}). 
+Oba te modele dotyczą baz danych, zatem oba wymagają aby operacje klienta były trwałe (\emph{Durability}).
+Różnica między nimi bierze się z podejścia do konsystencji.
+W ACID system zawsze musi być w spójnym stanie, a dokonanie zmiany może wymagać szeregu operacji które doprowadzą system do tego stanu.
+Operacje te ponadto zostają objęte transakcją i zostają aplikowane albo wszystkie, albo żadna.
+W BASE system może być w stanie niespójnym z punktu widzenia aplikacji, a operacje które mają przywrócić tą spójność są wykonywane asynchronicznie.
 
 Producenci relacyjnych baz danych od dawna już byli świadomi potrzeby partycjonowania danych na wiele węzłów.
 Aby zapewnić semantykę ACID w kontekście rozproszonych transakcji stosuje się technikę 2PC (ang. \emph{2 Phase Commit}).
 Protokół 2PC działa dwustopniowo:
 
 \begin{enumerate}
- \item Najpierw koordynator transakcji żąda od wszystkich węzłów biorących udział w operacji aby wstępnie zcommitowały\todo{skomitowały?} transakcję i potwierdziły możliwość wykonania tej operacji.
+ \item Najpierw koordynator transakcji żąda od wszystkich węzłów biorących udział w operacji aby wstępnie dokonały operacji commit dla transakcji i potwierdziły możliwość wykonania tej operacji.
  Jeżeli wszystkie węzły dokonały tego potwierdzenia, przechodzi się do drugiego kroku.
  \item W drugim kroku koordynator żąda od wszystkich zainteresowanych węzłów dokonania operacji commit.
  Jeżeli którakolwiek z baz zawetuje tą operację, wszystkie muszą wycofać transakcję.
@@ -104,7 +111,7 @@ Artykuł \cite{vogels-eventually-consistent} wprowadza ponadto kilka rodzajów E
 
 \subsubsection*{Konfiguracja Eventual Consistency}
 
-Powyższy artykuł \cite{vogels-eventually-consistent} wprowadził nomenklaturę stosowaną w konfiguracji konsystencji wielu systemów NoSQL (np. Cassandra, Riak).
+Werner Vogels w artykule o Eventual Consistency \cite{vogels-eventually-consistent} wprowadził nomenklaturę stosowaną w konfiguracji konsystencji wielu systemów NoSQL (np. Cassandra, Riak).
 Konfigurację tą opisują zazwyczaj trzy liczby:
 
 \begin{enumerate}
@@ -114,13 +121,13 @@ Konfigurację tą opisują zazwyczaj trzy liczby:
  \item \emph{R} - liczba węzłów systemu, które muszą dokonać odczytu zanim wartość zostanie zwrócona do klienta.
  Czasem wartości zwrócone przez poszczególne węzły będą różne.
  Wtedy system  odpowiada albo za rozwiązanie konfliktu, albo za przekazanie wielu wersji klientowi.
- Parametr R jest najczęściej określany z osobna dla każdego zapytania.
+ Parametr R jest najczęściej określany z osobna dla każdego polecenia odczytu.
  \item \emph{W} - liczba węzłów systemu, które muszą potwierdzić zapis aby operacja została zakończyła się sukcesem.
  Podobnie jak R jest to parametr przekazywany dla każdego zapytania.
 \end{enumerate}
 
 Jeżeli $R+W>N$, to mamy do czynienia z silną konsystencją (ang. \emph{Strong Consistency}) - każdy odczyt zwróci ostatnią zapisaną wartość.
-Jeżeli $W = 0$, to zapis jest dokonywany asynchronicznie.
+Jeżeli $W = 0$, to zapis jest dokonywany w pełni asynchronicznie.
 
 \subsubsection*{Znaczenie}
 
