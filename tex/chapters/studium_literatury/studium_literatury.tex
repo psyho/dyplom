@@ -269,9 +269,79 @@ Stanowi on jedno z podstawowych narzędzi dla praktyki prostych odczytów, ale z
 
 \section{Amazon Dynamo}
 
-W tym rozdziale opiszę Amazon Dynamo \cite{amazon-dynamo} - bazę typu klucz-wartość zaprojektowaną z myślą o skalowalności i wysokiej dostępności.
-Amazon Dynamo jest dobrym przykładem systemów AP (\emph{Available, Partition Tolerant}).
-W oparciu o techniki opisane w tym artykule powstał darmowy system open-source o nazwie Riak.
+Amazon Dynamo to baza typu klucz-wartość używana w największym na świecie sklepie internetowym \emph{amazon.com}.
+Baza została opisana w artykule z 2007 roku \cite{amazon-dynamo} i od tego czasu opisany w nim system doczekał się już dwóch implementacji open-source: Dynomite i Riak, oraz stał się inspiracją dla innych baz takich jak Cassandra, czy rozszerzenia CouchDB pozwalającego na rozpraszanie tej bazy.
+
+Amazon Dynamo skaluje się bardzo dobrze - do setek węzłów, co dzięki zastosowaniu architektury opartej na usługach w zupełności wystarcza nawet takiemu gigantowi jak Amazon.
+Interesującym aspektem architektury tego sklepu internetowego jest to, że poszczególne usługi muszą oferować gwarancje na czas wykonania (ang. \emph{Service Level Agreements}).
+Przykładowym kontraktem tego typu jest gwarancja, że usługa zwróci odpowiedź w ciągu 300ms dla 99,9\% zapytań przy obciążeniu 500 zapytań na sekundę.
+Konsekwencją istnienia takich gwarancji jest to, że Dynamo musi udostępniać wiele możliwości konfiguracji, tak aby usługi mogły dostosować właściwości bazy na potrzeby oferowanego kontraktu.
+
+Jednym z wymagań dla systemu obsługującego sklep internetowy jest to aby użytkownik był w stanie zawsze dodać przedmioty do koszyka czy złożyć zamówienie.
+W związku z tym Amazon Dynamo jest systemem w którym dostępność (A w CAP) odgrywa kluczową rolę, a odporność na podział sieci (P w CAP) jest jej uzupełnieniem.
+Wydawało by się, że konsystencja ma duże znaczenie w przypadku sklepu internetowego - nie można przecież sprzedać towaru, którego się nie ma, a przecież w przypadku sklepu z którego korzystają miliony użytkowników równocześnie warunki wyścigu (ang. \emph{race conditions}) muszą występować nagminnie.
+W amazon.com dopuszczalne jest aby dwóch klientów zamówiło ostatnią z książek w magazynie, a kiedy okaże się że jeden z nich jej nie może otrzymać sklep kontaktuje się z nim proponując na przykład dłuższy okres dostawy.
+Nawet jeżeli nie wszyscy użytkownicy się zgodzą z taką sytuacją, to i tak przekłada się to na wyższe przychody.
+Pokazuje to jak Eventual Consistency może z powodzeniem być stosowane w sytuacjach, gdzie normalnie kładzie się duży nacisk na spójność danych, nie powodując przy tym ujmy dla systemu.
+
+\subsection*{Główne założenia architektury}
+
+Autorzy Amazon Dynamo określili takie założenia co do architektury:
+
+\begin{itemize}
+ \item system jest zawsze w stanie przyjąć operację zapisu
+ \item w związku z replikacją danych i naciskiem na wysoką dostępność, w systemie może wystąpić wiele wersji rekordu
+ \item rozwiązywanie konfliktów między wersjami następuje przy odczycie i jest dokonywane przez aplikację, nie przez bazę (ale aplikacja może z tego zrezygnować i wybrać prosty mechanizm, np. ostatni zapis wygrywa)
+ \item system musi się łatwo skalować wszerz poprzez dodawanie kolejnych węzłów i nie powinno to mieć dużego wpływu ani na administrację systemem ani na sam system
+ \item system musi się charakteryzować symetrią: każdy węzeł ma taki sam zestaw obowiązków jak wszystkie inne
+ \item system musi być zdecentralizowany: żaden węzeł nie jest wyróżniony i wszelkie operacje są wykonywane korzystając z mechanizmów \emph{peer-to-peer}
+ \item system musi radzić sobie z heterogenicznością środowiska: narzut pracy na pojedynczy węzeł powinien uwzględniać jego możliwości w porównaniu do innych węzłów
+\end{itemize}
+
+\subsection*{Stosowane techniki}
+
+Amazon Dynamo łączy w sobie wiele ciekawych technik rozwiązujących problemy takie jak partycjonowanie, wersjonowanie rekordów czy wykrywanie awarii.
+W niniejszym rozdziale postaram się je czytelnikowi przybliżyć.
+
+\subsubsection*{Consistent Hashing} 
+
+W systemie takim jak Dynamo, który ma za zadanie skalować się do setek węzłów, horyzontalne partycjonowanie jest nieuniknione.
+W Amazon Dynamo za podział na partycje odpowiada zmodyfikowany algorytm Consistent Hashing.
+W następnych kilku paragrafach opiszę najpierw podstawowy algorytm, a następnie kolejne jego modyfikacje.
+
+Consistent Hashing to algorytm który dla dowolnego klucza określa który węzeł systemu go przechowuje.
+Ponieważ klucze są dowolnymi ciągami bajtów, zawsze operując na nich używamy funkcji mieszającej (ang. \emph{hashing function}).
+Przeciwdziedzinę tej funkcji mieszającej traktujemy jako pierścień gdzie najmniejsza i największa możliwa wartość niejako stykają się ze sobą, podobnie jak ma to na przykład miejsce w przypadku długości geograficznych czy godzin na tarczy zegara.
+W podstawowej wersji systemu każdy węzeł systemu losuje jedną wartość na tym pierścieniu.
+Aby określić któremu węzłowi odpowiada dany klucz, obliczamy dla niego wartość funkcji mieszającej, a następnie znajdujemy węzeł, którego ,,pozycja'' na pierścieniu jest najbliższą zgodnie z ruchem wskazówek zegara po wartości wyliczonej.
+W takim schemacie każdemu węzłowi odpowiada jeden, ciągły fragment pierścienia (patrz rysunek \ref{fig:consistent-hashing-01}).
+
+\myfigure{chapters/studium_literatury/consistent-hashing-01.png}{Podstawowe Consistent Hashing}{fig:consistent-hashing-01}
+
+Podstawowy wariant algorytmu ma wiele wad.
+Problemem jest na przykład potencjalnie bardzo nierównomierna dystrybucja kluczy między węzłami.
+Nie ma też żadnego wsparcia dla heterogeniczności środowiska - nie możemy ,,mocniejszemu'' serwerowi przekazać większego zakresu kluczy.
+W związku z tymi ograniczeniami, wprowadza się tak zwane ,,wirtualne węzły'': pojedynczemu fizycznemu węzłowi przypisuje się wiele pozycji na pierścieniu (zazwyczaj liczba tych pozycji jest znacznie większa od ogólnej liczby węzłów).
+Dzięki tej modyfikacji (o ile liczba wirtualnych węzłów jest wystarczająco duża) dystrybucja kluczy będzie znacznie bardziej sprawiedliwa, możemy też kontrolować obciążenie poszczególnych węzłów poprzez przyporządkowanie im mniejszej lub większej liczby pozycji na pierścieniu (patrz rysunek \ref{fig:consistent-hashing-02}).
+
+\myfigure{chapters/studium_literatury/consistent-hashing-02.png}{Consistent Hashing z wirtualnymi węzłami}{fig:consistent-hashing-02}
+
+Opisana powyżej wersja algorytmu radzi sobie zbyt dobrze z dodawaniem i usuwaniem węzłów niż wersja podstawowa, jednak w rzeczywistości nie sprawdza się zbyt dobrze.
+Przy dodaniu węzła do systemu, klucze znajdujące się do tej pory pod opieką innych węzłów muszą być przekazane nowemu węzłowi.
+Aby tego dokonać, konieczne jest dokonanie przeglądu wszystkich kluczy w dzielonym zakresie, konieczne jest także przeliczenie na nowo i synchronizacja drzew Merkle (vide \emph{Merkel Trees} na stronie \pageref{merkle-trees}). 
+Przegląd taki obciąża system i musi być dokonywany w tle aby nie złamać gwarancji dawanych przez korzystającą z Dynamo usługę.
+Aby uniknąć tego problemu należy rozdzielić mechanizm partycjonowania danych (w jaki sposób są tworzone przedziały) od tego które węzły nimi zarządzają.
+
+W tym wariancie algorytmu przestrzeń kluczy zostaje podzielona z góry na określoną liczbę przedziałów S.
+Najczęściej liczba ta będzie znacznie większa niż liczba węzłów systemu N ($S >> N$).
+Następnie każdy z przedziałów przydzielamy losowo jednemu z węzłów tak aby każdy miał ich po $S/N$\footnote{oczywiście ten mechanizm może być dostosowany do wymagania heterogeniczności, tak aby jedne węzły otrzymywały więcej przedziałów niż inne}.
+Dzięki temu rekordy przynależące do różnych z przedziałów mogą być przechowywane w odrębnych plikach, które z kolei mogą być przesyłane w ramach potrzeby do przejmujących nad przedziałem kontrolę węzłów bez zbędnego przeglądania danych na dysku.
+Rysunek \ref{fig:consistent-hashing-03} przedstawia opisaną powyżej wersję algorytmu.
+
+\myfigure{chapters/studium_literatury/consistent-hashing-03.png}{Consistent Hashing z rozdziałem partycjonowania i pozycjonowania rekordów}{fig:consistent-hashing-03}
+
+\subsubsection*{Merkle Trees}
+\label{merkle-trees}
 
 \section{Google BigTable}
 
