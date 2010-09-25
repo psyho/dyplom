@@ -303,7 +303,7 @@ Autorzy Amazon Dynamo określili takie założenia co do architektury:
 Amazon Dynamo łączy w sobie wiele ciekawych technik rozwiązujących problemy takie jak partycjonowanie, wersjonowanie rekordów czy wykrywanie awarii.
 W niniejszym rozdziale postaram się je czytelnikowi przybliżyć.
 
-\subsubsection*{Consistent Hashing} 
+\subsubsection*{Partycjonowanie - Consistent Hashing} 
 
 W systemie takim jak Dynamo, który ma za zadanie skalować się do setek węzłów, horyzontalne partycjonowanie jest nieuniknione.
 W Amazon Dynamo za podział na partycje odpowiada zmodyfikowany algorytm Consistent Hashing.
@@ -339,6 +339,48 @@ Dzięki temu rekordy przynależące do różnych z przedziałów mogą być prze
 Rysunek \ref{fig:consistent-hashing-03} przedstawia opisaną powyżej wersję algorytmu.
 
 \myfigure{chapters/studium_literatury/consistent-hashing-03.png}{Consistent Hashing z rozdziałem partycjonowania i pozycjonowania rekordów}{fig:consistent-hashing-03}
+
+\subsubsection*{Replikacja}
+
+Mechanizm opisany w poprzednim rozdziale przydziela przedziałów kluczy do węzłów, które są \emph{koordynatorami} tych przedziałów.
+Oczywiście nie wystarcza aby każdy przedział był zapisany tylko na dysku koordynatora - awaria pojedynczego węzła powodowałaby wtedy (potencjalnie nieodwracalne) straty danych, a przynajmniej ich czasową niedostępność.
+W Amazon Dynamo dane są replikowane do N fizycznych węzłów, gdzie N\footnote{
+Uważny czytelnik zwróci uwagę na to, że ta sama nomenklatura była wykorzystana w artykule o Eventual Consistency.
+W rzeczy samej, autor tego artykułu Werner Vogels (CTO amazon.com) figuruje na także na liście autorów artykułu o Amazon Dynamo.
+Obie prace są ze sobą blisko związane i dobrze uzupełniają się.
+}
+jest parametrem określanym w konfiguracji bazy.
+Najczęściej stosowaną wartością N jest 3.
+
+Klucze są zapisywane na dysku koordynatora, oraz na dyskach N-1 kolejnych węzłów.
+Kolejne węzły to węzły, które są koordynatorami kolejnych w kierunku ruchu wskazówek zegara przedziałów pierścienia.
+Ponieważ może zajść sytuacja, że koordynatorem kolejnych przedziałów jest ten sam węzeł, poruszamy się wzdłuż pierścienia aż znajdziemy N różnych węzłów.
+Lista węzłów odpowiedzialnych za przechowywanie klucza jest nazywana \emph{listą preferencyjną}.
+Lista ta zazwyczaj zawiera więcej niż N adresów, na wypadek awarii jednego lub więcej z N podstawowych węzłów.
+
+\subsubsection*{Wersjonowanie - Zegary Wektorowe}
+
+Amazon Dynamo jest systemem, w którym dane są replikowane asynchronicznie i który zachowuje dostępność nawet w wypadku podziałów sieci, czy awarii poszczególnych węzłów.
+Konsekwencją tego podejścia jest możliwość występowania wielu wersji rekordu równocześnie w systemie, a w przypadku długotrwałych podziałów sieci możliwe jest nawet istnienie równoległych ,,drzew historii'' dla tego rekordu.
+
+Podobnie jak wcześniej i tu widzimy wyraźny wpływ tego, jak wymagania biznesowe wpłynęły na wybór algorytmów i architektury Dynamo.
+Jednym z rozdzajów danych które są przechowywane w tym systemie jest koszyk użytkownika.
+Ze względów finansowych jest istotne aby użytkownik nie tylko mógł zawsze dodać nowe przedmioty do swojego koszyka, ale także aby informacja o dodaniu tych przedmiotów nigdy nie została utracona.
+Gdyby zatem do wersjonowania rekordów w systemie użyto znaczników czasowych, nie byłoby możliwe określenie logicznej kolejności modyfikacji danego rekordu.
+Wykorzystanie startegii ,,nowszy wygrywa'' do rozwiązywania ewentualnych konfliktów mogłoby grozić utratą zamówień z koszyka, a zatem negatywnymi konsekwencjami finansowymi dla firmy.
+
+Autorzy Amazon Dynamo zdecydowali się na wykorzystanie mechanizmu nazywanego zegarami wektorowymi (ang. \emph{vector clocks}).
+Zegar wektorowy jest to zbiór par, gdzie pierwszym elementem pary jest identyfikator węzła\footnote{Riak, opisany w rozdziale \ref{sec:riak}, używa identyfikatorów klientów jako pierwszych elementów pary. Użycie identyfikatorów serwerów wiąże się bowiem z ryzykiem utraty danych. Problem ten jest opisany bliżej w \cite{basho-vector-clocks-hard}.}, a drugim elementem jest liczba naturalna.
+Przy każdej modyfikacji rekordu serwer dokonujący tej modyfikacji zwiększa o 1 liczbę przypisaną do swojego identyfikatora w zegarze wektorowym (albo wpisuje swój identyfikator z wartością 1, jeżeli go wcześniej nie było).
+Jeżeli wszystkie elementy zegara A mają wszystkie wartości odpowiednich elementów mniejsze bądź równe wartościom wektora B, to mówimy że A jest przodkiem wektora B i w przypadku napotkania takich dwóch wersji B zastępuje A.
+Jeżeli natomiast ani A nie jest przodkiem B ani vice versa, to mówimy że te dwie wersje rekordu znajdują się w konflikcie, który z kolei musi zostać rozwiązany przez aplikację (klienta).
+
+Zegar wektorowy rekordu o długim czasie życia w systemie może osiągnąć potencjalnie nieograniczoną długość.
+Aby temu zapobiec do pary identyfikator węzła-liczba, dodaje się jeszcze trzeci element: znacznik czasu (ang. \emph{timestamp}), który zapisuje kiedy ostatni raz dany węzeł modyfikował wartość rekordu.
+Długość zegara można dzięki temu kontrolować poprzez usuwanie najstarszych elementów, kiedy długość zegara przekroczy pewien próg (10 dla Dynamo).
+Teoretycznie utrata tych informacji grozi wystąpieniem konieczności rozwiązywania konfliktów między wersjami które w rzeczywistości są w relacji następstwa, ale zdarzenie takie jest wysoce nieprawdopodobne i nie wiąże się z dużymi trudnościami dla aplikacji.
+
+Bardzo dobry opis zegarów wektorowych czytelnik może znaleźć w artykułach na blogu firmy Basho, która to firma zajmuje się rozwojem bazy Riak: \cite{basho-vector-clocks-easy} opisuje tą technikę z punktu widzenia klienta, zaś \cite{basho-vector-clocks-hard} opisuje ją z punktu widzenia implementacji serwera.
 
 \subsubsection*{Merkle Trees}
 \label{merkle-trees}
