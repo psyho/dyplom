@@ -382,6 +382,31 @@ Teoretycznie utrata tych informacji grozi wystąpieniem konieczności rozwiązyw
 
 Bardzo dobry opis zegarów wektorowych czytelnik może znaleźć w artykułach na blogu firmy Basho, która to firma zajmuje się rozwojem bazy Riak: \cite{basho-vector-clocks-easy} opisuje tą technikę z punktu widzenia klienta, zaś \cite{basho-vector-clocks-hard} opisuje ją z punktu widzenia implementacji serwera.
 
+\subsubsection*{Operacje odczytu i zapisu}
+
+Jako baza typu klucz-wartość, Amazon Dynamo udostępnia użytkownikowi dwie podstawowe operacje: \emph{put} i \emph{get}.
+Operacja \emph{get} przyjmuje między innymi parametr R, określający minimalną liczbę węzłów które muszą dokonać operacji odczytu aby zakończyła się ona sukcesem.
+Operacja \emph{set} jako jeden z parametrów przyjmuje z kolei wartość W, określającą ile węzłów musi potwierdzić zapis wartości aby operacja się powiodła.
+
+Amazon Dynamo używa protokołu HTTP w komunikacji między klientem i serwerem.
+Zaletą tego podejścia jest brak konieczności linkowania aplikacji z kodem służącym do komunikacji z Amazon Dynamo, wadą jednak jest to, że klient który traktuje bazę jako ,,czarną skrzynkę'' jest wolniejszy.
+Jeżeli klient nie jest świadomy istnienia list preferencyjnych i informacji w nich zawartych, operacja odczytu przebiega następująco: 
+\begin{enumerate}
+ \item Klient wysyła zapytanie, które jest obsługiwane przez \emph{load balancer}.
+ \item \emph{Load balancer} może wybrać węzeł, do którego ma przekazać zapytanie, albo poprzez inspekcję przekazywanego zapytania i wybór węzła na podstawie listy preferencyjnej, albo losowo z pośród wszystkich węzłów systemu.
+ \item Jeżeli węzeł, do którego trafiło polecenie zapisu nie znajduje się na jednym z N pierwszych miejsc listy preferencyjnej, przekazuje on zapytanie dalej do pierwszego, nie podlegającego aktualnie awarii węzła na tej liście.
+ Nie dzieje się tak w przypadku poleceń odczytu, które mogą być koordynowane przez dowolny węzeł, gdyż nie muszą modyfikować zegarów wektorowych powiązanych z rekordami.
+ \item Węzeł ten wykonuje żądaną operację, oraz przekazuje ją do wykonania do N-1 innych węzłów znajdujących się na szczycie listy preferencyjnej.
+ \item Kiedy węzeł otrzyma potwierdzenie od $R-1$ bądź $W-1$ z tych węzłów, operacja kończy się powodzeniem.
+ Jeżeli w systemie występują wersje rekordu, które znajdują się w konflikcie, wszystkie one zostaną przekazane do klienta.
+ Nieaktualne wersje rekordów zostaną wykryte i automatycznie uaktualnione w sposób przeźroczysty dla klienta.
+\end{enumerate}
+
+Jak widać w powyższym schemacie, klient znający listy preferencyjne systemu jest w stanie całkowicie pominąć \emph{load balancer} i ewentualne przekazanie zapytania do jednego z węzłów na liście preferencyjnej klucza. 
+W przypadku gdy Dynamo posługuje się znacznikami czasu do wersjonowania rekordów, klient może przejąć na siebie także obowiązki koordynatora zapytań.
+W przypadku wykorzystania zegarów wektorowych nie jest to możliwe, gdyż w zegarze wektorowym w Dynamo jest zapisywany identyfikator węzła systemu, nie klienta (tak jak to ma miejsce w Riak).
+Koordynacja zapytań przez klienta zmniejsza opóźnienia (ang. \emph{latency}) w systemie o ponad połowę, zarówno dla wartości średnich, jak i dla 99.9\% zapytań.
+
 \subsubsection*{Merkle Trees}
 \label{merkle-trees}
 
