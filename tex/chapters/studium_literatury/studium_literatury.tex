@@ -407,8 +407,41 @@ W przypadku gdy Dynamo posługuje się znacznikami czasu do wersjonowania rekord
 W przypadku wykorzystania zegarów wektorowych nie jest to możliwe, gdyż w zegarze wektorowym w Dynamo jest zapisywany identyfikator węzła systemu, nie klienta (tak jak to ma miejsce w Riak).
 Koordynacja zapytań przez klienta zmniejsza opóźnienia (ang. \emph{latency}) w systemie o ponad połowę, zarówno dla wartości średnich, jak i dla 99.9\% zapytań.
 
-\subsubsection*{Merkle Trees}
+\subsubsection*{Obsługa awarii - Hinted Handoff}
+
+W poprzednich rozdziałach opisane zostały listy preferencyjne oraz mechanizm koordynacji operacji zapisu i odczytu.
+Przypomnijmy, że Amazon Dynamo na liście preferencyjnej zawiera więcej węzłów, niż liczba N podana przez użytkownika, a w razie awarii części węzłów przechowujących dany zakres kluczy, klient będzie kierował swoje zapytania do węzłów znajdujących się dalej na liście preferencyjnej, pomijając te, które uległy awarii.
+Informacja o tym, że rekord miał trafić do innego węzła, ale ze względu na jego awarię trafił do węzła aktualnego jest zapisywana w metadanych tego rekordu.
+Rekordy takie są przechowywane osobno od reszty rekordów i regularnie jest dokonywane sprawdzenie, czy można już taki rekord przekazać do węzła, na który miał on trafić oryginalnie.
+Technikę tę nazywamy \emph{Hinted Handoff}, czyli w wolnym tłumaczeniu przekazywanie z sugestiami.
+W Amazon Dynamo operacje dołączenia, czy usunięcia fizycznego węzła są jawne, stąd też przyjmujemy że węzły stają się niedostępne jedynie tymczasowo, w przypadku permanentnej awarii węzeł powinien zostać jawnie usunięty.
+
+\subsubsection*{Wykrywanie różnic - Merkle Trees}
 \label{merkle-trees}
+
+W Amazon Dynamo każdy węzeł jest odpowiedzialny za przechowywanie pewnej liczby zakresów kluczy.
+Węzły odpowiedzialne za określony zakres kluczy nazywamy jego replikami.
+Repliki mogą zawierać różne wersje rekordów i aby zmniejszyć ryzyko utraty danych należy co jakiś czas dokonywać synchronizacji danych między nimi.
+W tym celu stosuje się drzewa Merkle (ang. \emph{Merkle Trees}).
+Drzewo takie jako liście posiada sumy kontrolne wartości dla wszystkich kluczy danego przedziału, wszystkie pozostałe węzły drzewa zawierają sumę kontrolną ze swoich dzieci.
+Dzięki temu, że dwa drzewa o tej samej wartości w korzeniu są identyczne, możliwe jest porównanie zakresów kluczy przechowywane przez różne repliki w bardzo efektywny sposób, znacznie ograniczając ilość danych do przesłania.
+
+\subsubsection*{Optymalizacje}
+
+Podobnie jak wiele innych wysokowydajnych baz danych\footnote{MongoDB, Riak, Redis}, w celu zmniejszenia opóźnień w Amazon Dynamo zapisy mogą być przechowywane tymczasowo w pamięci i zrzucane na dysk w tle co jakiś czas.
+Aby zapewnić trwałość danych Dynamo dba o to aby przynajmniej jeden węzeł z N zapisywał dane od razu na dysku.
+Ponieważ jednak W jest zazwyczaj mniejsze od N, nie zmniejsza to szybkości działania.
+
+Inną wartą uwagi optymalizacją, jest taka konstrukcja list preferencyjnych aby każdy zakres kluczy był przechowywany na węzłach znajdujących się w co najmniej dwóch centrach danych.
+Dzięki temu w razie awarii całego centrum danych system jest w stanie zachować dostępność.
+
+\subsubsection*{Znaczenie}
+
+Amazon Dynamo jest bardzo ciekawym przykładem rozproszonego systemu bazodanowego.
+Jest jednym z nielicznych systemów, w których wszystkie węzły są sobie równe.
+Jest też warty uwagi ze względu na niezwykle wysokie gwarancje dostępności jakie oferuje i jakie ma to konsekwencje dla konsystencji.
+Dynamo doczekało się naśladowców w postaci baz Riak i Dynomite, oraz zainspirowała twórców Apache Cassandra i programistów firmy Cloudant tworzących rozproszoną wersję CouchDB.
+Artykuł ,,Dynamo: amazon's highly available key-value store'' \cite{amazon-dynamo} jest ponadto jednym z najciekawszych i najbardziej przystępnych artykułów dotyczących zagadnień związanych ze skalowalnymi bazami danych znanych autorowi tej pracy i warty polecenia wszystkim osobom zainteresowanym ruchem NoSQL.
 
 \section{Google BigTable}
 
