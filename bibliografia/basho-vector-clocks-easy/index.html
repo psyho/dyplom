@@ -1,0 +1,545 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="http://blog.basho.com/feed/index.xml" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0" href="http://blog.basho.com/feed/atom/index.xml" />
+    <title>The Basho Blog </title>
+    <meta content="Basho Riak" name="description"/>
+    <meta content="Basho, Riak, Web Database, fault tolerance, efficient scaling" name="keywords"/>
+    <link type="text/css" rel="stylesheet" href="bashoapp.css">
+	
+	
+
+	<script type="text/javascript">
+
+	    var disqus_developer = 1;
+
+	</script>
+  
+	<link rel="icon" type="image/png" href="http://riak.basho.com/images/basho-portrait-small.png">
+</head>
+ 	<body>
+
+      
+  <body>
+<div id="fixwidth">
+     <div id="header">
+     </div>  		
+		<a href="http://blog.basho.com"><div id="teaser">	
+			<div id="wrap">			
+			</div>	
+		</div></a>
+	<div id="bar">
+	</div>
+
+	<div id="main_block">
+		<div id="prose_block">	
+
+
+
+
+
+      
+<div id="blog_post">
+
+<p></p>
+
+  <a name="Why Vector Clocks are Easy" />
+  <h2 class="blog_post_title"><strong><a href="index.html" rel="bookmark" title="Permanent Link to Why Vector Clocks are Easy">Why Vector Clocks are Easy</strong></a></h2>
+
+  <small>January 29, 2010 at 11:15 AM | categories: 
+
+<a href="http://blog.basho.com/category/riak">Riak</a>
+</small><p/>
+<p></p>
+
+
+
+<div id="outline-container-1" class="outline-2">
+
+<div class="outline-text-2" id="text-1">
+<p>
+<a href="http://en.wikipedia.org/wiki/Vector_clock">Vector clocks</a>
+are confusing the first time you're introduced to them.  It's not
+clear what their benefits are, nor how it is you derive said benefits.
+Indeed, each Riak developer has had his own set of false starts in
+making them behave.
+</p>
+<p>
+The truth, though, is that vector clocks are actually very simple, and
+a couple of quick rules will get you all the power you need to use
+them effectively.
+</p>
+<p>
+The simple rule is: assign each of your actors an ID, then make sure you
+include that ID and the last vector clock you saw for a given value
+whenever to store a modification.
+</p>
+<p>
+The rest of this post will explain why and how to follow that simple
+rule.  First, I'll explain how vector clocks work with a <b>very</b> simple
+example, and then show how to use them easily in Riak.
+</p>
+</div>
+</div>
+<div id="outline-container-2" class="outline-2">
+<h2 id="sec-2">Vector Clocks by Example </h2>
+<div class="outline-text-2" id="text-2">
+<p>
+We've all had this problem:
+</p>
+<blockquote>
+<p>Alice, Ben, Cathy, and Dave are planning to meet next week for
+dinner.  The planning starts with Alice suggesting they meet on
+Wednesday.  Later, Dave discuss alternatives with Cathy, and they
+decide on Thursday instead.  Dave also exchanges email with Ben, and
+they decide on Tuesday.  When Alice pings everyone again to find out
+whether they still agree with her Wednesday suggestion, she gets
+mixed messages: Cathy claims to have settled on Thursday with Dave,
+and Ben claims to have settled on Tuesday with Dave.  Dave can't be
+reached, and so no one is able to determine the order in which these
+communications happened, and so none of Alice, Ben, and Cathy know
+whether Tuesday or Thursday is the correct choice.
+</p>
+</blockquote>
+<p>
+The story changes, but the end result is always the same: you ask
+two people for the latest version of a piece of information, and
+they reply with two different answers, and there's no way to tell
+which one is <b>really</b> the most recent.
+</p>
+<p>
+Vector clocks to the rescue, but how?  Simple: tag the date choice
+with a vector clock, and then have each party member update the
+clock whenever they alter the choice.  Start with Alice's initial
+message:
+</p>
+<pre class="example">
+date = Wednesday
+vclock = Alice:1
+</pre>
+<p>
+Alice says, "Let's meet Wednesday," and tags that value as the first
+version of the message that she has seen.  Now Dave and Ben start
+talking.  Ben suggests Tuesday:
+</p>
+<pre class="example">
+date = Tuesday
+vclock = Alice:1, Ben:1
+</pre>
+<p>
+Ben left Alice's mark alone, but added a mark specifying that it was
+the first version of the message that he had seen.  Dave replies,
+confirming Tuesday:
+</p>
+<pre class="example">
+date = Tuesday
+vclock = Alice:1, Ben:1, Dave:1
+</pre>
+<p>
+Just like Ben's modification, Dave just adds his own first-revision
+mark.  Now Cathy gets into the act, suggesting Thursday:
+</p>
+<pre class="example">
+date = Thursday
+vclock = Alice:1, Cathy:1
+</pre>
+<p>
+But wait, what happened to Ben's and Dave's marks?  Cathy didn't
+have a version of the object that had been modified by Ben or Dave,
+so their marks can't appear in her modification.  This means that
+<b>Dave</b> has two conflicting objects:
+</p>
+<pre class="example">
+date = Tuesday
+vclock = Alice:1, Ben:1, Dave:1
+</pre>
+<p>
+and
+</p>
+<pre class="example">
+date = Thursday
+vclock = Alice:1, Cathy:1
+</pre>
+<p>
+Dave can tell that these versions are in conflict, because neither
+vclock "descends" from the other.  In order for vclock B to be
+considered a descendant of vclock A, each marker in vclock A must have
+a corresponding marker in B that has a revision number greater than or
+equal to the marker in vclock A.  Markers not contained in a
+vclock can be considered to have revision number zero.  So, since
+the <i>Tuesday</i> value has a Cathy revision of zero
+while <i>Thursday</i> has a Cathy revision of one, <i>Tuesday</i>
+cannot descend from <i>Thursday</i>.  But, since <i>Thursday</i> has
+Ben and Dave revisions of zero while <i>Tuesday</i> has Bend and Dave
+revisions of one, <i>Thursday</i> is also not descended
+from <i>Tuesday</i>.  Neither succeeds the other, so Dave has a
+conflict to sort out.
+</p>
+<p>
+Luckily, Dave's a reasonable guy, and chooses Thursday:
+</p>
+<pre class="example">
+date = Thursday
+vclock = Alice:1, Ben:1, Cathy:1, Dave:2
+</pre>
+<p>
+Dave also created a vector clock that is successor to all
+previously-seen vector clocks: it has revision numbers for every
+actor equal to or greater than the last revision number he saw for
+that actor.  He emails this value back to Cathy.
+</p>
+<p>
+So now when Alice asks Ben and Cathy for the latest decision, the
+replies she receive are, from Ben:
+</p>
+<pre class="example">
+date = Tuesday
+vclock = Alice:1, Ben:1, Dave:1
+</pre>
+<p>
+and from Cathy:
+</p>
+<pre class="example">
+date = Thursday
+vclock = Alice:1, Ben:1, Cathy:1, Dave:2
+</pre>
+<p>
+From this, she can tell that Dave intended his correspondence with
+Cathy to override the decision he made with Ben.  All Alice has to
+do is show Ben the vector clock from Cathy's message, and Ben will
+know that he has been overruled.  (Dave will, almost certainly,
+blame his broken email software for failing to inform Ben of the
+change.)
+</p>
+</div>
+</div>
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3">How to do this in Riak </h2>
+<div class="outline-text-2" id="text-3">
+<p>
+Now that you understand vector clocks, using them with Riak is easy.
+I'll use the raw HTTP interface to illustrate.
+</p>
+<p>
+First, whenever you store a value, include an <code>X-Riak-ClientId</code>
+header to identify your actor.  For Alice's first message above,
+you'd say:
+</p>
+<pre class="example">
+curl -X PUT -H "X-Riak-ClientId: Alice" -H "content-type: text/plain" \
+http://localhost:8098/raw/plans/dinner --data "Wednesday"
+</pre>
+<p>
+When Ben, Cathy, and Dave each GET Alice's plans, they'll get the
+same vector clock (I've removed some of the other headers for
+brevity):
+</p>
+<pre class="example">
+curl -i http://localhost:8098/raw/plans/dinner
+HTTP/1.1 200 OK
+X-Riak-Vclock: a85hYGBgzGDKBVIsrLnh3BlMiYx5rAzLJpw7wpcFAA==
+Content-Type: text/plain
+Content-Length: 9
+
+Wednesday
+</pre>
+<p>
+The <code>X-Riak-Vclock</code> header contains an encoded version of a vclock
+that is the same as out earlier example: Alice has modified this
+value once.
+</p>
+<p>
+Now when Ben sends his change to Dave, he includes both the vector
+clock he pulled down (in the <code>X-Riak-Vclock</code> header), and his own
+<code>X-Riak-Client-Id</code>:
+</p>
+<pre class="example">
+curl -X PUT -H "X-Riak-ClientId: Ben" -H "content-type: text/plain" \
+-H "X-Riak-Vclock: a85hYGBgzGDKBVIsrLnh3BlMiYx5rAzLJpw7wpcFAA==" \
+http://localhost:8098/raw/plans/dinner --data "Tuesday"
+</pre>
+<p>
+Dave pulls down a fresh copy, and then confirms Tuesday:
+</p>
+<pre class="example">
+curl -i http://localhost:8098/raw/plans/dinner
+...
+X-Riak-Vclock: a85hYGBgymDKBVIsrLnh3BlMiYx5rAymfeeO8EGFWRLl30GF/00ACmcBAA==
+...
+curl -X PUT -H "X-Riak-ClientId: Dave" -H "content-type: text/plain" \
+-H "X-Riak-Vclock: a85hYGBgymDKBVIsrLnh3BlMiYx5rAymfeeO8EGFWRLl30GF/00ACmcBAA==" \
+http://localhost:8098/raw/plans/dinner --data "Tuesday"
+</pre>
+<p>
+Cathy, on the other hand, hasn't pulled down a new version, and
+instead merely updated the plans with her suggestion of Thursday:
+</p>
+<pre class="example">
+curl -X PUT -H "X-Riak-ClientId: Cathy" -H "content-type: text/plain" \
+-H "X-Riak-Vclock: a85hYGBgzGDKBVIsrLnh3BlMiYx5rAzLJpw7wpcFAA==" \
+http://localhost:8098/raw/plans/dinner --data "Thursday"
+</pre>
+<p>
+(That's the same vector clock that Ben used, in that encoded
+gibberish is making your eyes cross.)
+</p>
+<p>
+Now, when Dave goes to grab this new copy (after Cathy tells him she
+has posted it), he'll see one of two things.  If the "plans" Riak
+bucket has the <code>allow_mult</code> property set to <code>false</code>, he'll see just
+Cathy's update.  If <code>allow_mult</code> is <code>true</code> for the "plans" bucket,
+he'll see both his last update and Cathy's.  I'm going to show the
+<code>allow_mult=true</code> version below, because I think it illustrates the
+flow better.
+</p>
+<pre class="example">
+curl -i -H "Accept: multipart/mixed" http://localhost:8098/raw/plans/dinner
+HTTP/1.1 300 Multiple Choices
+X-Riak-Vclock: a85hYGBgzWDKBVIsrLnh3BlMiYx5rAymfeeO8EGFWRLl30GF1fsRwsypF59BhT0mIoTZ/1SYQIUrEcJszUksu9R6kCWyAA==
+Content-Type: multipart/mixed; boundary=ZZ3eyjUllBi7GXRRMJsUublFxjn
+Content-Length: 368
+
+
+--ZZ3eyjUllBi7GXRRMJsUublFxjn
+Content-Type: text/plain
+
+Tuesday
+--ZZ3eyjUllBi7GXRRMJsUublFxjn
+Content-Type: text/plain
+
+Thursday
+--ZZ3eyjUllBi7GXRRMJsUublFxjn--
+</pre>
+<p>
+Dave sees two values because the vclock that Cathy generated wasn't
+a successor to the vclock that Dave had generated with his last
+modification.  Riak couldn't choose between them, and therefore kept
+both values.
+</p>
+<p>
+Dave picks Thursday, and updates the object, resolving the conflict.
+Riak has already computed a unified, descendant vector clock for
+Dave, so he uses the vector clock from the multi-value version he
+just pulled down, just like before:
+</p>
+<pre class="example">
+curl -X PUT -H "X-Riak-ClientId: Dave" -H "content-type: text/plain" \
+-H "X-Riak-Vclock: a85hYGBgzWDKBVIsrLnh3BlMiYx5rAymfeeO8EGFWRLl30GF1fsRwsypF59BhT0mIoTZ/1SYQIUrEcJszUksu9R6kCWyAA==" \
+http://localhost:8098/raw/plans/dinner --data "Thursday"
+</pre>
+<p>
+Now when Alice check for the latest version, she just sees the final
+decision:
+</p>
+<pre class="example">
+curl -i http://localhost:8098/raw/plans/dinner
+HTTP/1.1 200 OK
+X-Riak-Vclock: a85hYGBgzWDKBVIsrLnh3BlMiYx5rAymfeeO8EGFWRLl30GF1fvhwmzNSSy71HqgEpUTEerZ/1SYYBFmTr34DCjMBBTOnQwUzgIA
+Content-Type: text/plain
+Content-Length: 7
+
+Thursday
+</pre>
+<p>
+While Riak couldn't decide whether to choose Cathy's modification
+over Dave's earlier modification, it was easy to choose Dave's
+latest modification, because the vclock created was a successor to
+the vclock in place.
+</p>
+</div>
+</div>
+<div id="outline-container-4" class="outline-2">
+<h2 id="sec-4">Review </h2>
+<div class="outline-text-2" id="text-4">
+<p>
+So, vclocks are easy: assign each of your actors an ID ("Alice",
+"Ben", "Cathy", and "Dave" in these examples), then make sure you
+include that ID and the last vector clock you saw for a given value
+whenever to store a modification.
+</p>
+<p>
+If two actors store changes with vector clocks that don't descend
+from each other, Riak will store and hand back both values.  When
+descendancy can be calculated, values stored with vector clocks that
+have been succeeded will be removed.
+</p>
+<p>
+<a href="http://twitter.com/hobbyist">-Bryan</a>
+</p></div>
+</div>
+
+
+<div class="comments">
+<strong><a href="index.html#disqus_thread" rel="bookmark"></a></strong>
+</div>
+ <hr>
+<br/>
+</div>
+
+
+<div id="disqus_thread"></div><script type="text/javascript" src="http://disqus.com/forums/thebashoblog/embed.js"></script><noscript><a href="http://disqus.com/forums/thebashoblog/?url=ref">View the discussion thread.</a></noscript><a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+ 
+
+         </div> <!-- End ProseBlock -->
+		
+		
+		
+  <div id="right_sidebar">
+	<a href="http://www.basho.com"><img src="basho-portrait.png"/></a>
+	<p>maker of <a href="http://basho.com/Riak.html">Riak</a>, the Internet-Scale Data Store.</p>
+	<p><a href="http://feeds.feedburner.com/basho/knDR" class="image"><img src="btn_rss.png"></a></p>
+	<div id="blog_post_list">
+  	<h3>Latest blog posts</h3>
+  	<ul>
+
+    <li><a href="http://blog.basho.com/2010/09/29/basho-is-taking-over-baltimore-this-weekend/">Basho is Taking Over Baltimore This Weekend</a></li>
+    <li><a href="http://blog.basho.com/2010/09/16/nosql-performance-in-the-cloud-webinar/">NoSQL Performance in the Cloud Webinar</a></li>
+    <li><a href="http://blog.basho.com/2010/09/15/lineup-and-location-for-september-riak-meetup/">Lineup and Location for September Riak Meetup</a></li>
+    <li><a href="http://blog.basho.com/2010/09/03/links-and-link-walking-on-the-riak-fast-track/">Links and Link Walking on the Riak Fast Track</a></li>
+    <li><a href="http://blog.basho.com/2010/09/01/a-new-community-editor---marten-gustafson/">A New Community Editor - Marten Gustafson</a></li>
+   </ul>
+   </div>
+   <div id="categories">
+    	<h3>Categories</h3>
+    	<ul>
+     	<li><a href="http://blog.basho.com/category/screencast">Screencast</a> (4)</li>	
+     	<li><a href="http://blog.basho.com/category/javascript">JavaScript</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/benchmarking">Benchmarking</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/joyent">Joyent</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/nosql">NoSQL</a> (34)</li>	
+     	<li><a href="http://blog.basho.com/category/innostore">Innostore</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/podcast">Podcast</a> (3)</li>	
+     	<li><a href="http://blog.basho.com/category/ruby">Ruby</a> (4)</li>	
+     	<li><a href="http://blog.basho.com/category/developers">Developers</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/erlang">Erlang</a> (9)</li>	
+     	<li><a href="http://blog.basho.com/category/core">Core</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/riak">Riak</a> (59)</li>	
+     	<li><a href="http://blog.basho.com/category/eventual-consistency">Eventual Consistency</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/beer">Beer</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/riak-core">Riak Core</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/map/reduce">Map/Reduce</a> (7)</li>	
+     	<li><a href="http://blog.basho.com/category/links">Links</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/nitrogen">Nitrogen</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/distributed-systems">Distributed Systems</a> (3)</li>	
+     	<li><a href="http://blog.basho.com/category/analytics">Analytics</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/fault-tolerance">Fault Tolerance</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/innodb">InnoDB</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/erlang_js">erlang_js</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/rebar">Rebar</a> (3)</li>	
+     	<li><a href="http://blog.basho.com/category/startups">Startups</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/resources">Resources</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/scaling">Scaling</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/community">Community</a> (7)</li>	
+     	<li><a href="http://blog.basho.com/category/webmachine">Webmachine</a> (3)</li>	
+     	<li><a href="http://blog.basho.com/category/database">Database</a> (26)</li>	
+     	<li><a href="http://blog.basho.com/category/search">Search</a> (4)</li>	
+     	<li><a href="http://blog.basho.com/category/ops">Ops</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/scalability">Scalability</a> (3)</li>	
+     	<li><a href="http://blog.basho.com/category/operations">Operations</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/schema">Schema</a> (4)</li>	
+     	<li><a href="http://blog.basho.com/category/"></a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/velocity">Velocity</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/production">Production</a> (1)</li>	
+    	</ul>
+  </div>
+  <div id="archives">
+    <h3>Archives</h3>
+    	<ul>
+      	<li><a href="http://blog.basho.com/archive/2010/09/1" title="September 2010">September 2010</a>&nbsp; (5)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/08/1" title="August 2010">August 2010</a>&nbsp; (5)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/07/1" title="July 2010">July 2010</a>&nbsp; (9)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/06/1" title="June 2010">June 2010</a>&nbsp; (5)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/05/1" title="May 2010">May 2010</a>&nbsp; (7)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/04/1" title="April 2010">April 2010</a>&nbsp; (6)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/03/1" title="March 2010">March 2010</a>&nbsp; (4)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/02/1" title="February 2010">February 2010</a>&nbsp; (5)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/01/1" title="January 2010">January 2010</a>&nbsp; (4)</li>				
+      	<li><a href="http://blog.basho.com/archive/2009/12/1" title="December 2009">December 2009</a>&nbsp; (8)</li>				
+      	<li><a href="http://blog.basho.com/archive/2009/11/1" title="November 2009">November 2009</a>&nbsp; (3)</li>				
+      	<li><a href="http://blog.basho.com/archive/2009/10/1" title="October 2009">October 2009</a>&nbsp; (1)</li>				
+		</ul>
+ 		</div>
+ 		<div id= "recommended_reading">
+		<h3>Other Recommended Reading</h3>
+		
+		<ul>
+		<li><a href="http://blog.therestfulway.com/">The RESTful Way</a></li>
+		<li><a href="http://blog.beerriot.com/">The Beerriot Blog</a></li>
+		<li><a href="http://rklophaus.com/">Rusty Klophaus</a></li>
+		<li><a href="http://dizzyd.com/blog"/>Gradual Epiphany</a></li>
+		</ul>
+		</div>
+		<div id="contact">
+  		<h3>Contact</h3>
+  		<p><a href="http://www.basho.com">Basho Technologies </a></p>
+  
+  		<p>196 Broadway<br/>
+  		Cambridge, MA 02139<br/></p>
+
+ 		<p>617.714.1700</p>
+ 		<p>info@basho.com</p> 
+  	</div>
+</div>
+
+
+        
+		</div>  <!-- End MainBlock Div-->
+
+</div> <!--end Content Div -->
+
+  
+
+
+
+
+<script type="text/javascript">
+//<![CDATA[
+(function() {
+	var links = document.getElementsByTagName('a');
+	var query = '?';
+	for(var i = 0; i < links.length; i++) {
+	if(links[i].href.indexOf('#disqus_thread') >= 0) {
+		query += 'url' + i + '=' + encodeURIComponent(links[i].href) + '&';
+	}
+	}
+	document.write('<script charset="utf-8" type="text/javascript" src="http://disqus.com/forums/thebashoblog/get_num_replies.js' + query + '"></' + 'script>');
+})();
+//]]>
+</script>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try{
+var pageTracker = _gat._getTracker("UA-10051263-4");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+ 
+
+<!-- Start of HubSpot Logging Code  -->
+    <script type="text/javascript" language="javascript">
+      var hs_portalid=60327; 
+      var hs_salog_version = "2.00";
+      var hs_ppa = "basho1.app6.hubspot.com"
+      document.write(unescape("%3Cscript src='" + document.location.protocol + "//" + hs_ppa + "/salog.js.aspx' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <!-- End of HubSpot Logging Code -->
+
+</body>
+</html>
+
+<!-- These should be overridden in site.mako: -->
+
+
+
+

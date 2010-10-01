@@ -1,0 +1,488 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    
+  <link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="http://blog.basho.com/feed/index.xml" />
+<link rel="alternate" type="application/atom+xml" title="Atom 1.0" href="http://blog.basho.com/feed/atom/index.xml" />
+    <title>The Basho Blog </title>
+    <meta content="Basho Riak" name="description"/>
+    <meta content="Basho, Riak, Web Database, fault tolerance, efficient scaling" name="keywords"/>
+    <link type="text/css" rel="stylesheet" href="bashoapp.css">
+	
+	
+
+	<script type="text/javascript">
+
+	    var disqus_developer = 1;
+
+	</script>
+  
+	<link rel="icon" type="image/png" href="http://riak.basho.com/images/basho-portrait-small.png">
+</head>
+ 	<body>
+
+      
+  <body>
+<div id="fixwidth">
+     <div id="header">
+     </div>  		
+		<a href="http://blog.basho.com"><div id="teaser">	
+			<div id="wrap">			
+			</div>	
+		</div></a>
+	<div id="bar">
+	</div>
+
+	<div id="main_block">
+		<div id="prose_block">	
+
+
+
+
+
+      
+<div id="blog_post">
+
+<p></p>
+
+  <a name="Why Vector Clocks are Hard" />
+  <h2 class="blog_post_title"><strong><a href="index.html" rel="bookmark" title="Permanent Link to Why Vector Clocks are Hard">Why Vector Clocks are Hard</strong></a></h2>
+
+  <small>April 05, 2010 at 03:16 PM | categories: 
+
+<a href="http://blog.basho.com/category/riak">Riak</a>
+</small><p/>
+<p></p>
+
+
+
+<div id="outline-container-1" class="outline-2">
+
+<div class="outline-text-2" id="text-1">
+<p>
+A couple of months ago,
+<a href="http://blog.basho.com/2010/01/29/why-vector-clocks-are-easy/">
+Bryan wrote about vector clocks
+</a>
+on this blog.  The title of the post was "Why Vector Clocks are Easy";
+anyone who read the post would realize that he meant that they're easy
+for a client to use when talking to a system that implements them.
+For that reason, there is no reason to fear or avoid using a service
+that exposes the existence of vector clocks in its API.
+</p><p>
+Of course, actually implementing such a system is not easy.  Two of
+the hardest things are deciding what an actor is (i.e. where the
+incrementing and resolution is, and what parties get their own field
+in the vector) and how to keep vclocks from growing without bound over
+time.
+</p><p>
+In Bryan's example the parties that actually proposed changes
+("clients") were the actors in the vector clocks.  This is the model
+that vector clocks are designed for and work well with, but it has a
+drawback.  The width of the vectors will grow proportionally with the
+number of clients.  In a group of friends deciding when to have dinner
+this isn't a problem, but in a distributed storage system the number
+of clients over time can be large.  Once the vector clocks get that
+large, they not only take up more space in disk and RAM but also take
+longer to compute comparisons over.
+</p><p>
+Let's run through that same example again, but this time visualize the
+vector clocks throughout the scenario.  If you don't recall the whole
+story in the example, you should
+<a href="http://blog.basho.com/2010/01/29/why-vector-clocks-are-easy/">
+read Bryan's post again</a>
+as I am just going to show the data flow aspect of it here.
+</div>
+</div>
+<div id="outline-container-2" class="outline-2">
+<h2 id="sec-2">Vector Clocks by Example, in detail</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+Start with Alice's initial message where she suggests Wednesday.
+(In the diagrams I abbreviate names, so that "Alice" will be "A" in the
+vclocks and so on for Ben, Cathy, and Dave.)
+</p>
+<pre class="example">
+date = Wednesday
+vclock = Alice:1
+</pre>
+<img src="a-vectors-6.png">
+<p>
+Ben suggests Tuesday:
+</p>
+<pre class="example">
+date = Tuesday
+vclock = Alice:1, Ben:1
+</pre>
+<img src="a-vectors-5.png">
+<p>
+Dave replies, confirming Tuesday:
+</p>
+<pre class="example">
+date = Tuesday
+vclock = Alice:1, Ben:1, Dave:1
+</pre>
+<img src="a-vectors-4.png">
+<p>
+Now Cathy gets into the act, suggesting Thursday:
+</p>
+<pre class="example">
+date = Thursday
+vclock = Alice:1, Cathy:1
+</pre>
+<img src="a-vectors-3.png">
+<p>
+Dave has two conflicting objects:
+</p>
+<pre class="example">
+date = Tuesday
+vclock = Alice:1, Ben:1, Dave:1
+</pre>
+<p>
+and
+</p>
+<pre class="example">
+date = Thursday
+vclock = Alice:1, Cathy:1
+</pre>
+<p>
+Dave can tell that these versions are in conflict, because neither
+vclock "descends" from the other.
+Luckily, Dave's a reasonable guy, and chooses Thursday.  Dave also
+created a vector clock that is a successor to all 
+previously-seen vector clocks.  He emails this value back to Cathy.
+</p>
+<pre class="example">
+date = Thursday
+vclock = Alice:1, Ben:1, Cathy:1, Dave:2
+</pre>
+<img src="a-vectors-2.png">
+<p>
+So now when Alice asks Ben and Cathy for the latest decision, the
+replies she receives are, from Ben:
+</p>
+<pre class="example">
+date = Tuesday
+vclock = Alice:1, Ben:1, Dave:1
+</pre>
+<p>
+and from Cathy:
+</p>
+<pre class="example">
+date = Thursday
+vclock = Alice:1, Ben:1, Cathy:1, Dave:2
+</pre>
+<img src="a-vectors-1.png">
+<p>
+From this, she can tell that Dave intended his correspondence with
+Cathy to override the decision he made with Ben.  All Alice has to
+do is show Ben the vector clock from Cathy's message, and Ben will
+know that he has been overruled.
+</p>
+<img src="a-vectors.png">
+<p>
+That worked out pretty well.
+</p>
+</div>
+</div>
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3">Making it Easier Makes it Harder</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+Notice that even in this short
+and simple example the vector clock grew from nothing up to a 4-pairs
+mapping?  In a real world scenario with long-lived data, each data
+element would end up with a vector clock with a length proportional to
+the number of clients that had ever modified it.  That's a
+(potentially unbounded) large growth in storage volume and
+computation, so it's a good idea to think about how to prevent it.
+</p>
+<p>
+One straightforward idea is to make the servers handling client
+requests be the "actors", instead of representing the clients
+directly. Since any given system usually has a known bounded number of
+servers over time and also usually has less servers than clients, this
+serves to reduce and cap the size of the vclocks. I know of at least
+two real systems that have tried this. In addition to keeping growth
+under control, this approach attracts people because it means you
+don't expose "hard" things like vector clocks to clients at all.
+</p>
+<p>
+Let's think through the same example, but with that difference, to see
+how it goes. We'll assume that a 2-server distributed system is
+coordinating the communication, with clients evenly distributed among
+them. We'll be easy on ourselves and allow for client affinity, so for
+the duration of the session each client will use only one
+server. Alice and Dave happen to get server X, and Ben and Cathy get
+server Y.  To avoid getting too complicated here I am not going to
+draw the server communication; instead I'll just abstract over it by
+changing the vector clocks accordingly.
+</p>
+<p>
+We're fine through the first few steps:
+</p>
+<img src="c-vectors-1.png">
+<p>
+The only real difference so far is that each update increments a
+vector clock field named for the client's chosen server instead of the
+client itself.  This will mean that the number of fields needed won't
+grow without bound; it will be the same as the number of servers.
+This is the desired effect of the change.
+</p>
+<p>
+We run into trouble, though, when Cathy sends her update:
+</p>
+<img src="c-vectors.png">
+<p>
+In the original example, this is where a conflict was created.  Dave
+sorted out the conflict, and everything was fine.  With our new
+strategy, though, something else happened.  Ben and Cathy were both
+modifying from the same original object.  Since we used their server
+id instead of their own name to identify the change, Cathy's message
+has the same vector clock as Ben's!  This means that Dave's message
+(responding to Ben) appears to be a simple successor to Cathy's... and
+we lose her data silently!
+</p>
+<p>
+Clearly, this approach won't work.  Remember the two systems I
+mentioned that tried this approach?  Neither of them stuck with it
+once they discovered that it can be expected to silently lose updates.
+</p>
+<p>
+For vector clocks to have their desired effect without causing
+accidents such as this, the elements represented by the fields in the
+vclock must be the real units of concurrency.  In a case like this
+little example or a distributed storage system, that means client
+identifiers, not server-based ones.
+</p>
+</div>
+</div>
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3">Just Lose a Little Information and Everything Will Be Fine</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+If we use client identifiers, we're back in the situation where vector
+clocks will grow and grow as more clients use a system over time.  The
+solution most people end up with is to "prune" their vector clocks as
+they grow.
+</p>
+<p>
+This is done by adding a timestamp to each field, and updating it to
+the current local time whenever that field is incremented.  This
+timestamp is never used for vclock comparison -- that is purely a
+matter of logical time -- but is only for pruning purposes.
+</p>
+<p>
+This way, when a given vclock gets too big, you can remove fields,
+starting at the one that was updated longest ago, until you hit a
+size/age threshold that makes sense for your application.
+</p>
+<p>
+But, you ask, doesn't this lose information?
+</p>
+<p>
+Yes, it does -- but it won't make you lose your data.  The only
+case where this kind of pruning will matter at all is when a client
+holds a very old copy of the unpruned vclock and submits data descended
+from that.  This will create a sibling (conflict)
+even though you might have been able to resolve it automatically if you had the
+complete unpruned vclock at the server.  That is the tradeoff with
+pruning: in exchange for keeping growth under control, you run the
+chance of occasionally having to do a "false merge"... but you never
+lose data quietly, which makes this approach unequivocally better than
+moving the field identifiers off of the real client and onto the server.
+</p>
+</div>
+</div>
+<div id="outline-container-4" class="outline-2">
+<h2 id="sec-4">Review </h2>
+<div class="outline-text-2" id="text-4">
+<p>
+So, vclocks are hard: even with perfect implementation you can't have
+perfect information about causality in an open system without
+unbounded information growth.  Realize this and design accordingly.
+</p>
+<p>
+Of course, that is just advice for people building brand new
+distributed systems or trying to improve existing ones.
+Using <a href="http://basho.com/Riak.html">a system that exposes vclocks</a>
+is still easy.
+</p>
+<p>
+<a href="http://twitter.com/justinsheehy">-Justin</a>
+</p></div>
+</div>
+
+
+<div class="comments">
+<strong><a href="index.html#disqus_thread" rel="bookmark"></a></strong>
+</div>
+ <hr>
+<br/>
+</div>
+
+
+<div id="disqus_thread"></div><script type="text/javascript" src="http://disqus.com/forums/thebashoblog/embed.js"></script><noscript><a href="http://disqus.com/forums/thebashoblog/?url=ref">View the discussion thread.</a></noscript><a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+ 
+
+         </div> <!-- End ProseBlock -->
+		
+		
+		
+  <div id="right_sidebar">
+	<a href="http://www.basho.com"><img src="basho-portrait.png"/></a>
+	<p>maker of <a href="http://basho.com/Riak.html">Riak</a>, the Internet-Scale Data Store.</p>
+	<p><a href="http://feeds.feedburner.com/basho/knDR" class="image"><img src="btn_rss.png"></a></p>
+	<div id="blog_post_list">
+  	<h3>Latest blog posts</h3>
+  	<ul>
+
+    <li><a href="http://blog.basho.com/2010/09/29/basho-is-taking-over-baltimore-this-weekend/">Basho is Taking Over Baltimore This Weekend</a></li>
+    <li><a href="http://blog.basho.com/2010/09/16/nosql-performance-in-the-cloud-webinar/">NoSQL Performance in the Cloud Webinar</a></li>
+    <li><a href="http://blog.basho.com/2010/09/15/lineup-and-location-for-september-riak-meetup/">Lineup and Location for September Riak Meetup</a></li>
+    <li><a href="http://blog.basho.com/2010/09/03/links-and-link-walking-on-the-riak-fast-track/">Links and Link Walking on the Riak Fast Track</a></li>
+    <li><a href="http://blog.basho.com/2010/09/01/a-new-community-editor---marten-gustafson/">A New Community Editor - Marten Gustafson</a></li>
+   </ul>
+   </div>
+   <div id="categories">
+    	<h3>Categories</h3>
+    	<ul>
+     	<li><a href="http://blog.basho.com/category/screencast">Screencast</a> (4)</li>	
+     	<li><a href="http://blog.basho.com/category/javascript">JavaScript</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/benchmarking">Benchmarking</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/joyent">Joyent</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/nosql">NoSQL</a> (34)</li>	
+     	<li><a href="http://blog.basho.com/category/innostore">Innostore</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/podcast">Podcast</a> (3)</li>	
+     	<li><a href="http://blog.basho.com/category/ruby">Ruby</a> (4)</li>	
+     	<li><a href="http://blog.basho.com/category/developers">Developers</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/erlang">Erlang</a> (9)</li>	
+     	<li><a href="http://blog.basho.com/category/core">Core</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/riak">Riak</a> (59)</li>	
+     	<li><a href="http://blog.basho.com/category/eventual-consistency">Eventual Consistency</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/beer">Beer</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/riak-core">Riak Core</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/map/reduce">Map/Reduce</a> (7)</li>	
+     	<li><a href="http://blog.basho.com/category/links">Links</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/nitrogen">Nitrogen</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/distributed-systems">Distributed Systems</a> (3)</li>	
+     	<li><a href="http://blog.basho.com/category/analytics">Analytics</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/fault-tolerance">Fault Tolerance</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/innodb">InnoDB</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/erlang_js">erlang_js</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/rebar">Rebar</a> (3)</li>	
+     	<li><a href="http://blog.basho.com/category/startups">Startups</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/resources">Resources</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/scaling">Scaling</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/community">Community</a> (7)</li>	
+     	<li><a href="http://blog.basho.com/category/webmachine">Webmachine</a> (3)</li>	
+     	<li><a href="http://blog.basho.com/category/database">Database</a> (26)</li>	
+     	<li><a href="http://blog.basho.com/category/search">Search</a> (4)</li>	
+     	<li><a href="http://blog.basho.com/category/ops">Ops</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/scalability">Scalability</a> (3)</li>	
+     	<li><a href="http://blog.basho.com/category/operations">Operations</a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/schema">Schema</a> (4)</li>	
+     	<li><a href="http://blog.basho.com/category/"></a> (2)</li>	
+     	<li><a href="http://blog.basho.com/category/velocity">Velocity</a> (1)</li>	
+     	<li><a href="http://blog.basho.com/category/production">Production</a> (1)</li>	
+    	</ul>
+  </div>
+  <div id="archives">
+    <h3>Archives</h3>
+    	<ul>
+      	<li><a href="http://blog.basho.com/archive/2010/09/1" title="September 2010">September 2010</a>&nbsp; (5)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/08/1" title="August 2010">August 2010</a>&nbsp; (5)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/07/1" title="July 2010">July 2010</a>&nbsp; (9)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/06/1" title="June 2010">June 2010</a>&nbsp; (5)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/05/1" title="May 2010">May 2010</a>&nbsp; (7)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/04/1" title="April 2010">April 2010</a>&nbsp; (6)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/03/1" title="March 2010">March 2010</a>&nbsp; (4)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/02/1" title="February 2010">February 2010</a>&nbsp; (5)</li>				
+      	<li><a href="http://blog.basho.com/archive/2010/01/1" title="January 2010">January 2010</a>&nbsp; (4)</li>				
+      	<li><a href="http://blog.basho.com/archive/2009/12/1" title="December 2009">December 2009</a>&nbsp; (8)</li>				
+      	<li><a href="http://blog.basho.com/archive/2009/11/1" title="November 2009">November 2009</a>&nbsp; (3)</li>				
+      	<li><a href="http://blog.basho.com/archive/2009/10/1" title="October 2009">October 2009</a>&nbsp; (1)</li>				
+		</ul>
+ 		</div>
+ 		<div id= "recommended_reading">
+		<h3>Other Recommended Reading</h3>
+		
+		<ul>
+		<li><a href="http://blog.therestfulway.com/">The RESTful Way</a></li>
+		<li><a href="http://blog.beerriot.com/">The Beerriot Blog</a></li>
+		<li><a href="http://rklophaus.com/">Rusty Klophaus</a></li>
+		<li><a href="http://dizzyd.com/blog"/>Gradual Epiphany</a></li>
+		</ul>
+		</div>
+		<div id="contact">
+  		<h3>Contact</h3>
+  		<p><a href="http://www.basho.com">Basho Technologies </a></p>
+  
+  		<p>196 Broadway<br/>
+  		Cambridge, MA 02139<br/></p>
+
+ 		<p>617.714.1700</p>
+ 		<p>info@basho.com</p> 
+  	</div>
+</div>
+
+
+        
+		</div>  <!-- End MainBlock Div-->
+
+</div> <!--end Content Div -->
+
+  
+
+
+
+
+<script type="text/javascript">
+//<![CDATA[
+(function() {
+	var links = document.getElementsByTagName('a');
+	var query = '?';
+	for(var i = 0; i < links.length; i++) {
+	if(links[i].href.indexOf('#disqus_thread') >= 0) {
+		query += 'url' + i + '=' + encodeURIComponent(links[i].href) + '&';
+	}
+	}
+	document.write('<script charset="utf-8" type="text/javascript" src="http://disqus.com/forums/thebashoblog/get_num_replies.js' + query + '"></' + 'script>');
+})();
+//]]>
+</script>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try{
+var pageTracker = _gat._getTracker("UA-10051263-4");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+ 
+
+<!-- Start of HubSpot Logging Code  -->
+    <script type="text/javascript" language="javascript">
+      var hs_portalid=60327; 
+      var hs_salog_version = "2.00";
+      var hs_ppa = "basho1.app6.hubspot.com"
+      document.write(unescape("%3Cscript src='" + document.location.protocol + "//" + hs_ppa + "/salog.js.aspx' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <!-- End of HubSpot Logging Code -->
+
+</body>
+</html>
+
+<!-- These should be overridden in site.mako: -->
+
+
+
+
