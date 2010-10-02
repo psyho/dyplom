@@ -87,7 +87,7 @@ Jeżeli mamy zatem węzły o indywidualnej dostępności 99.9\% to transakcja, k
 
 Jeżeli zatem ACID oferuje nam poziom konsystencji, który można byłoby określić mianem Strong Consistency, ale kosztem dostępności, to BASE oferuje w zamian wysoką dostępność kosztem konsystencji. 
 
-\subsection{Eventual Consistency}
+\section{Eventual Consistency}
 
 Eventual Consistency (w wolnym tłumaczeniu: konsystencja po pewnym czasie, ostatecznie) to słaba forma gwarancji konsystencji, która gwarantuje jedynie, że po pewnym, możliwym do przewidzenia czasie od momentu wykonania operacji, jej efekty będą widziane przez klientów systemu, niezależnie od tego, do którego z węzłów systemu się zwrócą z zapytaniem.
 Okno czasowe między operacją a propagacją jej efektów do wszystkich zainteresowanych węzłów w systemie nazywamy oknem niespójności (ang. \emph{inconsistency window}).
@@ -109,7 +109,7 @@ Artykuł \cite{vogels-eventually-consistent} wprowadza ponadto kilka rodzajów E
  Systemy które nie oferują tej gwarancji są bardzo trudne w użyciu.
 \end{enumerate}
 
-\subsubsection*{Konfiguracja Eventual Consistency}
+\subsection*{Konfiguracja Eventual Consistency}
 
 Werner Vogels w artykule o Eventual Consistency \cite{vogels-eventually-consistent} wprowadził nomenklaturę stosowaną w konfiguracji konsystencji wielu systemów NoSQL (np. Cassandra, Riak).
 Konfigurację tą opisują zazwyczaj trzy liczby:
@@ -129,7 +129,7 @@ Konfigurację tą opisują zazwyczaj trzy liczby:
 Jeżeli $R+W>N$, to mamy do czynienia z silną konsystencją (ang. \emph{Strong Consistency}) - każdy odczyt zwróci ostatnią zapisaną wartość.
 Jeżeli $W = 0$, to zapis jest dokonywany w pełni asynchronicznie.
 
-\subsubsection*{Znaczenie}
+\subsection*{Znaczenie}
 
 Eventual Consistency opisuje problem dotykający każdej rozproszonej bazy danych, niezależnie od tego czy jest to baza relacyjna, sieciowy system plików czy baza NoSQL.
 Tradycyjne podejście do konsystencji w kontekście replikacji jest ograniczające.
@@ -529,6 +529,8 @@ Awaria i niedostępność Chubby powoduje także niedostępność BigTable.
 Cytując za artykułem \cite{google-bigtable}, przełożyło się to średnio na zmniejszenie dostępności systemu średnio o 0.0047\%, a w najgorszym przypadku o 0.0326\%\footnote{Dla lepszego zobrazowania: odpowiednio 24 minuty i 171 minut w ciągu roku}.
 
 \subsection*{Model Danych}
+
+
 
 \subsection*{Architektura}
 
