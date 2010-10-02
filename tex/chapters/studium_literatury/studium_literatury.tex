@@ -197,7 +197,7 @@ Użytkownik tworzy aplikację, w której specyfikuje dwie funkcje \emph{map} i \
 \begin{enumerate}
  \item Biblioteka MapReduce dzieli plik wejściowy na \emph{M} części.
  \item Program użytkownika zostaje wysłany i uruchomiony na maszynach klastra.
- Jedna z tych maszyn przyjmuje specjalną rolę \emph{master}, pozostałe zaś mają rolę \emph{worker}\todo{może powinienem zamienić master na zarządca/nadzorca a worker na pracownik?}.
+ Jedna z tych maszyn przyjmuje specjalną rolę \emph{master}, pozostałe zaś mają rolę \emph{worker}.
  \item \emph{master} przypisuje poszczególnym \emph{workerom} po jednym zadaniu do wykonania.
  Kolejne są przydzielane w miarę jak węzły kończą przydzieloną im pracę.
  Zadanie \emph{map} zostanie przydzielone w pierwszej kolejności maszynie która jest równocześnie \emph{chunkserverem} przechowującym odpowiedni plik wejściowy.
@@ -435,7 +435,7 @@ Ponieważ jednak W jest zazwyczaj mniejsze od N, nie zmniejsza to szybkości dzi
 Inną wartą uwagi optymalizacją, jest taka konstrukcja list preferencyjnych aby każdy zakres kluczy był przechowywany na węzłach znajdujących się w co najmniej dwóch centrach danych.
 Dzięki temu w razie awarii całego centrum danych system jest w stanie zachować dostępność.
 
-\subsubsection*{Znaczenie}
+\subsection*{Znaczenie}
 
 Amazon Dynamo jest bardzo ciekawym przykładem rozproszonego systemu bazodanowego.
 Jest jednym z nielicznych systemów, w których wszystkie węzły są sobie równe.
@@ -445,3 +445,93 @@ Artykuł ,,Dynamo: amazon's highly available key-value store'' \cite{amazon-dyna
 
 \section{Google BigTable}
 
+Google BigTable to podstawowa baza danych używana przez firmę Google.
+Opisana została w artykule z 2006 roku pod tytułem ,,BigTable: A Distributed Storage System for Structured Data'' \cite{google-bigtable}.
+Baza ta stała się inspiracją dla systemów takich jak Apache Cassandra, które zawdzięcza BigTable model danych, HBase, które jest dla BigTable tym, czym dla Dynamo jest Riak, czy też MongoDB, które stosuje mechanizm partycjonowania i replikacji podobny do bazy Google.
+
+Google BigTable skaluje się bardzo dobrze: do tysięcy serwerów i petabajtów danych.
+Podobnie jak Amazon Dynamo został stworzony z myślą o uruchamianiu go na klastrze maszyn średniej klasy.
+Podstawową różnicą między BigTable a Dynamo jest natomiast podejście do konsystencji.
+Baza firmy Amazon jest w stanie przyjąć zapis w każdej niemal sytuacji, przypłacając to kosztem tego, że aplikacja musi radzić sobie z wieloma wersjami rekordu, które mogą równocześnie występować w systemie.
+BigTable gwarantuje konsystencję (w sensie CAP), ale kosztem opóźnień (wybór węzła \emph{master}, przekazanie roli serwera \emph{tabletów}, replikacja na poziomie GFS) oraz zmniejszonej odporności na podział sieci.
+
+BigTable opiera się bardzo mocno na dwóch innych systemach: Google File System (GFS) oraz Google Chubby.
+W kolejnych sekcjach zostaną one pokrótce opisane aby ułatwić czytelnikowi zrozumienie architektury tej bazy i jaką te systemy pełnią w niej rolę.
+
+\subsection*{Google File System}
+
+Google File System opisany w artykule \cite{google-file-system} jest rozproszonym systemem plików, który jest zoptymalizowany pod duże pliki, najczęściej aktualizowane przez dopisywanie na koniec (ang. \emph{append-only files}), ale umożliwia także przechowywanie małych plików i losowy dostęp.
+Wszystkie pliki w GFS dzielone są na fragmenty rozmiaru 64MB (ang. \emph{chunk}).
+Każdy fragment jest replikowany na kilka (najczęściej 3) maszyn, z których jedna przyjmuje rolę głównej repliki.
+Jeden z węzłów jest wyróżniony i przyjmuje rolę \emph{master}.
+\emph{Master} przechowuje metadane o systemie plików, oraz o podziale plików na fragmenty.
+Informacja o lokalizacji fragmentów nie jest zapisywana trwale przez węzeł \emph{master} ale budowana po wyborze \emph{mastera} i uaktualniana w miarę potrzeby.
+Dane \emph{mastera} są replikowane na kilka maszyn aby zapobiec ich utracie.
+Wyboru \emph{mastera} dokonuje się wykorzystując usługę Google Chubby, podobnie jak ma to miejsce w BigTable.
+
+\emph{Master} przyznaje dla każdego fragmentu jednej z jogo replik dzierżawę (trwającą 60s), która sprawia, że węzeł ten staje się wyróżniony dla tej repliki i zajmuje się koordynacją zapisów.
+Klienci komunikują się z \emph{masterem} w celu zdobycia dostępu do metadanych systemu (lokalizacja fragmentów, system plików).
+Operacje zapisu i odczytu nie wymagają zazwyczaj komunikacji z węzłem \emph{master}, pod warunkiem oczywiście, że klient ma zapisane lokalizacje fragmentów.
+
+Poza typowymi operacjami na plikach, GFS udostępnia operację dodania ,,rekordu'' na koniec pliku.
+Rekord taki jest dodawany atomowo, ale może wystąpić w pliku więcej niż raz, a poszczególne rekordy mogą być rozdzielone obszarami zawierającymi nic nie znaczące śmieci.
+
+Zapis na koniec pliku w GFS przebiega w następujący sposób: 
+\begin{enumerate}
+ \item Najpierw klient przesyła dane do najbliższej\footnote{adresy IP serwerów pozwalają na określenie ,,odległości'' między nimi, gdyż są ściśle związane z topologią sieci} z replik.
+ \item Replika ta przekazuje dane dalej w ten sam sposób i jest to powtarzane, aż wszystkie serwery otrzymają dane.
+ \item Klient jest powiadamiany o zakończeniu transferu.
+ \item Klient wysyła do wyróżnionej repliki żądanie zapisu.
+ \item Wyróżniona replika definiuje kolejność zapisów (szereguje je) i zleca je pozostałym.
+ \item Operacja kończy się sukcesem tylko jeżeli wszystkie repliki zapiszą poprawnie rekord.
+ W przeciwnym razie błąd jest zgłaszany do użytkownika, ale ponieważ zapis mógł się powieść na niektórych replikach, rekord może występować w pliku więcej niż raz.
+\end{enumerate}
+
+BigTable wykorzystuje GFS do przechowywania tabletów, których dane zapisywane są w dwóch rodzajach plików: plikach typu SSTable, oraz dzienniku operacji (ang. \emph{tablet log}).
+Żaden z powyższych rodzajów plików nie wymaga losowego dostępu dla zapisów - pliki SSTable są zapisywane raz, w całości, zaś dziennik tabletu jest zapisywany poprzez dodawanie rekordów na koniec.
+
+\subsection*{Google Chubby}
+
+Google Chubby jest to rozproszony system plików, ale o zastosowaniu zupełnie innym niż GFS.
+Pliki w Chubbym są małe (limit 256kb), odczytywane i zapisywane atomowo, w całości.
+Chubby jest to także (a właściwie przede wszystkim) rozproszony system blokad (ang. \emph{distributed lock service}).
+Umożliwia on zakładanie blokad do odczytu i zapisu na plikach, mechanizm zdarzeń, oraz mechanizm cacheowania, który umożliwia automatyczne odświeżenie buforowanych wartości po wystąpieniu zmian.
+Google Chubby został dokładniej opisany w artykule z 2006 roku \cite{google-chubby}.
+
+Połączenie wyżej wymienionych funkcjonalności sprawia, że Chubby jest powszechnie używany jako serwer nazw, lepszy niż serwery DNS gdyż nie wymagający konfigurowania wartości TTL (ang. \emph{Time-To-Live}), która źle ustawiona może doprowadzić albo do nadmiernego obciążenia serwerów nazw, albo zbyt wolną propagację zmian wartości.
+
+Innym bardzo ważnym zastosowaniem Google Chubby jest wybór wyróżnionego serwera (np. serwera \emph{master}).
+Problem wyboru mastera jest problemem rozproszonego konsensu implementowany zazwyczaj przy pomocy algorytmu Paxos.
+Zastosowanie usługi takiej jak Chubby nie tylko znacznie upraszcza ten problem, ale także pozwala na dokonanie wyboru nawet w sytuacji, gdy nie da się osiągnąć kworum (ze względu na awarie węzłów, czy podział sieci).
+
+Procedura wyboru wyróżnionego serwera w Chubby przebiega następująco:
+
+\begin{enumerate}
+ \item Wszystkie zainteresowane węzły próbują otworzyć określony plik (np. /ls/foo/master) z blokadą do zapisu.
+ \item Chubby pozwala jednemu z nich na otwarcie tego pliku.
+ \item Węzeł zapisuje w tym pliku swój adres albo identyfikator.
+ \item Wszystkie węzły są informowane o zmianie węzła master poprzez zdarzenie zmodyfikowania pliku, na które powinny wszystkie być zarejestrowane.
+\end{enumerate}
+
+Podobnie łatwo można zastosować ten system do wykrywania węzłów.
+Chubby umożliwia tworzenie specjalnego rodzaju plików, zwanych plikami efemerycznymi.
+Pliki te są usuwane natychmiast po ich zamknięciu, bądź po utracie połączenia z klientem, który go otwarł.
+Jeżeli każdy węzeł podłączany do systemu utworzy efemeryczny plik w ogólnie znanym katalogu, wszystkie inne węzły z łatwością dowiedzą się o tej zmianie przy pomocy mechanizmu zdarzeń.
+Podobnie jeżeli węzeł ulegnie awarii, jego plik zostanie wkrótce usunięty i inne węzły dowiedzą się o tym niemal natychmiast.
+
+Google Chubby jest wprawdzie replikowany (komórka składa się zazwyczaj z 5 serwerów), ale cała komunikacja odbywa się między klientami a masterem\footnote{Artykuł \cite{google-chubby} opisuje potencjalne techniki skalowania przy pomocy partycjonowania i serwerów proxy, ale nie były one wykorzystywane w czasie pisania tego artykułu}.
+Replikacja ma na celu jedynie zapewnienie wysokiej dostępności systemu.
+Mimo tego ograniczenia Chubby jest w stanie obsłużyć ok. 90 000 klientów równocześnie.
+Jest to na tyle duża liczba, że komórki Chubby są zazwyczaj współdzielone między różnymi aplikacjami.
+
+W Google BigTable Chubby jest wykorzystywany do zapewnienia istnienia pojedynczego węzła master, wykrywania serwerów tabletów i ich awarii, przechowywania danych dotyczących schematu bazy i list dostępu.
+Awaria i niedostępność Chubby powoduje także niedostępność BigTable.
+Cytując za artykułem \cite{google-bigtable}, przełożyło się to średnio na zmniejszenie dostępności systemu średnio o 0.0047\%, a w najgorszym przypadku o 0.0326\%\footnote{Dla lepszego zobrazowania: odpowiednio 24 minuty i 171 minut w ciągu roku}.
+
+\subsection*{Model Danych}
+
+\subsection*{Architektura}
+
+\subsection*{Znaczenie}
+
+\section{Podsumowanie}
