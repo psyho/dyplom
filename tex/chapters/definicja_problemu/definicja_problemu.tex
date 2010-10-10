@@ -56,7 +56,7 @@ W tym rozwiązaniu wraz ze wzrostem liczby użytkowników zamiast wymieniać ser
 Nie możemy jednak całości bazy danych przechowywać na każdym z serwerów - problemy z tym związane zostały opisane powyżej.
 W związku z tym, dokonuje się podziału danych (partycjonowania) poziomego, pionowego albo obu równocześnie.
 
-Kiedy mowa o pojedynczej bazie danych, horyzontalne partycjonowanie oznacza, że rzędy na podstawie jakiegoś kryterium trafiają do różnych tabel.
+Kiedy mowa o pojedynczej bazie danych, horyzontalne partycjonowanie oznacza, że wiersze na podstawie jakiegoś kryterium trafiają do różnych tabel.
 Dla przykładu: tabela użytkowników może być podzielona w taki sposób, że użytkownicy z Polski trafiają do tabeli \verb=polish_users=, natomiast użytkownicy z Niemiec do tabeli \verb=german_users=.
 Tego rodzaju partycjonowania dokonuje się zazwyczaj w celu zwiększenia wydajności i niektóre bazy danych (w tym MySQL\footnote{http://dev.mysql.com/tech-resources/articles/performance-partitioning.html}) pozwalają na definiowanie partycjonowania w schemacie bazy danych.
 W przypadku rozproszonych baz danych, mówimy zamiennie o partycjonowaniu horyzontalnym bądź shardowaniu (ang. \emph{sharding}).
@@ -92,14 +92,15 @@ Szczególnie warta uwagi jest złożoność zaprojektowanego tam systemu, oraz t
 
 \subsection{Problemy z tradycyjnymi rozwiązaniami}
 
-Tradycyjne rozwiązania, oparte na shardowaniu, replikacji i cacheowaniu sprawdziły się i są ciągłym użyciu w wielu aplikacjach.
-Niestety niosą one ze sobą istotne ograniczenia: shardowanie pociąga za sobą wysoki koszt operacji na zbiorach danych, które są rozproszone na wielu węzłach systemu i brak transakcji, asynchroniczna replikacja wymaga aby odczyty i zapisy pojedynczego klienta były kierowane do tego samego serwera a cache wymaga skomplikowanych procedur inwalidacji, aby zapewnić konsystencję między nim a bazą.
+Tradycyjne rozwiązania, oparte na shardowaniu, replikacji i cacheowaniu sprawdziły się i są w ciągłym użyciu w wielu aplikacjach.
+Niestety niosą one ze sobą istotne ograniczenia: shardowanie pociąga za sobą wysoki koszt operacji na zbiorach danych, które są rozproszone na wielu węzłach systemu i brak transakcji, asynchroniczna replikacja wymaga aby odczyty i zapisy pojedynczego klienta były kierowane do tego samego serwera a cache wymaga skomplikowanych procedur inwalidacji\footnote{Poprzez ,,inwalidację'' rozumiem oznaczanie części zapisanych w cache danych jako nieaktualne, usunięcie ich lub zastąpienie aktualnymi. W praktyce bardzo trudno jest zapewnić aktualność danych zapisanych w cache w skomplikowanym systemie, dlatego częściej stosuje się mechanizmy oparte na uaktualnianiu cache po określonym czasie.}, aby zapewnić konsystencję między nim a bazą.
 Innym problemem jest też konieczność dokonywania migracji schematu bazy danych wraz z rozwojem aplikacji.
-Dodanie kolumny czy indeksu do tabeli zawierającej miliony rekordów czasem trwa nawet godzinami.
+Dodanie kolumny czy indeksu do tabeli zawierającej miliony wierszy czasem trwa nawet godzinami.
+
 Wszystko powyższe wymaga bardzo dużych nakładów pracy na stworzenie i utrzymanie takiego systemu.
-Co więcej, systemy stworzone według tej receptury tracą główne zalety relacyjnych baz danych.
-W związku z tym, że systemy te są tworzone od zera na własne potrzeby i często jest ściśle związane z infrastrukturą i architekturą aplikacji, bardzo problematyczne jest udostępnienie tego kodu na licencji open source.
-W ostatnich latach jednak część z tych rozwiązań (a właściwie ich fragmenty) została upubliczniona.
+Co więcej, systemy stworzone według tej receptury tracą główne zalety relacyjnych baz danych: rezygnując z łączenia tabel rezygnujemy z relacyjności bazy, zaś wprowadzając shardowanie rezygnujemy z możliwości zadawania zapytań, które dotyczyłyby wszystkich wierszy tabeli.
+W związku z tym, że systemy te są tworzone od zera na własne potrzeby i często są ściśle związane z infrastrukturą i architekturą aplikacji, bardzo problematyczne jest udostępnienie tego kodu na licencji open source.
+W ostatnich latach jednak część z rozwiązań mających na celu zastąpić relacyjne bazy danych w pewnych rozwiązaniach wymagających skalowalności została upubliczniona.
 Noszą one wspólną nazwę systemów NoSQL.
 
 \section{NoSQL}
