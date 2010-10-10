@@ -2,10 +2,18 @@
 
 \section*{Streszczenie}
 
-W studium literatury zajmę się opisaniem teorii CAP \cite{brewers-conjecture} (\emph{Consistency, Availability, Partition Tolerance}), zwanej również teorią Brewer'a od nazwiska jej autora. 
+W studium literatury zajmę się opisaniem teorii CAP (\emph{Consistency, Availability, Partition Tolerance}), zwanej również teorią Brewer'a od nazwiska jej autora. 
 Teoria ta twierdzi, że rozproszony system nie jest w stanie zapewnić równocześnie wszystkich trzech gwarancji: konsystencji danych widzianych przez węzły systemu, odporności całości systemu na awarie poszczególnych jego węzłów oraz odporności systemu na utratę połączenia pomiędzy poszczególnymi węzłami lub ich grupami. 
-Przedstawię także zasady działania Google BigTable \cite{google-bigtable} oraz Amazon Dynamo \cite{amazon-dynamo}, które bardzo istotnie wpłynęły na architekturę systemów NoSQL. 
-Porównam także semantykę BASE (\emph{Basically Available, Soft-state, Eventually-consistent}) z ACID (\emph{Atomicity, Consistency, Isolation, Durability}).\todo{napisać dlaczego, uporządkować}
+
+Opiszę także BASE (\emph{Basically Available, Soft state, Eventual consistency}) i Eventual Consistency, które wprowadzają model konsystencji systemu bazodanowego, który o wiele lepiej przystaje do systemów rozproszonych niż ACID, dając programiście dużo większe możliwości wpłynięcia na zachowanie systemu i jego charakterystyki wydajnościowe, ale opłacając to kosztem zwiększenia złożoności korzystania z takiego systemu.
+
+Google MapReduce to nie tylko narzędzie pozwalające na przetwarzanie astronomicznych ilości danych.
+Jest to także wzorzec wykorzystywany przez wiele systemów NoSQL w celu zapewnienia możliwości przetwarzania dużych zbiorów rekordów pod nieobecność takich operatorów jak GROUP BY w SQL.
+
+Przedstawię także zasady działania Google BigTable oraz Amazon Dynamo, które bardzo istotnie wpłynęły na architekturę systemów NoSQL. 
+Bazy te przedstawiają sobą zupełnie różne podejścia do problemu skalowalności: Amazon Dynamo stawia przede wszystkim na dostępność, podczas gdy Google BigTable stawia na konsystencję.
+
+Koncepcje i techniki opisane w tym rozdziale odbijają się echem w architekturach wielu z systemów opisanych w kolejnych częściach niniejszej pracy, dlatego przedstawienie ich tutaj ma za zadanie umożliwić czytelnikowi lepsze zrozumienie tych systemów i tego, na czym opierali się ich autorzy podczas ich projektowania.
 
 \section{Teoria CAP}
 
@@ -57,8 +65,7 @@ Ze względu na to dzielimy je na:
 \end{enumerate}
 
 W praktyce systemy omawiane w tej pracy zazwyczaj zadowalają się częściowym zapewnieniem wszystkich wymienionych gwarancji, przy czym wysoka dostępność odgrywa główną rolę, a poświęcana jest albo odporność na podziały, albo konsystencja. 
-Dlatego systemy te należą albo do grupy CA (Google BigTable, HBase), albo do grupy AP (Amazon Dynamo, Riak).
-\todo{Podział na CA, AP, CP - po lepszym poznaniu poszczególnych rozwiązań} 
+Dlatego systemy te należą albo do grupy CP (Google BigTable, HBase), albo do grupy AP (Amazon Dynamo, Riak).
 
 \section{BASE}
 
@@ -260,7 +267,7 @@ Dlatego najczęściej wykonywanie tego typu operacji jest dokonywane co pewien c
 
 W przeważającej większości obliczenia te są wykonywane przy zastosowaniu algorytmu MapReduce.
 Wiele systemów, tak jak MongoDB czy Riak, zapewnia taką funkcjonalność, inne wymagają zastosowania zewnętrznych narzędzi.
-Wierną implementacją Google MapReduce jest Hadoop, który opiszemy nieco bliżej przy okazji Hbase.
+Wierną implementacją Google MapReduce jest Hadoop, który opiszemy nieco bliżej przy okazji HBase.
 Bardzo ciekawe podejście do MapReduce prezentuje CouchDB, która przechowuje wyniki funkcji map, dzięki czemu umożliwia dokonywanie zapytań opartych o MapReduce w trybie on-line.
 CouchDB zostanie opisane bliżej w kolejnym rozdziale.
 
@@ -490,6 +497,10 @@ Zapis na koniec pliku w GFS przebiega w następujący sposób:
 BigTable wykorzystuje GFS do przechowywania tabletów, których dane zapisywane są w dwóch rodzajach plików: plikach typu SSTable, oraz dzienniku operacji (ang. \emph{tablet log}).
 Żaden z powyższych rodzajów plików nie wymaga losowego dostępu dla zapisów - pliki SSTable są zapisywane raz, w całości, zaś dziennik tabletu jest zapisywany poprzez dodawanie rekordów na koniec.
 
+W momencie pisania tych słów w użyciu jest już nowa wersja GFS -- GFS2, zaprojektowana z myślą o BigTable i zastosowaniach gdzie nawet kilkunastosekundowe opóźnienia spowodowane wyborem nowego mastera są niedopuszczalne.
+Nowa wersja GFS zmniejsza znacznie rozmiar fragmentu pliku, z 64MB do 1MB oraz opiera się na architekturze opartej na wielu serwerach master i partycjonowaniu metadanych systemu plików.
+Niestety dokładny opis tej architektury nie jest jeszcze dostępny.
+
 \subsection*{Google Chubby}
 
 Google Chubby jest to rozproszony system plików, ale o zastosowaniu zupełnie innym niż GFS.
@@ -530,10 +541,98 @@ Cytując za artykułem \cite{google-bigtable}, przełożyło się to średnio na
 
 \subsection*{Model Danych}
 
+Google BigTable jest prekursorem tablicowych baz danych.
+Model danych można opisać jako macierz, gdzie rzędami są rekordy, a kolumny reprezentują pola tych rekordów.
+Każdy rząd identyfikowany jest przez klucz o wielkości maksymalnej 64KB, ale średnio klucze są mniejsze niż 100B.
+System przechowuje rekordy posortowane po kluczu, podzielone na segmenty zwane tabletami.
+Aby wykorzystać tę właściwość tabela przechowująca wyniki indeksowania sieci WWW, przechowuje adresy URL jako klucze w odwróconej kolejności (np. pl.edu.agh.eaie.www zamiast www.eaie.agh.edu.pl).
+W ten sposób podobne klucze znajdą się blisko siebie.
+Kolumny są grupowane w rodziny kolumn (ang. \emph{column families}).
+Wszystkie kolumny z jednej rodziny mają nazwę postaci nazwa\_grupy:nazwa\_kolumny.
+Nazwa grupy kolumn musi składać się ze znaków nadających się do wydruku, zaś nazwa kolumny może być dowolnym ciągiem bajtów.
 
+Rodzina kolumn zazwyczaj przechowuje wartości tego samego typu, gdyż wartości te są kompresowane razem.
+Rodzina kolumn musi być dodana do schematu zanim będzie możliwe dodawanie wartości w jej kolumnach.
+Nie jest konieczne deklarowanie samych kolumn.
+W bazach takich jak BigTable przyjmuje się, że liczba rodzin kolumn jest niewielka i zmienia się nieznacznie wraz z rozwojem aplikacji.
+Jedynie nie-puste wartości kolumn są zapisywane, więc można powiedzieć, że tabela BigTable jest macierzą rzadką (ang. \emph{sparse}).
+
+BigTable pozwala na przechowywanie wielu oznaczonych znacznikiem czasowym wersji dla każdej z komórek macierzy.
+Stare rewizje mogą być usuwane przez system automatycznie albo dzięki określeniu maksymalnej liczby wartości do zapisania, albo przez określenie jak dawne wersje mają być przechowywane (np. z ostatnich siedmiu dni).
+
+Modyfikacje rekordu są atomowe, co znacznie upraszcza pracę w rozproszonym środowisku.
+Ponieważ rekordy są przechowywane posortowane, operacje na niewielkich\footnote{mniejszych niż rozmiar tabletu} zakresach podobnych kluczy zazwyczaj wymagają komunikacji z jednym albo dwoma węzłami systemu.
+Dla porównania w Amazon Dynamo dla klucza jest wyliczana suma kontrolna i dopiero na podstawie tej wartości następuje przydział rekordu do określonego przedziału a co za tym idzie węzła, w związku z czym podobne klucze mogą znaleźć się na zupełnie innych węzłach.
+
+Google BigTable nie udostępnia mechanizmów wyszukiwania rekordów podobnych do relacyjnych baz danych.
+Jedyne mechanizmy wyszukiwania dla rekordów to wyszukiwanie po kluczu albo po zakresie kluczy.
+Dla pojedynczego rekordu natomiast istnieje dość bogate API umożliwiające filtrowanie kolumn na różne sposoby.
+Istnieje także możliwość wykonywania skryptów w przestrzeni adresowej serwera.
+Skrypty te (pisane w języku Sawzall) nie mogą wprawdzie dokonywać żadnych modyfikacji, ale są przydatne w celu dokonywania różnorakich obliczeń czy podsumowań.
 
 \subsection*{Architektura}
 
+W tej sekcji przedstawiona zostanie architektura Google BigTable, najpierw z punktu widzenia całości systemu, a potem z punktu widzenia serwowania pojedynczego tabletu.
+
+\subsubsection*{Architektura wysokiego poziomu}
+
+W Google BigTable występują trzy rodzaje aktorów: \emph{master}, \emph{serwer tabletów}, i \emph{klient}.
+Bardzo ważną rolę odgrywa też komórka Google Chubby.
+Jak już wspomniano wyżej, rekordy w BigTable są zapisywane w grupach zwanych tabletami.
+Każdy tablet reprezentuje pewien przedział kluczy.
+Tablety mogą być dzielone i łączone w miarę potrzeby.
+
+\emph{Master} zajmuje się przydziałem tabletów do serwerów tabletów, wykrywaniem dołączanych i usuwanych serwerów tabletów, równoważeniem obciążenia serwerów tabletów i usuwaniem zbędnych plików w GFS.
+
+\emph{Serwer Tabletów} obsługuje zazwyczaj od 10 do 1000 tabletów.
+Obsługuje zarówno odczyty, jak i zapisy, a także zajmuje się dzieleniem tabletów które przekroczyły maksymalny rozmiar.
+
+Większość \emph{klientów} systemu nie musi się wcale komunikować z serwerem master.
+
+Dane są zapisywane w trzypoziomowym drzewie.
+Korzeniem tego drzewa jest tak zwany \emph{root tablet}.
+Jest to specjalny tablet, który nigdy nie ulega podziałowi.
+Jego lokalizacja jest zapisana w pliku w Google Chubby, a rolą tego tabletu jest przechowywanie lokalizacji tabletów zawierających metadane.
+Tablety te przechowują lokalizacje wszystkich pozostałych tabletów w systemie (tabletów użytkownika).
+Dane o lokalizacji tabletów są także buforowane u klienta w pamięci.
+
+Serwery tabletów używają Google Chubby do rejestrowania się w systemie.
+Aby tego dokonać przy starcie serwera tabletów tworzy on plik w specjalnym katalogu i zdobywa na nim blokadę do zapisu.
+Dopóki serwer tabletów posiada tą blokadę, dopóty może on zajmować się serwowaniem tabletów.
+Jeżeli straci blokadę, stara się ją odzyskać, jeżeli jednak plik na którym miał blokadę został usunięty, serwer tabletów jest zmuszony zakończyć działanie.
+Węzeł master komunikuje się co pewien czas ze wszystkimi serwerami tabletów, żądając od nich podania statusu ich blokady.
+Jeżeli master nie jest w stanie się połączyć z serwerem tabletów, lub jeżeli odpowie on, że stracił blokadę na pliku, master próbuje zdobyć tą blokadę i w przypadku powodzenia, usuwa plik powodując tym samym restart serwera tabletów.
+
+\subsubsection*{Architektura serwera tabletów}
+
+Dane o tablecie są zapisywane przez serwer tabletów w trzech lokacjach.
+Pierwszą z nich jest \emph{tablet log}, do którego zapisywane są wszelkie modyfikujące tablet operacje.
+Każda taka operacja musi zostać zapisana w tym pliku zanim zostanie przetworzona.
+
+Po zapisaniu do \emph{tablet logu} operacja może zostać odwzorowana w pamięci operacyjnej.
+Mutacje są wykonywane korzystając z techniki \emph{copy-on-write} (kopiowanie przy zapisie), dzięki czemu wynik operacji nie jest widoczny aż do jej zakończenia.
+Co pewien czas struktura w pamięci (nazywana \emph{memtable}) jest zrzucana na dysk (do GFS) do pliku SSTable.
+SSTable to format pozwalający na zapisywanie tablic asocjacyjnych, odczytywanie kluczy zakresami i posiadający specjalny indeks, który, po wczytaniu do pamięci operacyjnej przy otwarciu pliku, umożliwia odczyt dowolnej wartości z pliku przy pomocy pojedynczego wyszukania na dysku.
+
+Odczyt musi przeszukać \emph{memtable} i wszystkie pliki SSTable, dlatego po przekroczeniu pewnego limitu plików SSTable, cześć z nich jest łączona w jeden.
+Istnieje także możliwość połączenia wszystkich plików SSTable w jeden.
+
 \subsection*{Znaczenie}
 
+Wpływy Google BigTable można znaleźć w HBase, Hypertable, Apache Cassandra i nawet MongoDB.
+Baza ta jest typowym przykładem systemu, który w obliczu wystąpienia podziałów sieci wybiera konsystencję kosztem dostępności (CP w Teorii CAP).
+Bardzo interesujące jest zastosowanie Google Chubby w tym systemie jako sposób na uniknięcie skomplikowanego problemu rozproszonego konsensusu.
+Odpowiednik Google Chubby o nazwie Zookeeper, zaimplementowany na potrzeby HBase, jest wykorzystywany do wyboru węzła master w grafowej bazie Neo4J.
+Technika ta może być z powodzeniem stosowana w wielu systemach rozproszonych upraszczając ich architekturę.
+
+Zainteresowanym lekturą artykułu przedstawiającego Google BigTable \cite{google-bigtable} polecam także lekturę dwóch innych pokrewnych artykułów o Google Chubby \cite{google-chubby} i Google File System \cite{google-file-system}.
+Pominięcie ich może bowiem sprawić, że czytelnik nie będzie w stanie samodzielnie zrozumieć architektury BigTable, a tym bardziej konsekwencji jakie mają decyzje podjęte przez architektów firmy Google.
+
 \section{Podsumowanie}
+
+W powyższym rozdziale przedstawione zostały podstawowe artykuły i koncepcje które mają wpływ na skalowalne bazy danych które są obecnie dostępne na rynku.
+Opisane zostały dwie wysoce skalowalne bazy danych wykorzystywane przez internetowych gigantów -- Google i Amazon.
+Sukces obu rozwiązań nie ulega wątpliwości, a pokazują one jak bardzo mogą różnić się podejścia do skalowalności.
+Z jednej strony mamy Amazon Dynamo, które stawia przede wszystkim na dostępność systemu, którą opłaca trudniejszym interfejsem z punktu widzenia programisty.
+Z drugiej strony mamy Google BigTable, które poświęca dostępność dla konsystencji, ale dzięki temu jest o wiele prostsze i wymaga mniejszych nakładów pracy od programisty.
+Przedstawiony został także framework MapReduce, który jest podstawą do wykonywania zapytań które muszą dokonać przeglądu wszystkich lub dużej części rekordów w bazie, w wielu nierelacyjnych systemach bazodanowych.
