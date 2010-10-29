@@ -1,7 +1,100 @@
 \chapter{Opis dostępnych rozwiązań}
 
 \section*{Streszczenie}
-Przedstawiona zostanie klasyfikacja rozwiązań NoSQL (podział na document oriented, table oriented, key-value stores, graph oriented i RDBMS based) oraz dla każdej z grup przedstawię charakterystykę 2-3 produktów przynależących do danej kategorii.
+\todo{Napisać jakieś streszczenie dla rozdziału}
+
+\section{Klasyfikacja nierelacyjnych baz danych}
+
+Jednym z założeń ruchu NoSQL jest zwrócenie uwagi użytkowników systemów bazodanowych na fakt, że dla różnych aplikacji i do różnych zastosowań mogą pasować zupełnie różne systemy.
+Ogromna liczba nierelacyjnych baz danych\footnote{Strona http://nosql-database.org/ wymienia ponad stu takich baz.} sprawia, że niemożliwym jest opisanie wszystkich z nich w niniejszej pracy.
+Z tego względu przedstawionych zostanie jedynie kilka najlepiej znanych i najbardziej popularnych rozwiązań.
+
+Istnieje wiele możliwych sposobów klasyfikacji systemów NoSQL.
+Na potrzeby tej pracy przyjęto najczęśćiej stosowany system, który dzieli bazy ze względu na wykorzystywany model danych.
+
+\subsection*{Podział ze względu na model danych}
+
+\begin{description}
+ \item[Bazy typu klucz-wartość]
+ Systemy tego typu modelują dane jako tablicę asocjacyjną.
+ W takiej tablicy unikalnemu kluczowi jest przyporządkowana wartość.
+ Zazwyczaj ani klucz, ani jegop wartość nie są interpretowane przez system.
+ Bazy tego typu udostępniają zazwyczaj jedynie prosty interfejs pozwlający na odczytanie lub ustawienie wartości klucza bądź jego usunięcie; bardziej skomplikowane zapytania są zazwyczaj niemożliwe.
+ 
+ \item[Bazy kolumnowe]
+ Systemy te wzorują swój model danych na Google BigTable (patrz strona \pageref{google-bigtable-model-danych}).
+ W bazie kolumnowej unikalnemu kluczowi odpowiada wiele kolumn.
+ Kolumny są grupwane w rodziny - zazwyczaj wszystkie kolumny należące do tej samej rodziny są jednego typu.
+ W przypadku Apache Cassandra kilka rodzin kolumn może być zebranych w super-rodzinę.
+ Kolumny przynależące do jednej rodziny z reguły zawierają dane jednego typu, gdyż są one kompresowane razem.
+ Bazy te zazwyczaj wymagają zdefiniowania struktury bazy z dokładnością do rodzin, czy super-rodzin kolumn.
+ Jedynie kolumny, którym jest przypisana jakaś wartość dla dangeo klucza zajmują miejsce w pamięci, dzięki temu różnych kolumn może być bardzo wiele i często służą na przykład do tworzenia list wartości.
+ Bazy kolumnowe pozwalają jedynie na wykonywanie zapytań o pojedynczy klucz lub ich zakres, ale za to oferują szeroki zakres możliwośći limitowania zwracanych kolumn.
+
+ \item[Bazy dokumentowe]
+ W systemie dokumentowym unikalnemu kluczowi przypisany jest tak zwany dokument.
+ Dokument jest to drzewo, którego liśćmi są wartości prymitywne (np. ciąg znaków, liczba, wartość logiczna, pusty obiekt NULL, itp.) a węzłami wartośći złożone (tablica, tablica asocjacyjna).
+ Dokumenty są zazwyczaj zgrupowane w kolekcje, po których można iterować.
+ Dokumenty należące do tej samej kolekcji nie muszą mieć tych samych pól czy struktury.
+ W odróżnieniu od systemu typu klucz-wartość przechowującego dane w formacie JSON, systemy dokumentowe są w stanie interpretować wartośći zawarte w dokumentach i umożliwiają użytkownikowi efektywne wyszukiwanie rekordów na podstawie tych wartości przy pomocy różnych rodzajów indeksów.
+ W bazie dokumentowej nie występują zazwyczaj relacje między dokumentami, ale możliwe jest zagnieżdżanie dokumentów, co ułatwia modelowanie relacji jeden-do-wielu.
+ 
+ \item[Bazy grafowe]
+ Głównym wyróżnikiem grafowych baz danych jest to, że baza grafowa pozwala w złożoności O(1) uzyskać informacje o relacjach danego węzła z innymi węzłami.
+ W takim systemie można uzyskać informacje zarówno o krawędziach wchodząych jak i wychodzących.
+ Zarówno węzły, jak i krawędzie grafu są opisane właściwościami.
+ Podobnie jak w przypadku baz dokumentowych węzły czy krawędzie nie mają z góry narzuconej struktury i mogą się różnić liczbą, typem i nazwami właśćiwości.
+ Podstawowym mechanizmem zapytań w bazie grafowej są rożne mechanizmy trawersowania grafu biorąc pod uwagę właściwości węzłów i krawędzi i poruszając się po krawędziach wchodzących i wychodzących.
+ Drugorzędnym mechanizmem jest wyszukiwanie węzłów i krawędzi grafu na podstawie ich właściwości.
+ Możliwość wykonywania takich zapytań nie jest jednak konieczna w bazie grafowej i niektóre produkty pozostawiają obsługę takich zapytań innym systemom. 
+\end{description}
+
+\subsection*{Opisane aspekty rozwiązań}
+
+Ponieważ dokładne przedstawienie dowolnego systemu bazodanowego na kilku stronach A4 jest zadaniem nie do wykonania, zamierzeniem autora tej pracy było wydystylowanie najbardziej istotnych i cennych dla czytelnika informacji.
+Pominięte zostały przede wszystkim szczegóły dotyczące API poszczególnych systemów oraz łatwo dostępne informacje, takie jak instrukcja instalacji systemu.
+Opisane zostały natomiast istotne cechy systemów, które pozwalają czytelnikowi lepiej zrozumieć mechanizm działania aplikacji.
+Każda baza została opisana według następującego schematu:
+
+\begin{description}
+ \item[Wstęp] 
+ Każdą sekcję poprzedzono wstępem przybliżającym w kilku zdaniach opisywaną bazę. 
+ 
+ \item[Protokół komunikacji]
+ Opisuje dostępne protokoły komunikacji z bazą i wsparcie dla różnych języków programowania.
+
+ \item[Replikacja]
+ Opisuje dostępne mechanizmy replikacji systemu i możliwości ich konfiguracji.
+
+ \item[Partycjonowanie]
+ W przypadku baz obsługujących horyzontalne partycjonowanie danych opisany zostanie ten mechanizm i jego możliwości konfiguracji.
+ W przypadku baz nie dających takiej możliwośći opisane zostaną narzędzia ją zapewniające.
+
+ \item[Persystencja]
+ Opisany zostanie mechanizm trwałego zapisu danych oraz różne opcje konfiguracji systemu z tym związane i w przypadku systemów, które obsługują wymienne moduły persystencji, zostaną one opisane.
+
+ \item[Wersjonowanie]
+ W przypadku systemów które oferują taką opcję, zostanie opisany mechanizm wersjonowania rekordów i rozwiązywania konfliktów.
+
+ \item[Dostępne typy zapytań]
+ Opisane zostaną ogólnie opcje tworzenia zapytań do systemu i indeksowania danych.
+
+ \item[Unikalne cechy]
+ Przedstawione zostaną cechy systemu, które wyróżniają go na tle konkurencji.
+
+ \item[Typowe zastosowania]
+ Opisane zostaną typowe zastosowania i znane wdrożenia danego systemu.
+
+ \item[Przeciwskazania]
+ Opisuje typy zastosowań, z którym system może mieć problemy, szczególnie takie, które mogą nie występować przy prostej ewaluacji.
+
+ \item[Społeczność]
+ Opisany zostanie poziom aktywności społecznośći związanej z daną bazą, możliwości komercyjnego wsparcia, subiektywna ocena jakości dokumentacji oraz w przypadku produktów rozwijanych przez konkretnych dostawców, zostaną oni przedstawieni.
+
+ \item[Pomocne odnośniki]
+ Każdy opis zostanie zakończony garścią odnośników pomocnych w zapoznawaniu się z systemem.
+
+\end{description} 
 
 \section{Bazy Klucz-Wartość}
 
@@ -11,7 +104,7 @@ Przedstawiona zostanie klasyfikacja rozwiązań NoSQL (podział na document orie
 \subsection{Redis}
 \label{sec:redis}
 
-\section{Bazy Tablicowe}
+\section{Bazy Kolumnowe}
 
 \subsection{Cassandra}
 \label{sec:cassandra}

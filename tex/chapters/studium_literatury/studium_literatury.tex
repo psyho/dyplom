@@ -57,12 +57,12 @@ W przypadku tak dużych systemów, czas jakiego wymaga replikacja danych aby dop
 Teoria CAP mówi, że nie możemy zapewnić równocześnie wszystkich trzech gwarancji, dlatego skalowalne systemy muszą porzucić jedną z nich. 
 Ze względu na to dzielimy je na:
 
-\begin{enumerate}
- \item \emph{CA} - (Consistent, Available) te systemy mają problemy z podziałem sieci, wymagając zazwyczaj aby operacje dotyczące poszczególnych transakcji trafiały do pojedynczej grupy węzłów, które podlegają awarii ,,atomowo'' - albo wszystkie działają, albo żaden. 
+\begin{description}
+ \item[CA] (Consistent, Available) te systemy mają problemy z podziałem sieci, wymagając zazwyczaj aby operacje dotyczące poszczególnych transakcji trafiały do pojedynczej grupy węzłów, które podlegają awarii ,,atomowo'' - albo wszystkie działają, albo żaden. 
  To podejście zazwyczaj wiąże się z problemami dla skalowalności.
- \item \emph{AP} - (Available, Partition-Tolerant) te systemy zapewniają największą odporność na awarie wynikające z rozproszonego środowiska, jednocześnie jednak stawiając twórców aplikacji przed trudnym zadaniem radzenia sobie z problemami wynikającymi z niespójności danych widzianych przez klientów bazy.
- \item \emph{CP} - (Consistent, Partition-Tolerant) te systemy w wypadku podziału oczekują na przywrócenie połączenia, ograniczając w ten sposób dostępność.
-\end{enumerate}
+ \item[AP] (Available, Partition-Tolerant) te systemy zapewniają największą odporność na awarie wynikające z rozproszonego środowiska, jednocześnie jednak stawiając twórców aplikacji przed trudnym zadaniem radzenia sobie z problemami wynikającymi z niespójności danych widzianych przez klientów bazy.
+ \item[CP] (Consistent, Partition-Tolerant) te systemy w wypadku podziału oczekują na przywrócenie połączenia, ograniczając w ten sposób dostępność.
+\end{description}
 
 W praktyce systemy omawiane w tej pracy zazwyczaj zadowalają się częściowym zapewnieniem wszystkich wymienionych gwarancji, przy czym wysoka dostępność odgrywa główną rolę, a poświęcana jest albo odporność na podziały, albo konsystencja. 
 Dlatego systemy te należą albo do grupy CP (Google BigTable, HBase), albo do grupy AP (Amazon Dynamo, Riak).
@@ -105,33 +105,37 @@ Innym przykładem może być system DNS, gdzie zmiana jest propagowana w systemi
 
 Artykuł \cite{vogels-eventually-consistent} wprowadza ponadto kilka rodzajów Eventual Consistency:
 
-\begin{enumerate}
- \item \emph{Causal Consistency} - Jeżeli proces A wykonał jakąś operację, a następnie zakomunikował ten fakt procesowi B, to proces B będzie widział zmienione dane w taki sam sposób jak proces A, a jego zapisy nie będą wchodzić w konflikt z tą operacją.
+\begin{description}
+ \item[Causal Consistency] 
+ Jeżeli proces A wykonał jakąś operację, a następnie zakomunikował ten fakt procesowi B, to proces B będzie widział zmienione dane w taki sam sposób jak proces A, a jego zapisy nie będą wchodzić w konflikt z tą operacją.
  Proces C, któremu ta informacja nie została przekazana, będzie podlegał normalnym regułom.
- \item \emph{Read-your-writes Consistency} - Proces dokonujący operacji w kolejnych operacjach zawsze widzi rezultaty tej operacji.
- \item \emph{Session Consistency} - To praktyczna realizacja poprzedniego rodzaju konsystencji.
+ \item[Read-your-writes Consistency]
+ Proces dokonujący operacji w kolejnych operacjach zawsze widzi rezultaty tej operacji.
+ \item[Session Consistency]
+ To praktyczna realizacja poprzedniego rodzaju konsystencji.
  W tym przypadku proces komunikuje się z systemem w kontekście sesji, w ramach której ma zapewnioną gwarancję odczytu swoich operacji.
  W przypadku awarii i konieczności nawiązania nowej sesji, gwarancje te nie przechodzą na nowo nawiązaną sesję.
- \item \emph{Monotonic Write Consistency} - W tym przypadku system gwarantuje, że operacje zostaną wykonane w tej samej kolejności, w jakiej żądania ich wykonania zostały wysłane.
+ \item[Monotonic Write Consistency]
+ W tym przypadku system gwarantuje, że operacje zostaną wykonane w tej samej kolejności, w jakiej żądania ich wykonania zostały wysłane.
  Systemy które nie oferują tej gwarancji są bardzo trudne w użyciu.
-\end{enumerate}
+\end{description}
 
 \subsection*{Konfiguracja Eventual Consistency}
 
 Werner Vogels w artykule o Eventual Consistency \cite{vogels-eventually-consistent} wprowadził nomenklaturę stosowaną w konfiguracji konsystencji wielu systemów NoSQL (np. Cassandra, Riak).
 Konfigurację tą opisują zazwyczaj trzy liczby:
 
-\begin{enumerate}
- \item \emph{N} - liczba węzłów systemu na które zostanie zreplikowany pojedynczy rekord.
+\begin{description}
+ \item[N] liczba węzłów systemu na które zostanie zreplikowany pojedynczy rekord.
  Liczba ta jest zazwyczaj określana jako parametr konfiguracji systemu, lub podczas wydawania polecenia utworzenia ``tabeli'' (nazwanego zbioru rekordów).
  Niektóre systemy pozwalają na zmianę tej wartości w trakcie działania systemu (np. Riak), ale większość wymaga ponownego uruchomienia aplikacji w celu zastosowania tej zmiany.
- \item \emph{R} - liczba węzłów systemu, które muszą dokonać odczytu zanim wartość zostanie zwrócona do klienta.
+ \item[R] liczba węzłów systemu, które muszą dokonać odczytu zanim wartość zostanie zwrócona do klienta.
  Czasem wartości zwrócone przez poszczególne węzły będą różne.
  Wtedy system  odpowiada albo za rozwiązanie konfliktu, albo za przekazanie wielu wersji klientowi.
  Parametr R jest najczęściej określany z osobna dla każdego polecenia odczytu.
- \item \emph{W} - liczba węzłów systemu, które muszą potwierdzić zapis aby operacja została zakończyła się sukcesem.
+ \item[W] liczba węzłów systemu, które muszą potwierdzić zapis aby operacja została zakończyła się sukcesem.
  Podobnie jak R jest to parametr przekazywany dla każdego zapytania.
-\end{enumerate}
+\end{description}
 
 Jeżeli $R+W>N$, to mamy do czynienia z silną konsystencją (ang. \emph{Strong Consistency}) - każdy odczyt zwróci ostatnią zapisaną wartość.
 Jeżeli $W = 0$, to zapis jest dokonywany w pełni asynchronicznie.
@@ -540,8 +544,9 @@ Awaria i niedostępność Chubby powoduje także niedostępność BigTable.
 Cytując za artykułem \cite{google-bigtable}, przełożyło się to średnio na zmniejszenie dostępności systemu średnio o 0.0047\%, a w najgorszym przypadku o 0.0326\%\footnote{Dla lepszego zobrazowania: odpowiednio 24 minuty i 171 minut w ciągu roku}.
 
 \subsection*{Model Danych}
+\label{google-bigtable-model-danych}
 
-Google BigTable jest prekursorem tablicowych baz danych.
+Google BigTable jest prekursorem kolumnowych baz danych.
 Model danych można opisać jako macierz, gdzie rzędami są rekordy, a kolumny reprezentują pola tych rekordów.
 Każdy rząd identyfikowany jest przez klucz o wielkości maksymalnej 64KB, ale średnio klucze są mniejsze niż 100B.
 System przechowuje rekordy posortowane po kluczu, podzielone na segmenty zwane tabletami.
