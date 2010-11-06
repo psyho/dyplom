@@ -20,6 +20,20 @@
 
 \usepackage[dvips, bookmarks, colorlinks=false, pdfauthor={Adam Pohorecki}, pdfsubject={Praca Magisterska}, pdfkeywords={master thesis, nosql, scalability}]{hyperref}
 
+% page headers
+\usepackage{fancyhdr}
+\setlength{\headheight}{15.2pt}
+
+\pagestyle{fancyplain}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+ 
+\lhead{\fancyplain{}{\textit{\rightmark}}}
+\chead{}
+\rhead{}
+\lfoot{}
+\cfoot{\fancyplain{}{\thepage}}
+\rfoot{}
+
 \makeindex
 
 \bibliographystyle{apalike}
