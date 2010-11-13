@@ -47,7 +47,7 @@ Pierwsza opcja, nazywana \emph{skalowaniem wzwyż}, ma pewne zalety: nie wymaga 
 Wadą tego rozwiązania jest jednak cena w porównaniu do możliwości.
 Cytując za artykułem na blogu \emph{Coding Horror} \cite{codinghorror-scaling-up-vs-out}: za cenę stu tysięcy dolarów możemy albo kupić jeden potężny serwer z 32 procesorami, 512GB RAM i 4TB przestrzeni dyskowej, albo 83 mniejsze serwery posiadające łącznie 332 rdzenie, 664GB RAM i 40,5TB przestrzeni dyskowej.
 Oczywiście nie można w ten sposób skalować aplikacji wzwyż w nieskończoność, ale warto pamiętać, że tylko nieliczne strony mogą konkurować rozmiarami z takimi gigantami jak Facebook.
-Większość aplikacji nigdy nie wyrośnie ponad rozmiar, w którym superkomputer nie wystarcza już do utrzymania ich obciążenia.
+Większość aplikacji nigdy nie wyrośnie ponad rozmiar, w którym ,,superkomputer'' nie wystarcza już do utrzymania ich obciążenia.
 
 \myfigure{chapters/definicja_problemu/hp-proliant-dl785.jpg}{HP ProLiant DL785 G5}{fig:superkomputer}
 
@@ -84,11 +84,11 @@ Memcached to \emph{darmowy i open source, rozproszony, wysokowydajny system do p
 Ponieważ serwery Memcached nie komunikują się między sobą bezpośrednio, możemy zwiększać przepustowość systemu liniowo, poprzez dodawanie kolejnych maszyn.
 Stosowanie Memcached w porównaniu do cache bazy danych ma wiele zalet: cache bazy danych jest ograniczony do pojedynczego serwera, czyszczony przy zapisach i ograniczony w tym, co możemy do niego zapisywać.
 Dla porównania nad Memcached mamy o wiele większą kontrolę i większą swobodę co do tego co w nim się znajdzie.
-Możemy cacheować pojedyncze rzędy tabel bazy danych, całe tabele, wyniki zapytań wymagających skomplikowanych obliczeń, pliki, fragmenty wygenerowanych stron HTML i wiele innych obiektów.
+Możemy cacheować pojedyncze wiersze tabel bazy danych, całe tabele, wyniki zapytań wymagających skomplikowanych obliczeń, pliki, fragmenty wygenerowanych stron HTML i wiele innych obiektów.
 
 W architekturach wielu wysokowydajnych aplikacjach internetowych Memcached odgrywa centralną rolę.
 W artykule \cite{highscalability-mysql-memcached} czytelnik znajdzie interesujący opis strategii wykorzystania Memcached w serwisie Fotolog.
-Szczególnie warta uwagi jest złożoność zaprojektowanego tam systemu, oraz to że fragmenty aplikacji wymagające największej wydajności komunikują się nie z bazą danych bezpośrednio, ale z serwerami cache w których część tabel jest w całości odwzorowana.
+Szczególnie warta uwagi jest złożoność zaprojektowanego tam systemu, oraz to że fragmenty aplikacji wymagające największej wydajności komunikują się nie z bazą danych bezpośrednio, ale z serwerami cache, w których część tabel jest w całości odwzorowana.
 
 \subsection{Problemy z tradycyjnymi rozwiązaniami}
 
@@ -106,15 +106,15 @@ Noszą one wspólną nazwę systemów NoSQL.
 \section{NoSQL}
 Powszechny i darmowy dostęp do produktów bazodanowych obiecujących wysoką skalowalność zaowocował powstaniem ruchu określanego popularnie mianem NoSQL (\emph{Not only SQL} - nie tylko SQL).
 Termin ten powstał początkowo jako nazwa grupy użytkowników rozproszonych baz danych udostępnionych na licencji open source.
-Ze względu na to, że nazwa ta umożliwia bardzo szeroką gamę interpretacji, pod metką NoSQL znajdujemy dziś systemy zaprojektowane w celu rozwiązywanie diametralnie różnych problemów \cite{evans-nosql-what-is-in-a-name}. 
+Ze względu na to, że nazwa ta umożliwia bardzo szeroką gamę interpretacji, pod metką NoSQL znajdujemy dziś systemy zaprojektowane w celu rozwiązywania diametralnie różnych problemów \cite{evans-nosql-what-is-in-a-name}. 
 Ze względu na to, że większość nowych produktów bazodanowych stworzonych z myślą o wysokiej skalowalności nie dysponuje możliwością zadawania zapytań w języku SQL, niezależnie od tego czy są to bazy grafowe, oparte na dokumentach czy nawet proste kontenery klucz-wartość, wszystkie one noszą wspólną nazwę systemów NoSQL.
 
 W literaturze trudno znaleźć nazwę problemu, który próbuje rozwiązać ruch NoSQL. 
 W artykule \cite{monash-db-hvsp} autor sugeruje nazwę HVSP (ang. \emph{High Volume Simple Processing}). 
 Sugerowane wyróżniki problemu to:
 \begin{itemize}
- \item Wielu równocześnie korzystających z bazy użytkowników, dokonujących zarówno odczytów, jak i zapisów.
- \item Operacje wykonywane przez użytkowników są nieskomplikowane, bez transakcji, łączenia tabel, czy operacji grupujących.
+ \item Wielu równocześnie korzystających z bazy użytkowników, dokonujących zarówno odczytów jak i zapisów.
+ \item Operacje wykonywane przez użytkowników są nieskomplikowane, bez transakcji, łączenia tabel czy operacji grupujących.
 \end{itemize}
 
 \section{Cel pracy}

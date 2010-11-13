@@ -25,9 +25,11 @@ Mówi ona, że z trzech pożądanych właściwości systemu rozproszonego: Konsy
 
 \subsection*{Konsystencja}
 
-Termin ,,Konsystencja'' w Teorii CAP ma nieco inne znaczenie niż w ACID, gdzie oznacza on, iż zapisywane dane nie mogą złamać pewnych określonych reguł integralności. 
-W Teorii CAP \emph{Consistency} jest dużo bardziej zbliżone do \emph{Atomicity} z ACID, oznacza ono bowiem, że gdy dokonamy operacji zapisu $x=x_0$ każdy kolejny odczyt $x$, niezależnie do którego węzła byłby skierowany, zwróci wartość $x_0$.
-
+Rozproszony system bazodanowy jest konsystentny jeżeli zachowuje się tak samo, jakby każda operacja była wykonywana po kolei na pojedynczym węźle.
+W praktyce oznacza to, że jeżeli operacja zapisu się powiedzie, to dla każdego klienta systemu jest widoczna natychmiast po zakończeniu.
+Dla przykładu system bazodanowy MySQL udostępnia możliwość replikacji synchronicznej i asynchronicznej.
+Jedynie jeżeli jest włączona replikacja synchroniczna system nazwiemy konsystentnym, w przeciwnym razie bowiem klient po dokonaniu modyfikacji i odczytując następnie wartość z innego węzła może otrzymać wartość sprzed modyfikacji.
+ 
 \subsection*{Wysoka Dostępność}
 
 Wysoka dostępność jest najbardziej pożądaną właściwością z trzech wymienionych.
@@ -251,15 +253,15 @@ Rozróżniamy dwa typy awarii: awaria węzła \emph{master} i awarie węzłów t
 
 \subsubsection*{Awaria węzła master}
 
-Ponieważ \emph{master} przechowuje między innymi informacje o zrealizowanych zadaniach i lokalizacji plików wynikowych.
-\emph{Master} musi działać aby operacja MapReduce się zakończyła powodzeniem, ale możliwe jest aby jego struktury danych były zapisywane w GFS, albo replikowane do zapasowego węzła.
+Ponieważ \emph{master} przechowuje między innymi informacje o zrealizowanych zadaniach i lokalizacji plików wynikowych, \emph{Master} musi działać aby operacja MapReduce się zakończyła powodzeniem.
+Możliwe jest aby jego struktury danych były zapisywane w GFS, albo replikowane do zapasowego węzła.
 W opisanym systemie awaria węzła master zawsze kończy się niepowodzeniem całości operacji MapReduce i koniecznością jej ponownego uruchomienia.
 Jest to dopuszczalne ponieważ czas trwania operacji jest liczony w minutach, więc awaria tego konkretnego węzła jest mało prawdopodobna (w odróżnieniu od np. BigTable, który jest systemem, który działa bez przerwy).
 
 \subsubsection*{Awaria węzła slave}
 
 \emph{Master} regularnie komunikuje się z węzłami \emph{slave} w celu ustalenia ich stanu.
-W przypadku gdy węzeł przestaje odpowiadać jest uznawany za ,,martwy'', w związku z czym \emph{master} oznacza zadanie aktualnie przez niego wykonywane jako przeznaczone to przydziału, tak samo wszystkie wykonane przez niego zadania \emph{map}.
+W przypadku gdy węzeł przestaje odpowiadać jest uznawany za ,,martwy'', w związku z czym \emph{master} oznacza zadanie aktualnie przez niego wykonywane jako przeznaczone do przydziału, tak samo wszystkie wykonane przez niego zadania \emph{map}.
 Zadania \emph{map} muszą być wykonane ponownie, ponieważ ich wyniki zostały zapisane w lokalnych plikach i przez to są niedostępne do odczytu.
 Zadania \emph{reduce} zapisują swoje wyniki w GFS, w związku z tym nie muszą być powtarzane. 
 
@@ -271,7 +273,7 @@ Dlatego najczęściej wykonywanie tego typu operacji jest dokonywane co pewien c
 
 W przeważającej większości obliczenia te są wykonywane przy zastosowaniu algorytmu MapReduce.
 Wiele systemów, tak jak MongoDB czy Riak, zapewnia taką funkcjonalność, inne wymagają zastosowania zewnętrznych narzędzi.
-Wierną implementacją Google MapReduce jest Hadoop, który opiszemy nieco bliżej przy okazji HBase.
+Wierną implementacją Google MapReduce jest Hadoop, który opisany zostanie nieco bliżej przy okazji HBase.
 Bardzo ciekawe podejście do MapReduce prezentuje CouchDB, która przechowuje wyniki funkcji map, dzięki czemu umożliwia dokonywanie zapytań opartych o MapReduce w trybie on-line.
 CouchDB zostanie opisane bliżej w kolejnym rozdziale.
 
@@ -289,7 +291,7 @@ Przykładowym kontraktem tego typu jest gwarancja, że usługa zwróci odpowied�
 Konsekwencją istnienia takich gwarancji jest to, że Dynamo musi udostępniać wiele możliwości konfiguracji, tak aby usługi mogły dostosować właściwości bazy na potrzeby oferowanego kontraktu.
 
 Jednym z wymagań dla systemu obsługującego sklep internetowy jest to aby użytkownik był w stanie zawsze dodać przedmioty do koszyka czy złożyć zamówienie.
-W związku z tym Amazon Dynamo jest systemem w którym dostępność (A w CAP) odgrywa kluczową rolę, a odporność na podział sieci (P w CAP) jest jej uzupełnieniem.
+W związku z tym Amazon Dynamo jest systemem, w którym dostępność (A w CAP) odgrywa kluczową rolę, a odporność na podział sieci (P w CAP) jest jej uzupełnieniem.
 Wydawało by się, że konsystencja ma duże znaczenie w przypadku sklepu internetowego - nie można przecież sprzedać towaru, którego się nie ma, a przecież w przypadku sklepu z którego korzystają miliony użytkowników równocześnie warunki wyścigu (ang. \emph{race conditions}) muszą występować nagminnie.
 W amazon.com dopuszczalne jest aby dwóch klientów zamówiło ostatnią z książek w magazynie, a kiedy okaże się że jeden z nich jej nie może otrzymać sklep kontaktuje się z nim proponując na przykład dłuższy okres dostawy.
 Nawet jeżeli nie wszyscy użytkownicy się zgodzą z taką sytuacją, to i tak przekłada się to na wyższe przychody.
@@ -300,25 +302,25 @@ Pokazuje to jak Eventual Consistency może z powodzeniem być stosowane w sytuac
 Autorzy Amazon Dynamo określili takie założenia co do architektury:
 
 \begin{itemize}
- \item system jest zawsze w stanie przyjąć operację zapisu
- \item w związku z replikacją danych i naciskiem na wysoką dostępność, w systemie może wystąpić wiele wersji rekordu
- \item rozwiązywanie konfliktów między wersjami następuje przy odczycie i jest dokonywane przez aplikację, nie przez bazę (ale aplikacja może z tego zrezygnować i wybrać prosty mechanizm, np. ostatni zapis wygrywa)
- \item system musi się łatwo skalować wszerz poprzez dodawanie kolejnych węzłów i nie powinno to mieć dużego wpływu ani na administrację systemem ani na sam system
- \item system musi się charakteryzować symetrią: każdy węzeł ma taki sam zestaw obowiązków jak wszystkie inne
- \item system musi być zdecentralizowany: żaden węzeł nie jest wyróżniony i wszelkie operacje są wykonywane korzystając z mechanizmów \emph{peer-to-peer}
- \item system musi radzić sobie z heterogenicznością środowiska: narzut pracy na pojedynczy węzeł powinien uwzględniać jego możliwości w porównaniu do innych węzłów
+ \item system jest zawsze w stanie przyjąć operację zapisu,
+ \item w związku z replikacją danych i naciskiem na wysoką dostępność, w systemie może wystąpić wiele wersji rekordu,
+ \item rozwiązywanie konfliktów między wersjami następuje przy odczycie i jest dokonywane przez aplikację, nie przez bazę (ale aplikacja może z tego zrezygnować i wybrać prosty mechanizm, np. ostatni zapis wygrywa),
+ \item system musi się łatwo skalować wszerz poprzez dodawanie kolejnych węzłów i nie powinno to mieć dużego wpływu ani na administrację systemem ani na sam system,
+ \item system musi się charakteryzować symetrią: każdy węzeł ma taki sam zestaw obowiązków jak wszystkie inne,
+ \item system musi być zdecentralizowany: żaden węzeł nie jest wyróżniony i wszelkie operacje są wykonywane korzystając z mechanizmów \emph{peer-to-peer},
+ \item system musi radzić sobie z heterogenicznością środowiska: narzut pracy na pojedynczy węzeł powinien uwzględniać jego możliwości w porównaniu do innych węzłów.
 \end{itemize}
 
 \subsection*{Stosowane techniki}
 
 Amazon Dynamo łączy w sobie wiele ciekawych technik rozwiązujących problemy takie jak partycjonowanie, wersjonowanie rekordów czy wykrywanie awarii.
-W niniejszym rozdziale postaram się je czytelnikowi przybliżyć.
+Niniejszy rozdział przybliży je czytelnikowi.
 
 \subsubsection*{Partycjonowanie - Consistent Hashing} 
 
 W systemie takim jak Dynamo, który ma za zadanie skalować się do setek węzłów, horyzontalne partycjonowanie jest nieuniknione.
 W Amazon Dynamo za podział na partycje odpowiada zmodyfikowany algorytm Consistent Hashing.
-W następnych kilku paragrafach opiszę najpierw podstawowy algorytm, a następnie kolejne jego modyfikacje.
+Kolejne paragrafy opisują najpierw podstawowy algorytm, a następnie kolejne jego modyfikacje.
 
 Consistent Hashing to algorytm który dla dowolnego klucza określa który węzeł systemu go przechowuje.
 Ponieważ klucze są dowolnymi ciągami bajtów, zawsze operując na nich używamy funkcji mieszającej (ang. \emph{hashing function}).
@@ -337,11 +339,11 @@ Dzięki tej modyfikacji (o ile liczba wirtualnych węzłów jest wystarczająco 
 
 \myfigure{chapters/studium_literatury/consistent-hashing-02.png}{Consistent Hashing z wirtualnymi węzłami}{fig:consistent-hashing-02}
 
-Opisana powyżej wersja algorytmu radzi sobie zbyt dobrze z dodawaniem i usuwaniem węzłów niż wersja podstawowa, jednak w rzeczywistości nie sprawdza się zbyt dobrze.
+Opisana powyżej wersja algorytmu lepiej radzi sobie z dodawaniem i usuwaniem węzłów niż wersja podstawowa, jednak w rzeczywistości nie sprawdza się zbyt dobrze.
 Przy dodaniu węzła do systemu, klucze znajdujące się do tej pory pod opieką innych węzłów muszą być przekazane nowemu węzłowi.
-Aby tego dokonać, konieczne jest dokonanie przeglądu wszystkich kluczy w dzielonym zakresie, konieczne jest także przeliczenie na nowo i synchronizacja drzew Merkle (vide \emph{Merkel Trees} na stronie \pageref{merkle-trees}). 
+Aby tego dokonać, konieczne jest wykonanie przeglądu wszystkich kluczy w dzielonym zakresie, konieczne jest także przeliczenie na nowo i synchronizacja drzew Merkle (vide \emph{Merkel Trees} na stronie \pageref{merkle-trees}). 
 Przegląd taki obciąża system i musi być dokonywany w tle aby nie złamać gwarancji dawanych przez korzystającą z Dynamo usługę.
-Aby uniknąć tego problemu należy rozdzielić mechanizm partycjonowania danych (w jaki sposób są tworzone przedziały) od tego które węzły nimi zarządzają.
+Aby uniknąć tego problemu należy rozdzielić mechanizm partycjonowania danych (w jaki sposób są tworzone przedziały) od tego, które węzły nimi zarządzają.
 
 W tym wariancie algorytmu przestrzeń kluczy zostaje podzielona z góry na określoną liczbę przedziałów S.
 Najczęściej liczba ta będzie znacznie większa niż liczba węzłów systemu N ($S >> N$).
@@ -353,11 +355,12 @@ Rysunek \ref{fig:consistent-hashing-03} przedstawia opisaną powyżej wersję al
 
 \subsubsection*{Replikacja}
 
-Mechanizm opisany w poprzednim rozdziale przydziela przedziałów kluczy do węzłów, które są \emph{koordynatorami} tych przedziałów.
+Mechanizm opisany w poprzednim rozdziale przydziela przedziały kluczy do węzłów, które są \emph{koordynatorami} tych przedziałów.
+Nazwa ,,koordynator'' może być dość myląca ponieważ węzeł ten niczego w rzeczywistości nie koordynuje, jedyne jego wyróżnienie polega na tym, że jest pierwszym węzłem na liście węzłów przechowujących dany przedział kluczy.
 Oczywiście nie wystarcza aby każdy przedział był zapisany tylko na dysku koordynatora - awaria pojedynczego węzła powodowałaby wtedy (potencjalnie nieodwracalne) straty danych, a przynajmniej ich czasową niedostępność.
 W Amazon Dynamo dane są replikowane do N fizycznych węzłów, gdzie N\footnote{
 Uważny czytelnik zwróci uwagę na to, że ta sama nomenklatura była wykorzystana w artykule o Eventual Consistency.
-W rzeczy samej, autor tego artykułu Werner Vogels (CTO amazon.com) figuruje na także na liście autorów artykułu o Amazon Dynamo.
+W rzeczy samej, autor tego artykułu Werner Vogels (CTO amazon.com) figuruje także na liście autorów artykułu o Amazon Dynamo.
 Obie prace są ze sobą blisko związane i dobrze uzupełniają się.
 }
 jest parametrem określanym w konfiguracji bazy.
@@ -397,7 +400,7 @@ Bardzo dobry opis zegarów wektorowych czytelnik może znaleźć w artykułach n
 
 Jako baza typu klucz-wartość, Amazon Dynamo udostępnia użytkownikowi dwie podstawowe operacje: \emph{put} i \emph{get}.
 Operacja \emph{get} przyjmuje między innymi parametr R, określający minimalną liczbę węzłów które muszą dokonać operacji odczytu aby zakończyła się ona sukcesem.
-Operacja \emph{set} jako jeden z parametrów przyjmuje z kolei wartość W, określającą ile węzłów musi potwierdzić zapis wartości aby operacja się powiodła.
+Operacja \emph{put} jako jeden z parametrów przyjmuje z kolei wartość W, określającą ile węzłów musi potwierdzić zapis wartości aby operacja się powiodła.
 
 Amazon Dynamo używa protokołu HTTP w komunikacji między klientem i serwerem.
 Zaletą tego podejścia jest brak konieczności linkowania aplikacji z kodem służącym do komunikacji z Amazon Dynamo, wadą jednak jest to, że klient który traktuje bazę jako ,,czarną skrzynkę'' jest wolniejszy.
@@ -413,7 +416,7 @@ Jeżeli klient nie jest świadomy istnienia list preferencyjnych i informacji w 
  Nieaktualne wersje rekordów zostaną wykryte i automatycznie uaktualnione w sposób przeźroczysty dla klienta.
 \end{enumerate}
 
-Jak widać w powyższym schemacie, klient znający listy preferencyjne systemu jest w stanie całkowicie pominąć \emph{load balancer} i ewentualne przekazanie zapytania do jednego z węzłów na liście preferencyjnej klucza. 
+Jak widać w powyższym schemacie, klient znający listy preferencyjne systemu jest w stanie całkowicie pominąć \emph{load balancer} i ewentualne przekazać zapytania do jednego z węzłów na liście preferencyjnej klucza. 
 W przypadku gdy Dynamo posługuje się znacznikami czasu do wersjonowania rekordów, klient może przejąć na siebie także obowiązki koordynatora zapytań.
 W przypadku wykorzystania zegarów wektorowych nie jest to możliwe, gdyż w zegarze wektorowym w Dynamo jest zapisywany identyfikator węzła systemu, nie klienta (tak jak to ma miejsce w Riak).
 Koordynacja zapytań przez klienta zmniejsza opóźnienia (ang. \emph{latency}) w systemie o ponad połowę, zarówno dla wartości średnich, jak i dla 99.9\% zapytań.
@@ -435,7 +438,7 @@ Węzły odpowiedzialne za określony zakres kluczy nazywamy jego replikami.
 Repliki mogą zawierać różne wersje rekordów i aby zmniejszyć ryzyko utraty danych należy co jakiś czas dokonywać synchronizacji danych między nimi.
 W tym celu stosuje się drzewa Merkle (ang. \emph{Merkle Trees}).
 Drzewo takie jako liście posiada sumy kontrolne wartości dla wszystkich kluczy danego przedziału, wszystkie pozostałe węzły drzewa zawierają sumę kontrolną ze swoich dzieci.
-Dzięki temu, że dwa drzewa o tej samej wartości w korzeniu są identyczne, możliwe jest porównanie zakresów kluczy przechowywane przez różne repliki w bardzo efektywny sposób, znacznie ograniczając ilość danych do przesłania.
+Dzięki temu, że dwa drzewa o tej samej wartości w korzeniu są identyczne, możliwe jest porównanie zakresów kluczy przechowywanych przez różne repliki w bardzo efektywny sposób, znacznie ograniczając ilość danych do przesłania.
 
 \subsubsection*{Optymalizacje}
 
@@ -471,16 +474,16 @@ W kolejnych sekcjach zostaną one pokrótce opisane aby ułatwić czytelnikowi z
 
 \subsection*{Google File System}
 
-Google File System opisany w artykule \cite{google-file-system} jest rozproszonym systemem plików, który jest zoptymalizowany pod duże pliki, najczęściej aktualizowane przez dopisywanie na koniec (ang. \emph{append-only files}), ale umożliwia także przechowywanie małych plików i losowy dostęp.
+Google File System (GFS) opisany w artykule \cite{google-file-system} jest rozproszonym systemem plików, który jest zoptymalizowany pod duże pliki, najczęściej aktualizowane przez dopisywanie na koniec (ang. \emph{append-only files}), ale umożliwia także przechowywanie małych plików i losowy dostęp.
 Wszystkie pliki w GFS dzielone są na fragmenty rozmiaru 64MB (ang. \emph{chunk}).
 Każdy fragment jest replikowany na kilka (najczęściej 3) maszyn, z których jedna przyjmuje rolę głównej repliki.
 Jeden z węzłów jest wyróżniony i przyjmuje rolę \emph{master}.
 \emph{Master} przechowuje metadane o systemie plików, oraz o podziale plików na fragmenty.
-Informacja o lokalizacji fragmentów nie jest zapisywana trwale przez węzeł \emph{master} ale budowana po wyborze \emph{mastera} i uaktualniana w miarę potrzeby.
+Informacja o lokalizacji fragmentów nie jest zapisywana trwale przez węzeł \emph{master}, ale budowana po wyborze \emph{mastera} i uaktualniana w miarę potrzeby.
 Dane \emph{mastera} są replikowane na kilka maszyn aby zapobiec ich utracie.
 Wyboru \emph{mastera} dokonuje się wykorzystując usługę Google Chubby, podobnie jak ma to miejsce w BigTable.
 
-\emph{Master} przyznaje dla każdego fragmentu jednej z jogo replik dzierżawę (trwającą 60s), która sprawia, że węzeł ten staje się wyróżniony dla tej repliki i zajmuje się koordynacją zapisów.
+\emph{Master} przyznaje dla każdego fragmentu jednej z jego replik dzierżawę (trwającą 60s), która sprawia, że węzeł ten staje się wyróżniony dla tej repliki i zajmuje się koordynacją zapisów.
 Klienci komunikują się z \emph{masterem} w celu zdobycia dostępu do metadanych systemu (lokalizacja fragmentów, system plików).
 Operacje zapisu i odczytu nie wymagają zazwyczaj komunikacji z węzłem \emph{master}, pod warunkiem oczywiście, że klient ma zapisane lokalizacje fragmentów.
 
@@ -489,12 +492,12 @@ Rekord taki jest dodawany atomowo, ale może wystąpić w pliku więcej niż raz
 
 Zapis na koniec pliku w GFS przebiega w następujący sposób: 
 \begin{enumerate}
- \item Najpierw klient przesyła dane do najbliższej\footnote{adresy IP serwerów pozwalają na określenie ,,odległości'' między nimi, gdyż są ściśle związane z topologią sieci} z replik.
- \item Replika ta przekazuje dane dalej w ten sam sposób i jest to powtarzane, aż wszystkie serwery otrzymają dane.
- \item Klient jest powiadamiany o zakończeniu transferu.
- \item Klient wysyła do wyróżnionej repliki żądanie zapisu.
- \item Wyróżniona replika definiuje kolejność zapisów (szereguje je) i zleca je pozostałym.
- \item Operacja kończy się sukcesem tylko jeżeli wszystkie repliki zapiszą poprawnie rekord.
+ \item Najpierw klient przesyła dane do najbliższej\footnote{adresy IP serwerów pozwalają na określenie ,,odległości'' między nimi, gdyż są ściśle związane z topologią sieci} z replik,
+ \item Replika ta przekazuje dane dalej w ten sam sposób i jest to powtarzane, aż wszystkie serwery otrzymają dane,
+ \item Klient jest powiadamiany o zakończeniu transferu,
+ \item Klient wysyła do wyróżnionej repliki żądanie zapisu,
+ \item Wyróżniona replika definiuje kolejność zapisów (szereguje je) i zleca je pozostałym,
+ \item Operacja kończy się sukcesem tylko jeżeli wszystkie repliki zapiszą poprawnie rekord,
  W przeciwnym razie błąd jest zgłaszany do użytkownika, ale ponieważ zapis mógł się powieść na niektórych replikach, rekord może występować w pliku więcej niż raz.
 \end{enumerate}
 
@@ -517,7 +520,8 @@ Połączenie wyżej wymienionych funkcjonalności sprawia, że Chubby jest powsz
 
 Innym bardzo ważnym zastosowaniem Google Chubby jest wybór wyróżnionego serwera (np. serwera \emph{master}).
 Problem wyboru mastera jest problemem rozproszonego konsensu implementowany zazwyczaj przy pomocy algorytmu Paxos.
-Zastosowanie usługi takiej jak Chubby nie tylko znacznie upraszcza ten problem, ale także pozwala na dokonanie wyboru nawet w sytuacji, gdy nie da się osiągnąć kworum (ze względu na awarie węzłów, czy podział sieci).
+Zastosowanie usługi takiej jak Chubby nie tylko znacznie upraszcza ten problem w stosunku do rozwiązania gdzie każdy węzeł implementuje Paxos, ale także pozwala na dokonanie wyboru nawet w sytuacji, gdy nie da się osiągnąć kworum (ze względu na awarie węzłów, czy podział sieci).
+
 
 Procedura wyboru wyróżnionego serwera w Chubby przebiega następująco:
 
