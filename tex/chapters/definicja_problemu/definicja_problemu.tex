@@ -1,8 +1,9 @@
 \chapter{Definicja Problemu}
 
 \section*{Streszczenie}
-W poniższym rozdziale zostanie zaprezentowany problem, który usiłują rozwiązać systemy bazodanowe opisane w niniejszej pracy.
-Przedstawione zostaną także sposoby skalowania aplikacji przy zastosowaniu relacyjnych baz danych.
+W poniższym rozdziale zostanie zaprezentowany problem, który usiłują rozwiązać systemy opisane w niniejszej pracy.
+Przedstawione zostaną sposoby skalowania aplikacji przy zastosowaniu relacyjnych baz danych.
+Opisane zostanie także pojęcie NoSQL i jakie problemy próbuje ten ruch rozwiązać.
 
 \section{Wstęp}
 Popularyzacja dostępu do internetu przyczyniła się w ostatnich latach do  powstania licznych serwisów, które mogą się pochwalić dziesiątkami, a nawet setkami milionów odwiedzin dziennie. 
@@ -117,9 +118,9 @@ Sugerowane wyróżniki problemu to:
  \item Operacje wykonywane przez użytkowników są nieskomplikowane, bez transakcji, łączenia tabel czy operacji grupujących.
 \end{itemize}
 
-\section{Cel pracy}
+Nie wszystkie systemy NoSQL spełniają powyższe warunki.
+Warto pamiętać, że przeważająca większość tworzonych w dzisiejszych czasach systemów z powodzeniem działa rozproszona na co najwyżej kilka węzłów, często nawet bez potrzeby partycjonowania danych.
+Dlatego właśnie, chociaż ruch NoSQL kojarzy się przede wszystkim ze skalowalnością, jednym z jego założeń jest dostosowanie systemu bazodanowego do potrzeb konkretnej aplikacji.
+Przykładowo: chociaż w relacyjnej bazie danych można bez większego problemu odwzorować graf, bazy grafowe umożliwiają znacznie efektywniejsze implementacje algorytmów na tej strukturze danych, ponieważ złożoność operacji znalezienia krawędzi wychodzących bądź wchodzących do wierzchołka nie zależy od wielkości całego grafu (w odróżnieniu od bazy relacyjnej).
 
-W dalszych rozdziałach niniejszej pracy przedstawię kilka systemów NoSQL, wraz z ich unikalnymi właściwościami, zaletami, wadami, możliwościami konfiguracji i znanymi wdrożeniami.
-Spróbuję dokonać oceny dojrzałości tych produktów, tempa ich rozwoju i poziomu aktywności ekosystemu narzędzi z nimi związanych.
-Przedstawione zostaną też wyniki porównania wybranych produktów w różnych scenariuszach wykorzystania.
-Ponieważ każde narzędzie dysponuje własną nomenklaturą konieczne będzie także wprowadzenie jednolitego nazewnictwa, które ułatwi zrozumienie, oraz porównanie opisanych produktów.
+W dalszej części tej pracy opisane zostały różne rodzaje baz danych -- zarówno takie, które ułatwiają skalowanie aplikacji, jak i takie, które upraszczają różne aspekty modelowania danych. 
