@@ -1,4 +1,33 @@
 \chapter{Wstęp}
 
-\section*{Streszczenie}
-Wstęp do pracy, opisujący jej cel i strukturę.
+Ostatnie lata przyniosły znaczny wzrost popularności nierelacyjnych baz danych.
+Nowe systemy reklamujące się wysoką wydajnością i skalowalnością co raz częściej zastępują lub uzupełniają relacyjne bazy danych w systemach produkcyjnych.
+
+Zyskujący na popularności ruch NoSQL (ang. \emph{Not only SQL}) postuluje aby osoby podejmujące decyzje o architekturze systemów informatycznych nie wybierały zawsze relacyjnych baz danych jako mechanizmu persystencji, tylko świadomie dokonywały analizy wad i zalet poszczególnych rozwiązań na potrzeby ich zastosowania.
+Ze względu na bardzo dużą liczbę konkurujących ze sobą produktów, bardzo trudne jest wybranie systemu, który najlepiej spełni stawiane przed nim wymagania.
+
+Niniejsza praca ma na celu przybliżenie czytelnikowi najpopularniejszych obecnie nierelacyjnych baz danych, ułatwienie zrozumienia stosowanych w tych systemach technik oraz sformułowanie wad, zalet i zastosowań opisanych baz.
+
+\section{Struktura pracy}
+
+Niniejsza praca składa się z czterech części:
+
+\begin{description}
+ \item[Definicja Problemu]
+ W rozdziale tym opisany został problem, z którym mierzą się systemy NoSQL, tradycyjne podejście do skalowania aplikacji internetowych w oparciu o relacyjną bazę danych oraz opisana zostanie historia i znaczenie ruchu NoSQL.
+ \item[Studium Literatury]
+ W kolejnym rozdziale przedstawione zostały publikacje, które miały największe znaczenie na rozwój systemów NoSQL.
+ Opisane w tym rozdziale zostały zarówno prawa rządzące systemami rozproszonymi (\emph{Teoria CAP}), wzorce projektowe dotyczące replikacji (\emph{BASE, Eventual Consistency}) jak i funkcjonujące systemy internetowych gigantów takich jak Amazon i Google, które doczekały się dostępnych na licencji Open Source implementacji oraz wpłynęły w mniejszym lub większym stopniu wiele baz NoSQL.
+ \item[Opis dostępnych rozwiązań]
+ Na tą część pracy składa się szereg rozdziałów zaczynając od rozdziału ,,Klasyfikacja Rozwiązań'' i kończąc na rozdziale opisującym ,,Skalowalne Bazy Relacyjne''.
+ Przybliży ona czytelnikowi cechy, wady i zalety najpopularniejszych systemów NoSQL.
+ Ponadto opisuje ona podział systemów NoSQL ze względu na takie parametry jak model danych czy sposób replikacji.
+ \item[Wnioski]
+ Ostatnia część pracy zajmuje się porównaniem możliwych zastosowań opisanych systemów i próbuje odpowiedzieć na takie pytania jak kiedy lepiej jest zastosować nierelacyjną bazę danych, a kiedy lepiej pozostać przy relacyjnej.
+\end{description}
+
+\section{Cel pracy}
+
+Celem niniejszej pracy jest wprowadzenie czytelnika w świat nierelacyjnych, skalowalnych baz danych.
+Przedstawione zostaną stosowane w tych systemach techniki, oraz cechy które wyróżniają i łączą poszczególne rozwiązania.
+Opisane zostaną popularne obecnie systemy oraz porady dotyczące wyboru mechanizmu persystencji dla różnych typów aplikacji.
