@@ -17,6 +17,14 @@ Koncepcje i techniki opisane w tym rozdziale odbijają się echem w architektura
 
 \section{Teoria CAP}
 
+\subsection*{Wprowadzenie}
+
+Pierwszym artykułem omawianym w tym rozdziale jest Teoria CAP.
+Zrozumienie tej teorii ma istotne znaczenie dla udanej analizy rozproszonych systemów bazodanowych.
+Wzmianki i odniesienia do niej można znaleźć w bardzo wielu artykułach dotyczących NoSQL, a ponieważ teoria ta nie została przez autora sformułowana w postaci publikacji, istnieje wiele jej interpretacji i rozbieżności w tym, jak różni ludzie ją rozumieją.
+
+\subsection*{Historia}
+
 Teoria CAP (\emph{Consistency, Availability, Partition Tolerance}) zwana również teorią Brewera od nazwiska jej autora została po raz pierwszy zaprezentowana podczas prezentacji profesora Uniwersytetu Berkley Eryka Brewera 19 czerwca 2000r. na konferencji \emph{ACM Symposium on the Principles of Distributed Computing} \cite{podc-keynote}. 
 W około dwa lata później, w 2002 roku, teoria ta (pod nazwą \emph{Brewer's Conjecture} - Domysł Brewera) została formalnie udowodniona przez Nancy Lynch oraz Setha Gilberta z MIT \cite{brewers-conjecture}.
 
@@ -61,15 +69,24 @@ Ze względu na to dzielimy je na:
 
 \begin{description}
  \item[CA] (Consistent, Available) te systemy mają problemy z podziałem sieci, wymagając zazwyczaj aby operacje dotyczące poszczególnych transakcji trafiały do pojedynczej grupy węzłów, które podlegają awarii ,,atomowo'' - albo wszystkie działają, albo żaden. 
- To podejście zazwyczaj wiąże się z problemami dla skalowalności.
  \item[AP] (Available, Partition-Tolerant) te systemy zapewniają największą odporność na awarie wynikające z rozproszonego środowiska, jednocześnie jednak stawiając twórców aplikacji przed trudnym zadaniem radzenia sobie z problemami wynikającymi z niespójności danych widzianych przez klientów bazy.
  \item[CP] (Consistent, Partition-Tolerant) te systemy w wypadku podziału oczekują na przywrócenie połączenia, ograniczając w ten sposób dostępność.
 \end{description}
 
-W praktyce systemy omawiane w tej pracy zazwyczaj zadowalają się częściowym zapewnieniem wszystkich wymienionych gwarancji, przy czym wysoka dostępność odgrywa główną rolę, a poświęcana jest albo odporność na podziały, albo konsystencja. 
+W praktyce wysoce skalowalne systemy omawiane w tej pracy zazwyczaj zadowalają się częściowym zapewnieniem wszystkich wymienionych gwarancji, przy czym odporność na podział sieci odgrywa główną rolę, a poświęcana w obliczu wystąpienia podziału sieci jest albo dostępność, albo konsystencja. 
 Dlatego systemy te należą albo do grupy CP (Google BigTable, HBase), albo do grupy AP (Amazon Dynamo, Riak).
+Z drugiej strony, jeżeli system jest tworzony z przeznaczeniem bycia rozproszonym na zaledwie kilka węzłów, to prawdopodobieństwo podziału sieci jest znikome, zatem całkiem akceptowalne jest rozwiązanie, w którym system w takim przypadku staje się całkowicie niedostępny.
+Systemy takie najczęściej klasyfikujemy jako CA, ponieważ powinny być one odporne na awarie pojedynczych węzłów bez utraty dostępności, a równocześnie przy małej skali systemu prostsze jest zapewnienie konsystencji.
 
 \section{BASE}
+
+\subsection*{Wprowadzenie}
+
+BASE to wzorzec, który w przypadku rozproszonych systemów bazodanowych pozwala na zastąpienie skomplikowanego i obniżającego dostępność systemu mechanizmu koordynacji transakcji kolejką zadań do wykonania w tle, co odbywa się kosztem konsystencji.
+Artykuł \cite{base-an-acid-alternative} jest krótki, prosty do zrozumienia i okraszony licznymi przykładami prowadzącymi czytelnika od rozwiązania używającego 2PC \footnote{2 Phase Commit - patrz poniżej} do rozwiązania opartego na BASE drobnymi krokami.
+Wzorzec ten jest bardzo uniwersalny, dlatego warto zapoznać się dokładniej z tą publikacją.
+
+\subsection*{Opis}
 
 BASE (\emph{Basically Available, Soft state, Eventual consistency}) to model konsystencji, który jest przeciwstawiany modelowi ACID (\emph{Atomicity, Consistency, Isolation, Durability}). 
 Oba te modele dotyczą baz danych, zatem oba wymagają aby operacje klienta były trwałe (\emph{Durability}).
@@ -94,9 +111,24 @@ Wystarczy aby jeden z węzłów systemu podległ awarii, aby cały system stał 
 Dostępność w kontekście transakcji staje się iloczynem dostępności poszczególnych węzłów systemu.
 Jeżeli mamy zatem węzły o indywidualnej dostępności 99.9\% to transakcja, która obejmuje trzy z nich będzie miała dostępność ok. 99.7\% - czyli o ok. 90 minut mniejszy \emph{uptime} w skali miesiąca \cite{base-an-acid-alternative}.
 
-Jeżeli zatem ACID oferuje nam poziom konsystencji, który można byłoby określić mianem Strong Consistency, ale kosztem dostępności, to BASE oferuje w zamian wysoką dostępność kosztem konsystencji. 
+W BASE natomiast system stosuje kolejkę zadań, które mają za zadanie przywrócić mu spójność.
+Ponieważ zadania te są wykonywane z pewnym opóźnieniem do operacji, która je zainicjowała, to system implementujący wzorzec BASE oferuje niższy poziom konsystencji (konkretnie Eventual Consistency, patrz niżej), ale za to zyskuje na dostępności.
+
+Operacje przywracające spójność systemu, aby zapewnić jak największą odporność na awarie i błędy, powinny być idempotentne.
+Operacją idempotentną nazywamy operację, która może być bezpiecznie powtórzona, na przykład operacja dodająca do salda użytkownika 100 złotych nie jest idempotentna ponieważ w wypadku powtórzenia przyzna użytkownikowi więcej pieniędzy niż powinien otrzymać, natomiast operacja sumująca środki wpływające i wypływające z konta użytkownika może być bezpiecznie powtórzona co czyni ją idempotentną.
+Zapewnienie tej właściwości sprawi, że system obsługujący kolejkę zadań nie będzie musiał wykonywać ich po kolei (na przykład w sytuacji kiedy zadania są wykonywane równolegle przez wiele procesów), a wypadku awarii będzie mógł je bezpiecznie powtórzyć nie ryzykując w ten sposób wprowadzenia niespójności do systemu.
 
 \section{Eventual Consistency}
+
+\subsection*{Wprowadzenie}
+
+Eventual Consistency to kolejny wzorzec mający duże znaczenie dla systemów rozproszonych.
+W dalszej części tej pracy Eventual Consistency występuje najczęściej w połączeniu z replikacją, ale jak już czytelnik miał okazję zobaczyć przy okazji BASE, wzorzec ten może dotyczyć także innych aspektów działania aplikacji.
+
+Eventual Consistency w praktyce występuje w dwóch najczęstszych przypadkach: w systemach AP zaprojektowanych z myślą o skalowalności, albo w systemach (nawet jednowęzłowych) które korzystają z więcej niż jednego źródła danych równocześnie lub stosują asynchroniczną replikację.
+W pierwszym przypadku mamy najczęściej możliwość konfiguracji systemu aby zapewnić mu takie właściwości jakie chcemy (włącznie z silną konsystencją), w drugim najczęściej problem niespójności występuje, ale bez możliwości wpłynięcia na właściwości systemu.
+
+\subsection*{Opis}
 
 Eventual Consistency (w wolnym tłumaczeniu: konsystencja po pewnym czasie, ostatecznie) to słaba forma gwarancji konsystencji, która gwarantuje jedynie, że po pewnym, możliwym do przewidzenia czasie od momentu wykonania operacji, jej efekty będą widziane przez klientów systemu, niezależnie od tego, do którego z węzłów systemu się zwrócą z zapytaniem.
 Okno czasowe między operacją a propagacją jej efektów do wszystkich zainteresowanych węzłów w systemie nazywamy oknem niespójności (ang. \emph{inconsistency window}).
