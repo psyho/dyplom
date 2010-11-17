@@ -189,6 +189,16 @@ Możliwość konfiguracji parametrów R, W i N stopniowo staje się standardem w
 
 \section{Google MapReduce}
 
+\subsection*{Wprowadzenie}
+
+Google MapReduce to narzędzie pozwalające na przetwarzanie ogromnych zbiorów danych w równolegle na wielu węzłach.
+Bezpośrednim odpowiednikiem MapReduce jest dostępny na licencji Open Source projekt Apache Hadoop, który jest stosowany przez takich internetowych gigantów jak Yahoo i Facebook.
+Jednak znaczenie MapReduce jest o wiele większe niż zainspirowanie tego projektu.
+Map-Reduce jest aktualnie de-facto standardem wykonywania skomplikowanych zapytań w systemach, które poza tym udostępniają jedynie bardzo uproszczony interfejs, tak jak bazy klucz-wartość, a nawet w systemach o rozbudowanych językach zapytań jak MongoDB, Map-Reduce jest stosowane w przypadku zapytań, które w SQL wymagałyby użycia klauzuli GROUP BY.
+Najdalej posuwa się w adopcji Map-Reduce CouchDB, gdzie wzorzec ten jest wykorzystywany do zapytań w trybie on-line, co możliwe jest dzięki temu, że wyniki operacji map są zapisywane dla każdego dokumentu i przeliczane przy każdej jego zmianie. 
+
+\subsection*{Opis}
+
 Google MapReduce \cite{google-mapreduce} jest biblioteką wykorzystywaną do przetwarzania dużych zbiorów danych w środowisku rozproszonym.
 Użytkownik biblioteki specyfikuje dwie funkcje nazywane \emph{map} i \emph{reduce} oraz kilka innych parametrów konfiguracyjnych.
 Następnie biblioteka dba o to aby dane wejściowe zostały podzielone, na poszczególnych rekordach została wykonana funkcja \emph{map}, a jej wyniki zostały zagregowane przy pomocy funkcji \emph{reduce}.
@@ -313,6 +323,17 @@ Algorytm MapReduce ma duże znaczenie w systemach NoSQL, gdyż stanowi surogat d
 Stanowi on jedno z podstawowych narzędzi dla praktyki prostych odczytów, ale złożonych zapisów.
 
 \section{Amazon Dynamo}
+
+\subsection*{Wprowadzenie}
+
+W tym rozdziale opisane zostały dwie bazy danych, które wpłynęły znacząco na architekturę dostępnych publicznie systemów NoSQL.
+Pierwszą z nich jest system stosowany przez firmę Amazon i który cechuje się tym, że został zaprojektowany z myślą o wysokiej dostępności.
+System ten, mimo że jako baza typu klucz-wartość jest bardzo prosty z punktu widzenia użytkownika, opiera się wewnętrznie na zastosowaniu wielu ciekawych technik, którym poświęcono więcej uwagi w dalszej części rozdziału.
+Wybór dostępności ponad konsystencję wiąże się z istotnymi konsekwencjami.
+Najbardziej widoczną z nich jest skomplikowany system wersjonowania rekordów, który wprawdzie umożliwia systemowi zachowanie dostępności w przypadku podziału sieci lub awarii grup węzłów, ale także sprawia, że system jest znaczniej bardziej skomplikowany w użyciu.
+Z drugiej strony system ten oferuje znakomite możliwości konfiguracji i kontroli nad replikacją, co umożliwia dopasowanie go na potrzeby wielu różnych aplikacji.
+
+\subsection*{Opis}
 
 Amazon Dynamo to baza typu klucz-wartość używana w największym na świecie sklepie internetowym \emph{amazon.com}.
 Baza została opisana w artykule z 2007 roku \cite{amazon-dynamo} i od tego czasu opisany w nim system doczekał się już dwóch implementacji open-source: Dynomite i Riak, oraz stał się inspiracją dla innych baz takich jak Cassandra, czy rozszerzenia CouchDB pozwalającego na rozpraszanie tej bazy.
@@ -490,6 +511,16 @@ Dynamo doczekało się naśladowców w postaci baz Riak i Dynomite, oraz zainspi
 Artykuł ,,Dynamo: amazon's highly available key-value store'' \cite{amazon-dynamo} jest ponadto jednym z najciekawszych i najbardziej przystępnych artykułów dotyczących zagadnień związanych ze skalowalnymi bazami danych znanych autorowi tej pracy i warty polecenia wszystkim osobom zainteresowanym ruchem NoSQL.
 
 \section{Google BigTable}
+
+\subsection*{Wprowadzenie}
+
+Opisany w tym rozdziale system jest pierwowzorem dla wszystkich baz typu kolumnowego a zarazem jest także dobrym przykładem bazy, która w wypadku podziału sieci stawia na konsystencję kosztem dostępności.
+Google BigTable nie da się łatwo zanalizować na podstawie artykułu, który ten system przedstawia, ponieważ aby zrozumieć działanie tej bazy należy sięgnąć do źródeł opisujących dwa systemy, na których bardzo mocno się ona opiera: Google Chubby i Google File System (GFS).
+Pierwszy z nich umożliwia BigTable wybór węzła master i ułatwia zadania takie jak utrzymywanie listy aktywnych węzłów systemu, drugi zaś zapewnia możliwość trwałego zapisu danych i replikację.
+
+Google BigTable jest wartym uwagi systemem, ponieważ od wielu lat stanowi kluczowy element architektury największej i najpopularniejszej wyszukiwarki internetowej na świecie.
+
+\subsection*{Opis}
 
 Google BigTable to podstawowa baza danych używana przez firmę Google.
 Opisana została w artykule z 2006 roku pod tytułem ,,BigTable: A Distributed Storage System for Structured Data'' \cite{google-bigtable}.
