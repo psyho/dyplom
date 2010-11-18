@@ -518,7 +518,7 @@ Opisany w tym rozdziale system jest pierwowzorem dla wszystkich baz typu kolumno
 Google BigTable nie da się łatwo zanalizować na podstawie artykułu, który ten system przedstawia, ponieważ aby zrozumieć działanie tej bazy należy sięgnąć do źródeł opisujących dwa systemy, na których bardzo mocno się ona opiera: Google Chubby i Google File System (GFS).
 Pierwszy z nich umożliwia BigTable wybór węzła master i ułatwia zadania takie jak utrzymywanie listy aktywnych węzłów systemu, drugi zaś zapewnia możliwość trwałego zapisu danych i replikację.
 
-Google BigTable jest wartym uwagi systemem, ponieważ od wielu lat stanowi kluczowy element architektury największej i najpopularniejszej wyszukiwarki internetowej na świecie.
+Google BigTable jest wartym uwagi systemem, ponieważ od wielu lat stanowi kluczowy element architektury największej i najpopularniejszej wyszukiwarki internetowej na świecie, a jego wpływy można odnaleźć w wielu różnych systemach NoSQL.
 
 \subsection*{Opis}
 
@@ -532,10 +532,52 @@ Podstawową różnicą między BigTable a Dynamo jest natomiast podejście do ko
 Baza firmy Amazon jest w stanie przyjąć zapis w każdej niemal sytuacji, przypłacając to kosztem tego, że aplikacja musi radzić sobie z wieloma wersjami rekordu, które mogą równocześnie występować w systemie.
 BigTable gwarantuje konsystencję (w sensie CAP), ale kosztem opóźnień (wybór węzła \emph{master}, przekazanie roli serwera \emph{tabletów}, replikacja na poziomie GFS) oraz zmniejszonej odporności na podział sieci.
 
+\subsection*{Model Danych}
+\label{google-bigtable-model-danych}
+
+Google BigTable jest prekursorem kolumnowych baz danych.
+Model danych można opisać jako macierz, gdzie rzędami są rekordy, a kolumny reprezentują pola tych rekordów.
+Każdy rząd identyfikowany jest przez klucz o wielkości maksymalnej 64KB, ale przeciętnie klucze są mniejsze niż 100B.
+System przechowuje rekordy posortowane po kluczu, podzielone na grupy zwane tabletami.
+Ponieważ rekordy są posortowane po kluczu, każdy tablet zawiera przedział kluczy do którego zdefiniowania wystarcza klucz początkowy i klucz końcowy.
+Ułatwia to określenie, który tablet odpowiada za określony klucz, bez konieczności przechowywania bardzo dużych ilości metadanych.
+
+Fakt, że rekordy są przechowywane w postaci uporządkowanej ma zarówno zalety, jak i wady.
+Zaletą jest to, że dzięki umiejętnej konstrukcji kluczy, rekordy które są ze sobą powiązane mogą być przechowywane razem, przez co operacje na nich wymagają interakcji z mniejszą liczbą węzłów.
+Przykładowo, tabela przechowująca wyniki indeksowania sieci WWW przechowuje adresy URL jako klucze w odwróconej kolejności (np. pl.edu.agh.eaie.www zamiast www.eaie.agh.edu.pl).
+W ten sposób operacje na wszystkich podstronach serwisu WWW nie muszą łączyć się z wieloma węzłami aby pobrać potrzebne dane.
+Wadą tej właściwości jest to, że nieodpowiednia konstrukcja klucza może sprawić, że kilka tabletów może stać się tak zwanym ,,gorącym'' punktem systemu, czyli większość operacji zapisu bądź odczytu będzie dotyczyć właśnie tych tabletów.
+Dla przykładu, jeżeli kluczem w systemie byłaby liczba, a każdy nowo utworzony rekord otrzymywałby klucz o jeden większy niż poprzednio utworzony rekord, to wszystkie operacje dodania rekordu operowałby na jednym i tym samym tablecie, co w konsekwencji mogłoby nawet doprowadzić do awarii systemu.
+Dla porównania w Amazon Dynamo dla klucza jest wyliczana suma kontrolna i dopiero na podstawie tej wartości następuje przydział rekordu do określonego przedziału a co za tym idzie węzła, w związku z czym podobne klucze mogą znaleźć się na zupełnie innych węzłach.
+
+Kolumny są grupowane w rodziny kolumn (ang. \emph{column families}).
+Wszystkie kolumny z jednej rodziny mają nazwę postaci nazwa\_grupy:nazwa\_kolumny.
+Nazwa grupy kolumn musi składać się ze znaków nadających się do wydruku, zaś nazwa kolumny może być dowolnym ciągiem bajtów.
+Rodzina kolumn zazwyczaj przechowuje wartości tego samego typu, gdyż wartości te są razem kompresowane.
+Rodzina kolumn musi być dodana do schematu zanim będzie możliwe dodawanie wartości w jej kolumnach, ale co ważne nie jest konieczne deklarowanie samych kolumn.
+W bazach takich jak BigTable przyjmuje się, że liczba rodzin kolumn jest niewielka i zmienia się nieznacznie wraz z rozwojem aplikacji.
+Jedynie nie-puste wartości kolumn są zapisywane, więc można powiedzieć, że tabela BigTable jest macierzą rzadką (ang. \emph{sparse}).
+
+Dzięki temu, że nie ma konieczności deklarowania kolumn, oraz tego że puste komórki nie zajmują miejsca, kolumny w BigTable są bardziej wszechstronne niż kolumny, które są czytelnikowi znane z relacyjnych baz danych.
+Często sama nazwa kolumny zawiera dane, takie jak na przykład klucz innego rekordu (bardzo łatwo w ten sposób modelować relację jeden do wielu).
+Ponadto BigTable pozwala na wersjonowanie komórek macierzy, czyli parze (klucz, nazwa kolumny) odpowiada lista wartości, z których każda opisana jest czasem modyfikacji.
+Stare rewizje mogą być usuwane przez system automatycznie albo dzięki określeniu maksymalnej liczby wartości do zapisania, albo przez określenie jak dawne wersje mają być przechowywane (np. z ostatnich siedmiu dni).
+Inną właściwością BigTable jest to, że zmiana wielu wartości kolumn jest dokonywana atomowo, co upraszcza pracę w rozproszonym środowisku.
+
+Ponieważ rekord w BigTable może mieć bardzo wiele kolumn, system ten udostępnia stosunkowo rozbudowane mechanizmy limitowania i wyszukiwania kolumn na poziomie pojedynczego rekordu.
+
+W Google BigTable nie ma możliwości wyszukiwania rekordów - dostęp do rekordów jest wyłącznie po ich kluczu, albo po przedziale kluczy.
+Nie oznacza to oczywiście, że wyszukiwanie po wartości konkretnego pola jest niemożliwe, ale wymaga to od użytkownika stworzenia osobnych tabel, które pełniłyby funkcję indeksów.
+Dla przykładu mając tabelę pracowników i chcąc móc wyszukiwać pracowników po nazwisku, oraz po adresie e-mail, musielibyśmy stworzyć dwie dodatkowe tabele, w jednej z nich kluczem byłoby nazwisko pracownika, a w drugiej adres e-mail, natomiast nazwy kolumn mogłyby zawierać klucze pracowników o tym adresie e-mail bądź nazwisku.
+Do wykonywania operacji na dużych liczbach rekordów służy albo opisywane wcześniej Google MapReduce, które wtedy zamiast wczytywać dane wejściowe i zapisywać dane wyjściowe do GFS, wczytuje je i zapisuje do BigTable, albo wykonywanie skryptów w przestrzeni adresowej serwera.
+Skrypty te (pisane w języku Sawzall) nie mogą wprawdzie dokonywać żadnych modyfikacji, ale są przydatne w celu dokonywania różnorakich obliczeń czy podsumowań.
+
+\subsection*{Zależności}
+
 BigTable opiera się bardzo mocno na dwóch innych systemach: Google File System (GFS) oraz Google Chubby.
 W kolejnych sekcjach zostaną one pokrótce opisane aby ułatwić czytelnikowi zrozumienie architektury tej bazy i jaką te systemy pełnią w niej rolę.
 
-\subsection*{Google File System}
+\subsubsection*{Google File System}
 
 Google File System (GFS) opisany w artykule \cite{google-file-system} jest rozproszonym systemem plików, który jest zoptymalizowany pod duże pliki, najczęściej aktualizowane przez dopisywanie na koniec (ang. \emph{append-only files}), ale umożliwia także przechowywanie małych plików i losowy dostęp.
 Wszystkie pliki w GFS dzielone są na fragmenty rozmiaru 64MB (ang. \emph{chunk}).
@@ -571,7 +613,7 @@ W momencie pisania tych słów w użyciu jest już nowa wersja GFS -- GFS2, zapr
 Nowa wersja GFS zmniejsza znacznie rozmiar fragmentu pliku, z 64MB do 1MB oraz opiera się na architekturze opartej na wielu serwerach master i partycjonowaniu metadanych systemu plików.
 Niestety dokładny opis tej architektury nie jest jeszcze dostępny.
 
-\subsection*{Google Chubby}
+\subsubsection*{Google Chubby}
 
 Google Chubby jest to rozproszony system plików, ale o zastosowaniu zupełnie innym niż GFS.
 Pliki w Chubbym są małe (limit 256kb), odczytywane i zapisywane atomowo, w całości.
@@ -608,38 +650,6 @@ Jest to na tyle duża liczba, że komórki Chubby są zazwyczaj współdzielone 
 W Google BigTable Chubby jest wykorzystywany do zapewnienia istnienia pojedynczego węzła master, wykrywania serwerów tabletów i ich awarii, przechowywania danych dotyczących schematu bazy i list dostępu.
 Awaria i niedostępność Chubby powoduje także niedostępność BigTable.
 Cytując za artykułem \cite{google-bigtable}, przełożyło się to średnio na zmniejszenie dostępności systemu średnio o 0.0047\%, a w najgorszym przypadku o 0.0326\%\footnote{Dla lepszego zobrazowania: odpowiednio 24 minuty i 171 minut w ciągu roku}.
-
-\subsection*{Model Danych}
-\label{google-bigtable-model-danych}
-
-Google BigTable jest prekursorem kolumnowych baz danych.
-Model danych można opisać jako macierz, gdzie rzędami są rekordy, a kolumny reprezentują pola tych rekordów.
-Każdy rząd identyfikowany jest przez klucz o wielkości maksymalnej 64KB, ale średnio klucze są mniejsze niż 100B.
-System przechowuje rekordy posortowane po kluczu, podzielone na segmenty zwane tabletami.
-Aby wykorzystać tę właściwość tabela przechowująca wyniki indeksowania sieci WWW, przechowuje adresy URL jako klucze w odwróconej kolejności (np. pl.edu.agh.eaie.www zamiast www.eaie.agh.edu.pl).
-W ten sposób podobne klucze znajdą się blisko siebie.
-Kolumny są grupowane w rodziny kolumn (ang. \emph{column families}).
-Wszystkie kolumny z jednej rodziny mają nazwę postaci nazwa\_grupy:nazwa\_kolumny.
-Nazwa grupy kolumn musi składać się ze znaków nadających się do wydruku, zaś nazwa kolumny może być dowolnym ciągiem bajtów.
-
-Rodzina kolumn zazwyczaj przechowuje wartości tego samego typu, gdyż wartości te są kompresowane razem.
-Rodzina kolumn musi być dodana do schematu zanim będzie możliwe dodawanie wartości w jej kolumnach.
-Nie jest konieczne deklarowanie samych kolumn.
-W bazach takich jak BigTable przyjmuje się, że liczba rodzin kolumn jest niewielka i zmienia się nieznacznie wraz z rozwojem aplikacji.
-Jedynie nie-puste wartości kolumn są zapisywane, więc można powiedzieć, że tabela BigTable jest macierzą rzadką (ang. \emph{sparse}).
-
-BigTable pozwala na przechowywanie wielu oznaczonych znacznikiem czasowym wersji dla każdej z komórek macierzy.
-Stare rewizje mogą być usuwane przez system automatycznie albo dzięki określeniu maksymalnej liczby wartości do zapisania, albo przez określenie jak dawne wersje mają być przechowywane (np. z ostatnich siedmiu dni).
-
-Modyfikacje rekordu są atomowe, co znacznie upraszcza pracę w rozproszonym środowisku.
-Ponieważ rekordy są przechowywane posortowane, operacje na niewielkich\footnote{mniejszych niż rozmiar tabletu} zakresach podobnych kluczy zazwyczaj wymagają komunikacji z jednym albo dwoma węzłami systemu.
-Dla porównania w Amazon Dynamo dla klucza jest wyliczana suma kontrolna i dopiero na podstawie tej wartości następuje przydział rekordu do określonego przedziału a co za tym idzie węzła, w związku z czym podobne klucze mogą znaleźć się na zupełnie innych węzłach.
-
-Google BigTable nie udostępnia mechanizmów wyszukiwania rekordów podobnych do relacyjnych baz danych.
-Jedyne mechanizmy wyszukiwania dla rekordów to wyszukiwanie po kluczu albo po zakresie kluczy.
-Dla pojedynczego rekordu natomiast istnieje dość bogate API umożliwiające filtrowanie kolumn na różne sposoby.
-Istnieje także możliwość wykonywania skryptów w przestrzeni adresowej serwera.
-Skrypty te (pisane w języku Sawzall) nie mogą wprawdzie dokonywać żadnych modyfikacji, ale są przydatne w celu dokonywania różnorakich obliczeń czy podsumowań.
 
 \subsection*{Architektura}
 
