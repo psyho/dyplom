@@ -539,6 +539,7 @@ Google BigTable jest prekursorem kolumnowych baz danych.
 Model danych można opisać jako macierz, gdzie rzędami są rekordy, a kolumny reprezentują pola tych rekordów.
 Każdy rząd identyfikowany jest przez klucz o wielkości maksymalnej 64KB, ale przeciętnie klucze są mniejsze niż 100B.
 System przechowuje rekordy posortowane po kluczu, podzielone na grupy zwane tabletami.
+W miarę dodawania i usuwania rekordów tablety mogą być dzielone i łączone.
 Ponieważ rekordy są posortowane po kluczu, każdy tablet zawiera przedział kluczy do którego zdefiniowania wystarcza klucz początkowy i klucz końcowy.
 Ułatwia to określenie, który tablet odpowiada za określony klucz, bez konieczności przechowywania bardzo dużych ilości metadanych.
 
@@ -572,21 +573,102 @@ Dla przykładu mając tabelę pracowników i chcąc móc wyszukiwać pracownikó
 Do wykonywania operacji na dużych liczbach rekordów służy albo opisywane wcześniej Google MapReduce, które wtedy zamiast wczytywać dane wejściowe i zapisywać dane wyjściowe do GFS, wczytuje je i zapisuje do BigTable, albo wykonywanie skryptów w przestrzeni adresowej serwera.
 Skrypty te (pisane w języku Sawzall) nie mogą wprawdzie dokonywać żadnych modyfikacji, ale są przydatne w celu dokonywania różnorakich obliczeń czy podsumowań.
 
+\subsection*{Architektura wysokiego poziomu}
+
+Google BigTable do działania potrzebuje dwóch innych systemów: Google Chubby i Google File System (GFS).
+Pierwszy z nich przede wszystkim pozwala na wybranie spośród węzłów systemu węzła master, a drugi zapewnia mechanizm replikacji.
+Oba te systemy zostały opisane nieco bliżej w sekcji ,,Zależności'' (patrz strona \pageref{sec:bigtable-zaleznosci}).
+
+\subsubsection*{Podział węzłów}
+
+\missingfigure{Typy węzłów BigTable}
+
+Węzły BigTable dzielimy na trzy rodzaje:
+
+\begin{description}
+ \item[master] - w danym momencie w systemie może występować tylko jeden węzeł tego typu.
+ Węzeł ten przyjmuje na siebie rolę zarządzania serwerami tabletów.
+ Jego zadaniem jest przydzielenie obsługi konkretnych tabletów do węzłów, wykrywanie kiedy serwer tabletów ulegnie awarii i przypisane mu tablety należy przydzielić innemu węzłowi.
+ Może on także zajmować się równoważeniem obciążenia węzłów poprzez przekazywanie tabletów z bardziej obciążonych węzłów do mniej obciążonych.
+ Innym zadaniem serwera master jest usuwanie zbędnych plików z GFS. 
+ \item[serwer tabletów] - każdy tablet jest przypisany do jednego węzła, który odpowiada za obsługę wszystkich operacji odczytu i zapisu dotyczących tego tabletu.
+ Same tablety są zapisywane w plikach w systemie plików GFS, co oznacza, że dane mogą znajdować się na innym węźle niż serwer tabletów.
+ Typowy węzeł jest serwerem od 10 do 1000 tabletów.
+ Dla porównania, w Amazon Dynamo za obsługę zapytań dotyczących przedziału rekordów, odpowiadają węzły, które również przechowują te dane.
+ \item[klient] - klient dokonuje zapytań w systemie.
+ Interesującą właściwością BigTable jest to, że typowy klient nie musi wcale komunikować się z węzłem master.
+ Za pośrednictwem Google Chubby i innych serwerów tabletów klient jest w stanie poznać przydział tabletów do węzłów i w ten sposób nawiązać komunikację bezpośrednio z odpowiednim serwerem tabletów.
+\end{description}
+
+\subsubsection*{Drzewo tabletów}
+
+\missingfigure{Drzewo tabletów}
+
+Metadane dotyczące wszystkich tabletów są zapisane w trzypoziomowym drzewie.
+Korzeniem tego drzewa jest specjalny tablet (tzw. \emph{root tablet}).
+Różni się on od innych tabletów tym, że jako jedyny nie może ulec podziałowi ani usunięciu.
+Zadaniem tego tabletu jest przechowywanie informacji od tabletach drugiego poziomu.
+
+Drugi poziom tabletów zawiera metadane tabletów zawierających dane użytkownika, które to stanowią trzeci poziom drzewa.
+
+Klient nie znający lokalizacji tabletu zawierającego interesujący go klucz musi:
+
+\begin{enumerate}
+ \item Odczytać z Google Chubby adres serwera tabletów odpowiadającego za \emph{root tablet}.
+ \item Wykonać zapytanie do tego serwera tabletów o lokalizację tabletu, który zawiera informacje o tablecie przechowującym interesujący klienta przedział.
+ \item Odczytać rekord z tabletu drugiego poziomu wskazujący na lokalizację tabletu zawierającego rekord interesujący klienta.
+ \item Znając lokalizację serwera tabletów, który odpowiada za rekord interesujący klienta, może on skierować do niego zapytanie.
+\end{enumerate}
+
+Jak widać, ważne jest aby klient zapisywał dane o lokalizacji tabletów.
+Widać także, że wspomniany wcześniej fakt, że powiązane rekordy mogą należeć do tego samego tabletu, pomaga zmniejszyć opóźnienia operacji na nich.
+
+W przypadku jeżeli klient posiana nieaktualne informacje o lokalizacji tabletu, próbuje on skontaktować się kolejno z serwerami od trzeciego do pierwszego poziomu korzystając z zapisanych danych o ich lokalizacji, a następnie wykrywa lokalizację tabletu według wcześniej opisanego schematu począwszy od tabletu, informacje o którym nie uległy dezaktualizacji.
+W pesymistycznym przypadku może to oznaczać konieczność połączenia aż z sześcioma węzłami, ale zazwyczaj nie jest to konieczne.
+
+Serwery tabletów używają Google Chubby do rejestrowania się w systemie.
+Aby tego dokonać przy starcie serwera tabletów tworzy on plik w specjalnym katalogu i zdobywa na nim blokadę do zapisu.
+Dopóki serwer tabletów posiada tą blokadę, dopóty może on zajmować się serwowaniem tabletów.
+Jeżeli straci blokadę, stara się ją odzyskać, jeżeli jednak plik na którym miał blokadę został usunięty, serwer tabletów jest zmuszony zakończyć działanie.
+Węzeł master komunikuje się co pewien czas ze wszystkimi serwerami tabletów, żądając od nich podania statusu ich blokady.
+Jeżeli master nie jest w stanie się połączyć z serwerem tabletów, lub jeżeli odpowie on, że stracił blokadę na pliku, master próbuje zdobyć tą blokadę i w przypadku powodzenia, usuwa plik powodując tym samym restart serwera tabletów.
+
+\subsection*{Architektura serwera tabletów}
+
+\missingfigure{Serwer tabletów}
+
+Dane o tablecie są zapisywane przez serwer tabletów w trzech lokacjach.
+Pierwszą z nich jest \emph{tablet log}, do którego zapisywane są wszelkie modyfikujące tablet operacje.
+Każda taka operacja musi zostać zapisana w tym pliku zanim zostanie przetworzona.
+
+Po zapisaniu do \emph{tablet logu} operacja może zostać odwzorowana w pamięci operacyjnej.
+Mutacje są wykonywane korzystając z techniki \emph{copy-on-write} (kopiowanie przy zapisie), dzięki czemu wynik operacji nie jest widoczny aż do jej zakończenia.
+Co pewien czas struktura w pamięci (nazywana \emph{memtable}) jest zrzucana na dysk (do GFS) do pliku SSTable.
+SSTable to format pozwalający na zapisywanie tablic asocjacyjnych, odczytywanie kluczy zakresami i posiadający specjalny indeks, który, po wczytaniu do pamięci operacyjnej przy otwarciu pliku, umożliwia odczyt dowolnej wartości z pliku przy pomocy pojedynczego wyszukania na dysku.
+
+Odczyt musi przeszukać \emph{memtable} i wszystkie pliki SSTable, dlatego po przekroczeniu pewnego limitu plików SSTable, cześć z nich jest łączona w jeden.
+Istnieje także możliwość połączenia wszystkich plików SSTable w jeden.
+
 \subsection*{Zależności}
+\label{sec:bigtable-zaleznosci}
 
 BigTable opiera się bardzo mocno na dwóch innych systemach: Google File System (GFS) oraz Google Chubby.
 W kolejnych sekcjach zostaną one pokrótce opisane aby ułatwić czytelnikowi zrozumienie architektury tej bazy i jaką te systemy pełnią w niej rolę.
 
 \subsubsection*{Google File System}
 
-Google File System (GFS) opisany w artykule \cite{google-file-system} jest rozproszonym systemem plików, który jest zoptymalizowany pod duże pliki, najczęściej aktualizowane przez dopisywanie na koniec (ang. \emph{append-only files}), ale umożliwia także przechowywanie małych plików i losowy dostęp.
+Google File System (GFS) opisany w artykule \cite{google-file-system} jest rozproszonym systemem plików (ang. \emph{distributed file system}), który jest zoptymalizowany pod duże pliki, najczęściej aktualizowane przez dopisywanie na koniec (ang. \emph{append-only files}), ale umożliwia także przechowywanie małych plików i losowy dostęp.
 Wszystkie pliki w GFS dzielone są na fragmenty rozmiaru 64MB (ang. \emph{chunk}).
-Każdy fragment jest replikowany na kilka (najczęściej 3) maszyn, z których jedna przyjmuje rolę głównej repliki.
-Jeden z węzłów jest wyróżniony i przyjmuje rolę \emph{master}.
+System ten jest zaprojektowany z myślą o pracy na setkach lub tysiącach średniej klasy maszyn.
+
+Podobnie jak w BigTable, w GFS występuje pojedynczy węzeł master wybierany korzystając z tego samego mechanizmu co w BigTable, korzystając z Google Chubby.
+Pozostałe węzły przyjmują role serwerów fragmentów (ang. \emph{chunkserver}).
+Jeden fragment jest zazwyczaj replikowany na 3 takie serwery, z których jeden jest wyróżniony.
+Wyróżniona replika odpowiada za koordynację zapisów.
+
 \emph{Master} przechowuje metadane o systemie plików, oraz o podziale plików na fragmenty.
 Informacja o lokalizacji fragmentów nie jest zapisywana trwale przez węzeł \emph{master}, ale budowana po wyborze \emph{mastera} i uaktualniana w miarę potrzeby.
 Dane \emph{mastera} są replikowane na kilka maszyn aby zapobiec ich utracie.
-Wyboru \emph{mastera} dokonuje się wykorzystując usługę Google Chubby, podobnie jak ma to miejsce w BigTable.
 
 \emph{Master} przyznaje dla każdego fragmentu jednej z jego replik dzierżawę (trwającą 60s), która sprawia, że węzeł ten staje się wyróżniony dla tej repliki i zajmuje się koordynacją zapisów.
 Klienci komunikują się z \emph{masterem} w celu zdobycia dostępu do metadanych systemu (lokalizacja fragmentów, system plików).
@@ -615,16 +697,27 @@ Niestety dokładny opis tej architektury nie jest jeszcze dostępny.
 
 \subsubsection*{Google Chubby}
 
-Google Chubby jest to rozproszony system plików, ale o zastosowaniu zupełnie innym niż GFS.
-Pliki w Chubbym są małe (limit 256kb), odczytywane i zapisywane atomowo, w całości.
-Chubby jest to także (a właściwie przede wszystkim) rozproszony system blokad (ang. \emph{distributed lock service}).
-Umożliwia on zakładanie blokad do odczytu i zapisu na plikach, mechanizm zdarzeń, oraz mechanizm cacheowania, który umożliwia automatyczne odświeżenie buforowanych wartości po wystąpieniu zmian.
+Google Chubby jest to rozproszony system blokad (ang. \emph{distributed lock service}).
+Jest to usługa pozwalająca klientom na zakładanie blokad (do odczytu bądź do zapisu), co z kolei umożliwia stosowania w środowisku rozproszonym powszechnie znanego modelu programowania w oparciu o muteksy.
 Google Chubby został dokładniej opisany w artykule z 2006 roku \cite{google-chubby}.
+
+Ponieważ blokady służą zazwyczaj do strzeżenia jakichś danych, architekci Chubby postanowili udostępnić także interfejs systemu plików, tak aby nie trzeba było wykorzystywać dwóch różnych systemów do tworzenia blokad oraz odczytu i zapisu danych.
+Google Chubby nie jest przeznaczony do stosowania jako typowy system plików, dlatego pliki w Chubbym są małe (limit 256kb) oraz odczytywane i zapisywane atomowo, w całości.
+
+Innymi ważnymi funkcjami Google Chubby jest mechanizm zdarzeń i mechanizm cacheowania.
+Klienci mogą zapisywać się na otrzymywanie powiadomień o szeregu różnych zdarzeń, które mogą zajść w systemie, najważniejszym z których jest zdarzenie modyfikacji pliku.
+Ponieważ klient utrzymuje połączenie z Google Chubby, informowany jest o zdarzeniach bardzo szybko.
+Z tego samego mechanizmu korzysta cacheowanie w Chubby.
+Każdy klient, który dokonał odczytu jakiejś wartości może zapisać ją lokalnie.
+Jeżeli ulegnie ona zmianie, serwer prześle klientowi informacje o tym, że nastąpiła zmiana (ale nie przesyła nowej wartości).
+Klient może wtedy ponownie odczytać nową wartość, sprawiając tym samym że zostanie poinformowany o kolejnych ewentualnych zmianach.
+Klient, który nie odczyta ponownie zmienionej wartości nie będzie już więcej powiadamiany o jej zmianach.
 
 Połączenie wyżej wymienionych funkcjonalności sprawia, że Chubby jest powszechnie używany jako serwer nazw, lepszy niż serwery DNS gdyż nie wymagający konfigurowania wartości TTL (ang. \emph{Time-To-Live}), która źle ustawiona może doprowadzić albo do nadmiernego obciążenia serwerów nazw, albo zbyt wolną propagację zmian wartości.
 
 Innym bardzo ważnym zastosowaniem Google Chubby jest wybór wyróżnionego serwera (np. serwera \emph{master}).
 Problem wyboru mastera jest problemem rozproszonego konsensu implementowany zazwyczaj przy pomocy algorytmu Paxos.
+W takim rozwiązaniu każdy węzeł musi wziąć udział w głosowaniu i większością głosów wybierany jest wyróżniony węzeł.
 Zastosowanie usługi takiej jak Chubby nie tylko znacznie upraszcza ten problem w stosunku do rozwiązania gdzie każdy węzeł implementuje Paxos, ale także pozwala na dokonanie wyboru nawet w sytuacji, gdy nie da się osiągnąć kworum (ze względu na awarie węzłów, czy podział sieci).
 
 Procedura wyboru wyróżnionego serwera w Chubby przebiega następująco:
@@ -642,61 +735,15 @@ Pliki te są usuwane natychmiast po ich zamknięciu, bądź po utracie połącze
 Jeżeli każdy węzeł podłączany do systemu utworzy efemeryczny plik w ogólnie znanym katalogu, wszystkie inne węzły z łatwością dowiedzą się o tej zmianie przy pomocy mechanizmu zdarzeń.
 Podobnie jeżeli węzeł ulegnie awarii, jego plik zostanie wkrótce usunięty i inne węzły dowiedzą się o tym niemal natychmiast.
 
-Google Chubby jest wprawdzie replikowany (komórka składa się zazwyczaj z 5 serwerów), ale cała komunikacja odbywa się między klientami a masterem\footnote{Artykuł \cite{google-chubby} opisuje potencjalne techniki skalowania przy pomocy partycjonowania i serwerów proxy, ale nie były one wykorzystywane w czasie pisania tego artykułu}.
-Replikacja ma na celu jedynie zapewnienie wysokiej dostępności systemu.
-Mimo tego ograniczenia Chubby jest w stanie obsłużyć ok. 90 000 klientów równocześnie.
-Jest to na tyle duża liczba, że komórki Chubby są zazwyczaj współdzielone między różnymi aplikacjami.
+Pojedynczy serwer Google Chubby jest w stanie obsłużyć nawet 90 tysięcy klientów.
+Jest to konieczne, ponieważ cała komunikacja odbywa się pomiędzy klientami a jednym, wyróżnionym serwerem master\footnote{Artykuł \cite{google-chubby} opisuje potencjalne techniki skalowania przy pomocy partycjonowania i serwerów proxy, ale nie były one wykorzystywane w czasie pisania tego artykułu}.
+Serwer ten jest replikowany zazwyczaj na 4 inne serwery.
+Wszystkie one (master i jego repliki są nazywane komórką - ang. \emph{cell}) biorą udział w wyborze mastera, wykorzystując do tego algorytm Paxos.
+Komórki Chubby są zazwyczaj współdzielone między różnymi aplikacjami.
 
 W Google BigTable Chubby jest wykorzystywany do zapewnienia istnienia pojedynczego węzła master, wykrywania serwerów tabletów i ich awarii, przechowywania danych dotyczących schematu bazy i list dostępu.
 Awaria i niedostępność Chubby powoduje także niedostępność BigTable.
 Cytując za artykułem \cite{google-bigtable}, przełożyło się to średnio na zmniejszenie dostępności systemu średnio o 0.0047\%, a w najgorszym przypadku o 0.0326\%\footnote{Dla lepszego zobrazowania: odpowiednio 24 minuty i 171 minut w ciągu roku}.
-
-\subsection*{Architektura}
-
-W tej sekcji przedstawiona zostanie architektura Google BigTable, najpierw z punktu widzenia całości systemu, a potem z punktu widzenia serwowania pojedynczego tabletu.
-
-\subsubsection*{Architektura wysokiego poziomu}
-
-W Google BigTable występują trzy rodzaje aktorów: \emph{master}, \emph{serwer tabletów}, i \emph{klient}.
-Bardzo ważną rolę odgrywa też komórka Google Chubby.
-Jak już wspomniano wyżej, rekordy w BigTable są zapisywane w grupach zwanych tabletami.
-Każdy tablet reprezentuje pewien przedział kluczy.
-Tablety mogą być dzielone i łączone w miarę potrzeby.
-
-\emph{Master} zajmuje się przydziałem tabletów do serwerów tabletów, wykrywaniem dołączanych i usuwanych serwerów tabletów, równoważeniem obciążenia serwerów tabletów i usuwaniem zbędnych plików w GFS.
-
-\emph{Serwer Tabletów} obsługuje zazwyczaj od 10 do 1000 tabletów.
-Obsługuje zarówno odczyty, jak i zapisy, a także zajmuje się dzieleniem tabletów które przekroczyły maksymalny rozmiar.
-
-Większość \emph{klientów} systemu nie musi się wcale komunikować z serwerem master.
-
-Dane są zapisywane w trzypoziomowym drzewie.
-Korzeniem tego drzewa jest tak zwany \emph{root tablet}.
-Jest to specjalny tablet, który nigdy nie ulega podziałowi.
-Jego lokalizacja jest zapisana w pliku w Google Chubby, a rolą tego tabletu jest przechowywanie lokalizacji tabletów zawierających metadane.
-Tablety te przechowują lokalizacje wszystkich pozostałych tabletów w systemie (tabletów użytkownika).
-Dane o lokalizacji tabletów są także buforowane u klienta w pamięci.
-
-Serwery tabletów używają Google Chubby do rejestrowania się w systemie.
-Aby tego dokonać przy starcie serwera tabletów tworzy on plik w specjalnym katalogu i zdobywa na nim blokadę do zapisu.
-Dopóki serwer tabletów posiada tą blokadę, dopóty może on zajmować się serwowaniem tabletów.
-Jeżeli straci blokadę, stara się ją odzyskać, jeżeli jednak plik na którym miał blokadę został usunięty, serwer tabletów jest zmuszony zakończyć działanie.
-Węzeł master komunikuje się co pewien czas ze wszystkimi serwerami tabletów, żądając od nich podania statusu ich blokady.
-Jeżeli master nie jest w stanie się połączyć z serwerem tabletów, lub jeżeli odpowie on, że stracił blokadę na pliku, master próbuje zdobyć tą blokadę i w przypadku powodzenia, usuwa plik powodując tym samym restart serwera tabletów.
-
-\subsubsection*{Architektura serwera tabletów}
-
-Dane o tablecie są zapisywane przez serwer tabletów w trzech lokacjach.
-Pierwszą z nich jest \emph{tablet log}, do którego zapisywane są wszelkie modyfikujące tablet operacje.
-Każda taka operacja musi zostać zapisana w tym pliku zanim zostanie przetworzona.
-
-Po zapisaniu do \emph{tablet logu} operacja może zostać odwzorowana w pamięci operacyjnej.
-Mutacje są wykonywane korzystając z techniki \emph{copy-on-write} (kopiowanie przy zapisie), dzięki czemu wynik operacji nie jest widoczny aż do jej zakończenia.
-Co pewien czas struktura w pamięci (nazywana \emph{memtable}) jest zrzucana na dysk (do GFS) do pliku SSTable.
-SSTable to format pozwalający na zapisywanie tablic asocjacyjnych, odczytywanie kluczy zakresami i posiadający specjalny indeks, który, po wczytaniu do pamięci operacyjnej przy otwarciu pliku, umożliwia odczyt dowolnej wartości z pliku przy pomocy pojedynczego wyszukania na dysku.
-
-Odczyt musi przeszukać \emph{memtable} i wszystkie pliki SSTable, dlatego po przekroczeniu pewnego limitu plików SSTable, cześć z nich jest łączona w jeden.
-Istnieje także możliwość połączenia wszystkich plików SSTable w jeden.
 
 \subsection*{Znaczenie}
 
