@@ -44,6 +44,9 @@ Na potrzeby tej pracy przyjęto najczęściej stosowany system, który dzieli ba
  Podstawowym mechanizmem zapytań w bazie grafowej są rożne mechanizmy trawersowania grafu biorąc pod uwagę właściwości węzłów i krawędzi i poruszając się po krawędziach wchodzących i wychodzących.
  Drugorzędnym mechanizmem jest wyszukiwanie węzłów i krawędzi grafu na podstawie ich właściwości.
  Możliwość wykonywania takich zapytań nie jest jednak konieczna w bazie grafowej i niektóre produkty pozostawiają obsługę takich zapytań innym systemom. 
+
+ \item[Skalowalne bazy relacyjne]
+ Do tej grupy należą systemy, które zachowują relacyjny model danych, oraz najczęściej SQL jako język zapytań, ale w odróżnieniu od typowych relacyjnych baz danych są zaprojektowane z myślą o horyzontalnej skalowalności.
 \end{description}
 
 \section{Opisane aspekty rozwiązań}
@@ -73,7 +76,7 @@ Każda baza została opisana według następującego schematu:
  \item[Wersjonowanie]
  W przypadku systemów które oferują taką opcję, zostanie opisany mechanizm wersjonowania rekordów i rozwiązywania konfliktów.
 
- \item[Dostępne typy zapytań]
+ \item[Wyszukiwanie]
  Opisane zostaną ogólnie opcje tworzenia zapytań do systemu i indeksowania danych.
 
  \item[Unikalne cechy]
@@ -85,7 +88,7 @@ Każda baza została opisana według następującego schematu:
  \item[Przeciwwskazania]
  Opisuje typy zastosowań, z którym system może mieć problemy, szczególnie takie, które mogą nie występować przy prostej ewaluacji.
 
- \item[Społeczność]
+ \item[Dokumentacja i wsparcie]
  Opisany zostanie poziom aktywności społeczności związanej z daną bazą, możliwości komercyjnego wsparcia, subiektywna ocena jakości dokumentacji oraz w przypadku produktów rozwijanych przez konkretnych dostawców, zostaną oni przedstawieni.
 
  \item[Pomocne odnośniki]

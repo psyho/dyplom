@@ -2,9 +2,145 @@
 
 \section*{Streszczenie}
 W tym rozdziale opisane zostaną dwie bazy klucz-wartość: Redis i Riak.
+\todo{Rozszerzyć wstęp}
 
 \section{Redis}
 \label{sec:redis}
 
+\subsection*{Wstęp} 
+
+Redis jest jedną z najbardziej popularnych baz NoSQL.
+Swoją popularność zawdzięcza on niezwykle bogatemu jak na bazę typu klucz-wartość API, oraz bardzo dużej wydajności.
+Bardzo często system ten jest wykorzystywany w aplikacjach internetowych równolegle z relacyjnymi bazami danych, najczęściej jako kolejka zadań albo w zastępstwie Memcached jako cache oraz baza, w której przechowywana jest sesja użytkownika.
+
+Mimo, że jest on klasyfikowany jako baza typu klucz-wartość, Redis nie jest horyzontalnie skalowalny.
+Nie jest to zazwyczaj bardzo dużym problemem, ponieważ Redis jest w większości przypadków wystarczająco wydajny, aby jeden węzeł był w stanie obsłużyć wszystkie zapytania generowane przez aplikację.
+
+\subsection*{Protokół komunikacji}
+
+Redis używa bardzo prostego, tekstowego protokołu komunikacji.
+Istnieje możliwość autentykacji, ale tylko przy pomocy hasła zapisanego w konfiguracji serwera.
+Nie ma możliwości tworzenia wielu użytkowników i określania ich uprawnień.
+Ponieważ hasło jest przesyłane otwartym tekstem, a połączenia nie są w żaden sposób szyfrowane, Redis nie należy do najbezpieczniejszych rozwiązań na rynku.
+
+Dzięki prostemu protokołowi, biblioteki do komunikacji z tym systemem są dostępne praktycznie dla każdego języka programowania.
+Dla niektórych języków programowania dostępne są także biblioteki wyższego poziomu, które pełnią rolę bardzo podobną do bibliotek ORM (Object-Relational Mapping).
+Biblioteki takie jak Ohm dla języka Ruby pozwalają na mapowanie obiektów na strukturę kluczy w Redis, włącznie z indeksowaniem wartości niektórych pól, co umożliwia wyszukiwanie rekordów po czym innym niż wartość klucza. 
+
+\subsection*{Replikacja}
+
+Redis posiada mechanizm replikacji w trybie master-slave.
+Replikacja jest asynchroniczna, co oznacza, że dane odczytane z serwerów slave mogą być czasem nieaktualne.
+Często Redis jest konfigurowany w taki sposób, aby serwer master w ogóle nie dokonywał zapisów na dysk twardy, tylko pozostawiał tą rolę serwerowi lub serwerom slave.
+Rozwiązanie takie pozwala na zwiększenie wydajności.
+
+\subsection*{Partycjonowanie}
+
+Redis nie obsługuje partycjonowania w wersji 2.0.
+Niektóre biblioteki pozwalają wprawdzie na implementację partycjonowania po stronie klienta, ale są to bardzo prymitywne rozwiązania, które nie mogą w żaden sposób konkurować z partycjonowaniem po stronie serwera, jakie jest zaimplementowane np. w omawianym w kolejnym rozdziale systemie Riak.
+
+\subsubsection*{Redis Cluster}
+
+W planach jest implementacja tak zwanego \emph{Redis Cluster}, który pozwoli na horyzontalne skalowanie systemu poprzez replikację i partycjonowanie danych.
+Redis Cluster będzie systemem typu CA (Consistent-Available).
+W systemie będą występować cztery rodzaje węzłów:
+
+\begin{description}
+ \item[Data Node] (węzeł danych) - węzły przechowujące dane.
+ Skalowanie systemu odbywa się poprzez zwiększanie liczby tych węzłów.
+
+ \item[Configuration Node] (węzeł konfiguracyjny) - węzeł przechowujący metadane o całym systemie, takie jak listy \emph{Data Node} i \emph{Proxy Node}.
+ W razie awarii tego węzła, system wprawdzie nie zaprzestaje normalnej pracy, ale nie jest w stanie obsłużyć sytuacji awaryjnych takich jak awaria innego węzła.
+ Ten węzeł tylko przechowuje dane konfiguracyjne, węzłem odpowiedzialnym za ich obsługę jest Handling Node.
+
+ \item[Proxy Node] (węzeł proxy) - węzły odpowiedzialne za koordynację zapytań w systemie.
+ Zapytania w systemie są zawsze kierowane do węzłów Proxy, które przekazują je następnie do jednego (w przypadku odczytów) lub wszystkich (w przypadku operacji zmieniających dane) węzłów, na których odpowiednie rekordy są zapisane.
+ Awarie są wykrywane przez Proxy Node i informacja o nich jest zapisywana w węźle konfiguracyjnym.
+
+ \item[Handling Node] (węzeł zarządzający) - to klient, który obsługuje dane zapisane w węźle konfiguracyjnym.
+ Zajmuje się on zmianą przydziału zakresów kluczy do węzłów w razie dodania lub usunięcia węzła, lub jego awarii.
+ Najczęściej Handling Node i Configuration Node są umieszczone na tym samym fizycznym węźle.
+\end{description}
+
+\subsection*{Persystencja}
+
+Persystencja
+
+\subsection*{Wersjonowanie}
+
+Wersjonowanie
+
+\subsection*{Wyszukiwanie}
+
+Wyszukiwanie
+
+\subsection*{Unikalne cechy}
+
+Unikalne cechy
+
+\subsection*{Typowe zastosowania}
+
+Typowe zastosowania
+
+\subsection*{Przeciwwskazania}
+
+Przeciwwskazania
+
+\subsection*{Dokumentacja i wsparcie}
+
+Dokumentacja i wsparcie
+
+\subsection*{Pomocne odnośniki}
+ 
+Pomocne odnośniki
+
 \section{Riak}
 \label{sec:riak}
+
+\subsection*{Wstęp} 
+
+Wstęp
+
+\subsection*{Protokół komunikacji}
+
+Protokół komunikacji
+
+\subsection*{Replikacja}
+
+Replikacja
+
+\subsection*{Partycjonowanie}
+
+Partycjonowanie
+
+\subsection*{Persystencja}
+
+Persystencja
+
+\subsection*{Wersjonowanie}
+
+Wersjonowanie
+
+\subsection*{Wyszukiwanie}
+
+Wyszukiwanie
+
+\subsection*{Unikalne cechy}
+
+Unikalne cechy
+
+\subsection*{Typowe zastosowania}
+
+Typowe zastosowania
+
+\subsection*{Przeciwwskazania}
+
+Przeciwwskazania
+
+\subsection*{Dokumentacja i wsparcie}
+
+Dokumentacja i wsparcie
+
+\subsection*{Pomocne odnośniki}
+ 
+Pomocne odnośniki
