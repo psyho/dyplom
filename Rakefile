@@ -27,7 +27,7 @@ end
 def load_bibtex_gem
   return require 'bibtex_parser'
 rescue LoadError
-  return puts "gem rbibtex is not installed!"
+  return puts "gem bibtex_parser is not installed!"
 end
 
 def bibliography_entries

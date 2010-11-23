@@ -1,0 +1,431 @@
+body {
+    font-family: 'Lucida Grande',Verdana,Arial,Sans-Serif;
+}
+
+#header img {
+    border:none;
+}
+
+#header H1 {
+    margin: 0px;
+    font-size: 45px;
+}
+
+#header H1 A {
+    color:black;
+    text-decoration: none;
+    font-weight: normal;
+}
+
+#header {
+    position: relative;
+    height: 60px;
+    margin-bottom: 20px;
+    padding-bottom: 5px;
+}
+
+#content {
+    position:relative;
+}
+
+A {
+    text-decoration: none;
+    color: black;
+}
+
+.blogposttitle {
+    font-family: "Tahoma", "sans-serif", Arial;
+    font-size:22px;
+    margin:3px;
+    float:left;
+    width: 450px;
+}
+
+.blogposttitle A {
+    color:#333333;
+    font-weight:normal;
+    text-decoration: none;
+}
+
+.blogposttitle A:hover {
+    text-decoration: underline;
+}
+
+div.blogposttext {
+    color:#444;
+    font-size:15px;
+    margin-left:5px;
+    text-align:justify;
+    margin-top:30px;
+}
+
+.blogposttext a {
+    text-decoration: underline;
+}
+
+.blogpostinfo {
+    font-weight: normal;
+    font-size: 12px;
+    color: #666;
+    padding-bottom:4px;
+    padding-top:8px;
+    padding-left:5px;
+}
+
+.blogpoststats {
+    font-weight: normal;
+    font-size: 12px;
+    color: #666;
+}
+
+.blogpostinfo A {
+    text-decoration: none;
+    color:black;
+    font-weight:bold;
+}
+
+div.blogpost {
+    position: relative;
+    width:90%;
+    max-width: 750px;
+    margin-top: 5px;
+    margin-bottom: 30px;
+}
+
+.blogpost H3 {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333333;
+}
+
+.blogpostdate {
+    padding-top:8px;
+    float:right;
+    font-weight:bold;
+    color:#666;
+}
+
+.comment {
+    position: relative;
+    width: 600px;
+    padding:10px;
+    margin:0px;
+    background-color: #ffffff;
+}
+
+.commentnum A {
+    color: #666666;
+    position: absolute;
+    top:5px;
+    right:3px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.comment0 {
+    border-top: 1px #cccccc solid;
+}
+
+.comment1 {
+    border-top: 1px #cccccc solid;
+    background-color: #f0f0f0;
+}
+
+.commentauthor {
+    font-size:12px;
+    font-weight: bold;
+}
+
+.commentauthor a {
+    color: #f55000;
+}
+
+.commentbody {
+    font-size: 14px;
+    text-align: justify;
+    padding-left:15px;
+}
+
+.commentinfo {
+    text-align: right;
+    font-size: 12px;
+    clear: both;
+}
+
+.postquote{
+    margin-left: 2px;
+    padding-left: 5px;
+    border-left: 3px solid #aaaaaa;
+}
+
+#footer {
+    border-top: 1px #aaaaaa solid;
+    margin-top:10px;
+    font-size:13px;
+    color:#666666;
+}
+
+#feedbacks {
+    clear:left;
+    padding:20px;
+    text-align:center;
+}
+
+#navbar {
+    position: absolute;
+    left: 3px;
+    bottom: 0px;
+}
+
+#navbar {
+    color: #f55000;
+}
+
+#navbar A {
+    color: #222;
+    font-size:14px;
+    text-decoration: none;
+}
+
+#adminbar {
+    margin: 0px;
+    margin-top: 20px;
+    padding: 5px;
+    background-color: #eeeeee;
+}
+
+#formathelp {
+    position:absolute;
+    padding: 5px;
+    margin: 5px;
+    width: 20%;
+    right:0px;
+    top:0px;
+}
+
+#formathelp TD {
+    padding-right: 20px;
+}
+
+.subtitle {
+    color: #44aa44;
+}
+
+#infobox h3 {
+    font-weight: bold;
+    font-size: 12px;
+    margin-top: 0px;
+    margin-bottom: 5px;
+    color: #444444;
+}
+
+#infobox A {
+    font-size: 13px;
+}
+
+#infobox UL {
+    margin: 0px;
+}
+
+.infoboxdiv {
+    float:left;
+    width:250px;
+    padding-right:15px;
+}
+
+.commentsummary {
+    font-size: 11px;
+    margin-bottom: 15px;
+    text-align:justify;
+}
+
+.commentsummary A {
+    text-decoration: none;
+}
+
+.commentdate {
+    font-size: 10px;
+    margin-bottom:10px;
+}
+
+#postcomment {
+    margin-top:20px;
+}
+
+#postcomment TD {
+    vertical-align:top;
+}
+
+.code {
+    font-size:12px;
+    font-family: Monospace;
+    background-color: #eee;
+    padding: 5px;
+    color:#666;
+}
+
+.blognextprevlink A {
+    margin-top: 20px;
+    font-weight:bold;
+    font-size:16px;
+}
+
+.blognextprevlink {
+    margin-top: 20px;
+}
+
+.emph {
+    width: 90%;
+    margin-left: 5%;
+    color: black;
+    background-color: #f3f3f3;
+    padding: 5px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+HR {
+    border: 1px #44aa44 dashed;
+}
+
+div.page {
+    position: relative;
+    width:70%;
+    max-width: 750px;
+    margin-top: 15px;
+}
+
+.pagetitle {
+    color:#444444;
+    font-weight:bold;
+    font-size:18px;
+    margin-bottom: 20px;
+    float:left;
+}
+
+div.pagetext {
+    color:#444;
+    font-size:15px;
+    margin-left:5px;
+    margin-bottom:10px;
+    text-align:justify;
+}
+
+.pageinfo {
+    font-weight: bold;
+    font-size: 12px;
+    color: #666;
+    border-top: 1px solid #dedede;
+    padding-bottom:4px;
+    padding-top:8px;
+}
+
+.pageinfo A {
+    text-decoration: none;
+}
+
+.fmtex {
+    border: 1px #aaaaaa dotted;
+    margin-bottom: 5px;
+    padding:5px;
+}
+
+.fmtcode {
+    font-family: monospace;
+}
+
+.draft {
+    background-color: red;
+    color:white;
+    padding: 3px;
+    margin: 3px;
+}
+
+#filelist TD {
+    vertical-align: top;
+    border: 1px #aaaaaa solid;
+    padding: 5px;
+}
+
+.commenttarget {
+    color: black;
+    font-weight: bold;
+}
+
+#about {
+    margin-bottom: 15px;
+    padding-right:10px;
+    font-size:12px;
+}
+
+.leftimage {
+    float:left;
+    padding:5px;
+}
+
+.centerimage {
+    margin:10px;
+}
+
+.rightimage {
+    float:left;
+    padding:5px;
+}
+
+#rssad {
+    border: 2px dotted #aaaaff;
+    margin:10px;
+    padding:5px;
+    width: 500px;
+}
+
+#rssad small {
+    color: #666666;
+}
+
+#topposts {
+    width: 60%;
+}
+
+.feed {
+    padding-left: 22px;
+    background: url(feedicon.png) 0 0 no-repeat;
+}
+
+/* pagination */
+A.lipagelink {
+    text-decoration: none;
+    color: #391779;
+}
+.licurpage {
+    font-weight: bold;
+    color: white;
+    padding-left: 4px;
+    padding-right: 4px;
+    background-color: #9c9c9a;
+}
+.linavbar {
+    padding:5px;
+    margin-top:5px;
+    margin-bottom:15px;
+    font-size:14px;
+}
+#edittable TD {
+    vertical-align:top;
+    width:50%;
+}
+.adunit {
+    margin:20px;
+}
+#copyright {
+    text-align:center;
+    padding:10px;
+    font-size:10px;
+}
+.linavbar a {
+    color:#f55000;
+}
+h2 {
+    font-size:20px;
+    color:#222;
+}

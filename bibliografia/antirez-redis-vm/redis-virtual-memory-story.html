@@ -1,0 +1,527 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<link rel="shortcut icon" href="favicon.ico" />
+<link rel="stylesheet" href="style.css%3Fv=9.css" type="text/css" />
+<link rel="alternate" title="feed antirez blog" type="application/rss+xml" href="http://antirez.com/rss" />
+<link rel="alternate" title="feed comments antirez blog" type="application/rss+xml" href="http://antirez.com/rss/comments" />
+<link rel="microsummary" href="http://antirez.com/microsummary.php" />
+<script type="text/javascript" src="blog.js"></script>
+<title>Redis Virtual Memory: the story and the code</title>
+</head>
+<body>
+
+<div id="header">
+<a href="http://antirez.com/"><img src="logo.png" alt="antirez weblog" /></a>
+<div id="navbar">
+<a href="http://antirez.com/rss" class="feed">rss</a> /
+<a href="http://antirez.com/rss/comments">comments</a> /
+<a href="http://invece.org">about</a> /
+<a href="http://antirez.com/pages.html.php">pages</a> /
+<a href="http://zzimma.antirez.com">it</a>
+</div>
+</div>
+
+<div id="content">
+<div class="blogpost"><h2 class="blogposttitle"><a href="redis-virtual-memory-story.html">Redis Virtual Memory: the story and the code </a></h2><div class="blogpostdate">Wednesday, 03 February 10</div><div style="clear:both"></div><div class="blogposttext">If you are reading this article probably you already know it: <a href="http://code.google.com/p/redis">Redis</a> is an in-memory DB. It's persistent, as it's disk backed, but disk is only used to persist, all the data is taken in the computer RAM.
+<br/><br/>
+
+I think the last few months showed that this was not a bad design decision. Redis proved to be very fast in real-world scenarios where there is to scale an unhealthy amount of writes, and it is supporting advanced features like <a href="http://code.google.com/p/redis/wiki/ZaddCommand">Sorted Sets</a>, and many other complex atomic operations, just because it is in memory, and single threaded. In other words, some of the features supported by Redis tend to be very complex to implement if there is to organize data on disk for fast access, and there are many concurrent threads accessing this data. The Redis design made this two problems a non issue, with the drawback of holding data in memory.
+<br/><br/>
+
+I really think to take data in memory is the way to go in many real world scenarios, as eventually your most accessed data must be in memory anyway to scale (think at the memcached farms many companies are running in this moment). But warning. I said <i>most accessed</i>. Too many datasets have something in common, they are accessed in a long tail fashion, that is, a little percentage of the dataset will get the majority of the queries (let's call it the <i>hot spot</i>). Still from time to time even data outside the hot spot is requested. With Redis we are forced (well, actually <i>were</i> forced) to take all the data in memory, and it's a huge waste as actually most of the times only our hot spot is stressed. So the logical question started to be more and more this: <b>is there a way to free the memory used by rarely accessed data</b>?
+<h3>Virtual Memory</h3>
+Virtual Memory is an idea originated in the operating systems world, <b>50 years ago</b>. It is probably one of the few non trivial OS ideas that many non tech people are aware of, in some way: the <i>swap file</i> is a famous object, and most  Windows power users more or less understand how it works.
+<br/><br/>
+
+Basically the memory is organized in pages, that are usually 4096 bytes in size. The OS is able to transfer this pages from memory to disk to free memory. When an application will try to access an address that maps to the physical memory page that was transfered on disk, the processor will call a special function that is in charge of loading such a page in memory, so that the accessing program can continue the execution.
+<br/><br/>
+
+OSes will not swap memory only when they are out of memory, but even when there is still some free memory, as more free memory can always be used for a very precious thing: disk cache, and this is a win if the pages we transfer on the swap file were rarely accessed.
+<br/><br/>
+
+So the question is: <b>Why Redis can't just use the OS Virtual Memory?</b> (instead to invent its own VM at application level?). There are two main reasons:
+<br/><br/>
+
+<ul><li>The OS will only swap pages rarely used. A page is 4096 bytes. Redis uses hash tables, object sharing and caching, so a single Redis &quot;value&quot; (like a Redis List or Set) can be physically allocated across many different pages. The reverse is also true: a physical page will likely contain objects about many Redis keys. Basically even if just 10% of the dataset is actively used, probably all the memory pages are accessed. Maybe most memory pages will contain only a few bytes of our hot, frequently used data, but even a byte for page is enough for preventing swapping, or to force the OS to transfer back and forth memory pages from disk to memory if it's out of memory.</li>
+
+<li>Redis objects, both simple and complex, take a lot more space when they are stored in RAM, compared to the space they take serialized on disk. On disk there are no pointers, nor meta data. An object is usually even <b>10 times</b> smaller serialized on disk, as Redis is able to encode the objects stored on disk pretty well. This means that the Redis application-level VM needs to perform ten times less disk I/O compared to the OS VM, for the same amount of data.</li>
+
+</ul>
+<br/><br/>
+
+While the OS cache can't help a lot, the idea behind Virtual Memory is very helpful. All I needed to do was to move the concept of Virtual Memory from kernel space to use space.
+<h3>Virtual Memory: the Redis way</h3>
+There are many design details about implementing Virtual Memory in a key-value store, but well, the basic concept is pretty straightforward: when we are out of memory, let's transfer values belonging to keys not recently used from memory to disk. When a Redis command will try to access a key that is swapped out, it is loaded back in memory.
+<br/><br/>
+
+It's as simple as that, but in the above description there is the first of many design decisions: <b>only values are swapped, not keys</b>. This is actually the direct result of another much more important design principia I made at the start: dealing with in memory keys should be more or less as fast as when VM is  disabled.
+<br/><br/>
+
+What this means is that you need to have enough RAM at least to hold all the keys objects, and this is the bad news, the good one is: Redis will be mostly as fast as you know it is when accessing in-memory keys. So if your dataset will have the famous &quot;long tail&quot; alike access pattern and your hot spot fits the available RAM, Redis will be as fast as it is with VM disabled.
+<br/><br/>
+
+Ok, it's time to show some number I guess, so you can start to make your math about the real world impact of Redis VM and when it is practical and when still too much memory is needed.
+<pre class="code">
+VM off: 300k keys, 4096 bytes values: 1.3G used
+VM on:  300k keys, 4096 bytes values: 73M used
+VM off: 1 million keys, 256 bytes values: 430.12M used
+VM on:  1 million keys, 256 bytes values: 160.09M used
+VM on:  1 million keys, values as large as you want, still: 160.09M used
+</pre>
+Guess what? With VM on (and configuring Redis VM in order to use as little memory as possible), it does not matter how big the value is. 1 million keys will always use 160 MB. You can store huge lists or sets inside, or tiny string values. Every value will be swapped out, but the keys and the top level hash table, will still use RAM, as well as the &quot;page table bitmap&quot;, that is a bit array of bits in the Redis memory containing information about used / free pages in the swap file.
+<br/><br/>
+
+So a very important question is, when VM is enabled, how much memory we'll use for every additional million of keys? More or less 160 MB for million of keys, so at minimum you need:
+<pre class="code">
+1M keys: 160 MB
+10M keys: 1.6 GB
+100M keys: 16 GB
+</pre>
+If you have 16 GB of RAM you can store 100M of keys, and every key can contain values as large and complex as you want (Lists, Sets, JSON encoded objects, and so forth) and the memory requirements will not change.
+<br/><br/>
+
+Think at this: even with MySQL it is not trivial to have a database with 100 million rows with less than 16 GB of RAM, but with the top-level keys in memory the speed gain is big.
+<h3>A reversed memcached</h3>
+When I started to work at Redis one year ago I often compared it to memcached, saying &quot;it's like memcached, but persistent and with more ops&quot; in order to tell people what Redis was about.
+<br/><br/>
+
+Not that this description was wrong from a pragmatic point of view, but in some philosophical sense Redis with VM is the <i>exact contrary</i> of MySQL + memcached.
+<br/><br/>
+
+Using memcached in order to cache SQL queries is a well established pattern. My SQL DB is slow, so I write an application layer to take the frequently accessed data in memcached (handling invalidation by hand), so I can query this faster cache instead of the DB. The idea is to take data on disk, but to cache the hotspot in memory for fast access.
+<br/><br/>
+
+Redis + VM is exactly the reverse. You take your data in memory, but what is <i>not</i> the hot spot is disk-backed in order to free mem for more interesting data. In both models the frequently accessed data will stay in memory, but the process is reversed, with the following benefits:
+<br/><br/>
+
+<ul><li>There is no invalidation to do. There is only one object we need to interact with, Redis. Data is not duplicated in two places, like in MySQL + memcached.</li>
+
+<li>This model can scale writes as well as it can scale reads. MySQL + memcached can mainly scale read queries.</li>
+
+<li>Once you write the memcached layer in your application, what you discover is that after all you are trying to access more and more data by unique key, or sort off: parametrized data is not handy to cache if the space of the parameters is large enough, and invalidation is crazy. Even to cache a simple pagination query can be hard, go figure with more complex stuff. So most benefits about SQL are lost in some way, you are silently turning your application into a key-value business! But memcached can't offer the higher level operations Redis is able to offer. To return to the pagination example, <a href="http://code.google.com/p/redis/wiki/LrangeCommand">LRANGE</a> and <a href="http://code.google.com/p/redis/wiki/ZrangeCommand">ZRANGE</a> are your friends.</li>
+
+</ul>
+<h3>The code</h3>
+I implemented VM in two stages. The first logical step was to start with a blocking implementation, given that Redis is single threaded, that is, an implementation where keys are swapped out blocking all the other clients when we are out of memory (but swapping just as many objects as needed to return to the memory limits, so it actually does not appear to block the server). The blocking implementation also loads keys synchronously when a client is accessing a swapped out key (or better, a key associated to a swapped out value).
+<br/><br/>
+
+This implementation took very little time, as I used the same functions to serialize and unserialized Redis objects in Redis .rdb files (used in order to persist on disk). A few more details:
+<br/><br/>
+
+<ul><li>The swap file is divided in pages, the page size can be configured.</li>
+
+<li>The page allocation table is taken in memory. It's a bitmap so every page takes 1 bit of actual RAM.</li>
+
+<li>When VM is enabled, Redis objects are allocated with a few more fields, one of this is about the last time the object was accessed. So when Redis is out of memory and there is something to swap, we sample a few random objects from the dataset, and the one with the higher <i>swappability</i> is the one that will be transfered on disk. The <i>swappability</i> is currently computed using the formula Object.age*Logarithm(Object.used_memory).</li>
+
+<li>The page allocation algorithm uses an algorithm I found reading the source code of the Linux VM system. Basically we try to allocate pages sequentially up to a given limit. When this limit is reached we start from page 0. This tries to improve locality. I added another trick: if I can't find free pages for a while, I start to <i>fast forward</i> with random jumps.</li>
+
+<li>When Redis fork()s in order to save the dataset on disk (Redis uses copy-on-write semantic in order to take the snapshot of the DB) VM is suspended: only loads are allowed, writes are blocked. So the child can access the VM file without troubles. The same happens when the <a href="http://code.google.com/p/redis/wiki/AppendOnlyFileHowto">Append Only File</a> is enabled and you issue a <a href="http://code.google.com/p/redis/wiki/BgrewriteaofCommand">BGREWRITEAOF</a> command.</li>
+
+</ul>
+<h3>I/O threads</h3>
+The blocking implementation worked very well, but in the real world there are applications where it is not good at all. It's perfect if you are using Redis with few clients to perform batch computations, but what about web applications with N clients? To wait for blocked clients to load stuff from disk before to continue is hardly an acceptable scenario.
+<br/><br/>
+
+Redis is a single-threaded multiplexing server, so a possible solution was to use non blocking disk I/O. I didn't liked enough this solution for a reason: it's not just a matter of I/O, also to serialize / unserialize the Redis objects to/from the disk representation is a slow CPU intensive operation with lists or sets composed of many elements. The last resort was what everybody tries to avoid (and for good reasons!): multi-threading programming.
+<br/><br/>
+
+There are two obvious ways to do this: serve every client with a different thread, or just make the VM I/O stuff threaded. I picked the second for two reasons: to make the implementation simpler and <b>self contained</b> (that is, outside the VM subsystem, no synchronization problems at all), and to retain the raw speed of the single threaded implementation when there was to access non swapped values.
+<br/><br/>
+
+So the final design is that the main thread communicate with a configurable number of I/O threads with a queue of I/O jobs. When there is a value to swap, an I/O job to swap the key is put in the queue. When there is a value to load because a client is requesting it, the client is suspended, an I/O job to load the key back in memory is added to the queue, and when all the keys needed for a given client are loaded the client is &quot;resumed&quot;.
+<br/><br/>
+
+Basically the main thread puts I/O jobs in the io_newjobs queue. After this jobs are processed, the I/O threads put the I/O jobs (filled with additional data) in the io_processed queue. This processed jobs are post-processed by the main thread in order to change the status of the keys from swapped to in-memory or vice versa and so forth.
+<h3>Our main trick</h3>
+To resume a client that is in the middle of a command exectuion is hard, but there was a simple solution, a probabilistic one.
+<br/><br/>
+
+When a client issues a command, like: <b>GET mykey</b>, we scan the arguments looking for swapped keys. If there is at least one swapped key, the client is suspended <i>before</i> the command is executed at all. Once the keys are back in memory the client is resumed.
+<br/><br/>
+
+This trick allows to reduce the complexity a lot, but it is just probabilistic. What if once we resume a client a key is swapped again as we are in hard out of memory conditions? What about the &quot;SORT BY&quot; command that will access keys we can't guess beforehand? Well, that's simple: if a given key is swapped for some reason, Redis reverts to the blocking implementation.
+<br/><br/>
+
+<b>The unblocking VM is a blocking VM with the trick of loading the keys in I/O threads thanks to static command analysis</b>. As simple as that, and works very well for all the commands but <b>SORT BY</b> that is a slow operation anyway.
+<h3>Still too complex</h3>
+The actual implementation is much more complex than that as you can guess. What happens if a value is being swapped off by an I/O thread while a client is accessing it? And so forth. There was to design the system so that I/O operations can be invalidated at any time, and this was tricky.
+<br/><br/>
+
+After the VM, I lost my feeling that Redis was trivial to gasp by the casual coder just reading the source code. Now it's 13k lines of code and there are many things to understand. Some functions are a few lines, but there are a lot of comments just to explain what's going on. Just an example, from the function in charge of jobs invalidation:
+<pre class="code">
+                switch(i) {
+                case 0: /* io_newjobs */
+                    /* If the job was yet not processed the best thing to do
+                     * is to remove it from the queue at all */
+                    freeIOJob(job);
+                    listDelNode(lists[i],ln);
+                    break;
+                case 1: /* io_processing */
+                    /* Oh Shi- the thread is messing with the Job:
+                     *
+                     * Probably it's accessing the object if this is a
+                     * PREPARE_SWAP or DO_SWAP job.
+                     * If it's a LOAD job it may be reading from disk and
+                     * if we don't wait for the job to terminate before to
+                     * cancel it, maybe in a few microseconds data can be
+                     * corrupted in this pages. So the short story is:
+                     *
+                     * Better to wait for the job to move into the
+                     * next queue (processed)... */<br /><br />                    /* We try again and again until the job is completed. */
+                    unlockThreadedIO();
+                    /* But let's wait some time for the I/O thread
+                     * to finish with this job. After all this condition
+                     * should be very rare. */
+                    usleep(1);
+                    goto again;
+                case 2: /* io_processed */
+                    /* The job was already processed, that's easy...
+                     * just mark it as canceled so that we'll ignore it
+                     * when processing completed jobs. */
+                    job-&gt;canceled = 1;
+                    break;
+                }
+</pre>
+<br/><br/>
+
+(Nazi Grammar Is Not Happy, I know). The complexity is self contained, but still there are a number of non trivial issues to understand for an external programmer in order to hack with the VM.
+<br/><br/>
+
+Fortunately the VM needs very little maintenance work, as the trick of using the same serialization format used to persiste on disk completely decoupled it from the other Redis subsystems. Want to implement a new type for Redis? Just write the commands to work with this new type and the functions to load/save it in the .rdb file and you are done. The VM will do the rest without your help.
+<br/><br/>
+
+Ok this article is already too long. I hope that Redis 2.0.0 will be released as stable code in two or three months at max. The VM needs a few more weeks of work and testing, but now it is working well and I encourage you to give it a try in development environment if you think you'll run out of memory in short time without it ;)
+<br/><br/>
+
+<div class="emph">
+You can comment this article on <a href="http://news.ycombinator.com/item?id=1097545">Hacker news</a> and <a href="http://www.reddit.com/r/programming/comments/axivr/redis_virtual_memory_the_story_and_the_code/">Programming Reddit</a>
+</div></div><div class="blogpostinfo"><div class="blogpoststats">post read 31622 times<sup><a href="http://antirez.com/page/uniquevisitors">*</a></sup> (average 107.8 visits/day)</div>Posted at 11:47:15 <a href="redis-virtual-memory-story.html">permalink</a> | <a href="redis-virtual-memory-story.html">54 comments</a> | <a href="http://antirez.com/print.php?postid=203">print</a> | <a href="http://postli.com/post?t=Redis+Virtual+Memory%3A+the+story+and+the+code&amp;u=http%3A%2F%2Fantirez.com%2Fpost%2Fredis-virtual-memory-story.html">post it</a> | <a class="tr-linkcount" href="http://technorati.com/search/http://antirez.com/post/redis-virtual-memory-story.html">View blog reactions</a></div></div>
+<div id="rssad">
+<strong>Do you like this article?</strong><br/>
+Subscribe to <a href="http://antirez.com/rss">the RSS feed of this blog</a> or <a href="http://www.feedburner.com/fb/a/emailverifySubmit?feedId=844731">use the newsletter service</a> in order to receive a notification every time there is something of new to read here.<br/><br/>
+<small>Note: you'll not see this box again if you are a usual reader.</small>
+</div>
+<h4>Comments</h4>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1502">1</a></div><div class="commentauthor"><span style="color:#666666">daniele</span> writes:</div><div class="commentdate">03 Feb 10, 12:03:24</div><div class="commentbody">awesome! <br />Keep on!</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1503">2</a></div><div class="commentauthor"><span style="color:#666666">aprilchild</span> writes:</div><div class="commentdate">03 Feb 10, 12:05:54</div><div class="commentbody">awesome! keep going:)</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1504">3</a></div><div class="commentauthor"><span style="color:#666666">Bernard</span> writes:</div><div class="commentdate">03 Feb 10, 12:39:23</div><div class="commentbody">Thanks.  I put a project on hold last year because I couldn't find a suitable data server that was both scalable and whose interface I liked.  I think Redis is the one for me.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1506">4</a></div><div class="commentauthor"><span style="color:#666666"><a href="http://duguo.com">Guo Du</a></span> writes:</div><div class="commentdate">03 Feb 10, 13:10:49</div><div class="commentbody">Redis is becoming one stop shop for storage: in memory cache, key/value store, queue, large data set.<br /><br />Good work and thanks!</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1507">5</a></div><div class="commentauthor"><span style="color:#666666">Jake McGraw</span> writes:</div><div class="commentdate">03 Feb 10, 13:37:15</div><div class="commentbody">Keep up the awesome work, this is utterly amazing.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1508">6</a></div><div class="commentauthor"><span style="color:#666666"><a href="http://michelangelo.altamore.org">Michelangelo Altamore</a></span> writes:</div><div class="commentdate">03 Feb 10, 13:39:43</div><div class="commentbody">Thank you antirez, I am amazed at your mastery.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1509">7</a></div><div class="commentauthor"><span style="color:#666666">antirez</span> writes:</div><div class="commentdate">03 Feb 10, 14:41:29</div><div class="commentbody">Thank you guys, I'll try to do my best.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1510">8</a></div><div class="commentauthor"><span style="color:#666666"><a href="http://www.funadvice.com">Ericson Smith</a></span> writes:</div><div class="commentdate">03 Feb 10, 15:33:52</div><div class="commentbody">Got goose bumps at the potential, just reading this!<br /><br />Good work antirez.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1511">9</a></div><div class="commentauthor"><span style="color:#666666"><a href="http://sunilarora.posterous.com">Sunil Arora</a></span> writes:</div><div class="commentdate">03 Feb 10, 17:40:51</div><div class="commentbody">Good work antirez!<br />I can smell the possibilities with you unleashing the real potential of Redis Store.<br />This weekend is all booked for Redis-VM. Thanks for the wonderful work once again!</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1512">10</a></div><div class="commentauthor"><span style="color:#666666">Justin</span> writes:</div><div class="commentdate">03 Feb 10, 19:00:28</div><div class="commentbody">Sounds awesome and good work! I'm a relatively novice programmer and I enjoy reading the Redis codebase. What a great mentor you would be! :-)</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1513">11</a></div><div class="commentauthor"><span style="color:#666666"><a href="http://blog.paulbetts.org">Paul Betts</a></span> writes:</div><div class="commentdate">03 Feb 10, 22:39:13</div><div class="commentbody">Your VM implementation might be good, but wouldn't a better solution to your problem #1 be just to improve the locality of your data by preallocating chunks of memory and managing it yourself, instead of just calling malloc and letting the heap manager decide where to put it? This would also help with #2, because your pages would be less likely to be paged out...</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1514">12</a></div><div class="commentauthor"><span style="color:#666666">antirez</span> writes:</div><div class="commentdate">03 Feb 10, 23:38:08</div><div class="commentbody"><span class="commenttarget">@Paul:</span> yes in theory, but the problem with your solution is that you loose a number of big advantages when there is no need of swapping, mainly: object sharing, and reuse of pre-allocated objects (object pools) instead of calling malloc again and again. Not only, many times this is just not viable: think at Redis lists, at every push I've to allocate another object. If I've a per-list pool preallocated how many memory I need to store million of lists? And so forth.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1515">13</a></div><div class="commentauthor"><span style="color:#666666"><a href="http://blog.paulbetts.org">Paul Betts</a></span> writes:</div><div class="commentdate">04 Feb 10, 01:41:10</div><div class="commentbody">@Antirez You don't necessarily have to completely preallocate everything, but you make sure to call malloc on large chunks, then use your own smart logic to hand out the pointers (essentially writing your own Redis-aware malloc, which is smart enough to allocate objects close to each other). You could build off of jemalloc (<a href="http://people.freebsd.org/~jasone/jemalloc/bsdcan2006/jemalloc.pdf" title="http://people.freebsd.org/~jasone/jemalloc/bsdcan2006/jemalloc.pdf" rel="nofollow">http://people.freebsd.org/~jasone/jemalloc/bsdcan2...</a>), which Firefox uses instead of the standard allocator to limit memory fragmentation.<br /><br />I'm not saying to ditch the VM approach though, they most likely would complement each other, and hopefully this might help you to make Redis even faster and more awesome than it already is!</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1516">14</a></div><div class="commentauthor"><span style="color:#666666">matt b</span> writes:</div><div class="commentdate">04 Feb 10, 03:14:44</div><div class="commentbody">Hey antirez, the first link for redis in your article is pointing at <a href="http://code.google.com/" title="http://code.google.com/" rel="nofollow">http://code.google.com/</a> instead of <a href="http://code.google.com/p/redis." title="http://code.google.com/p/redis." rel="nofollow">http://code.google.com/p/redis.</a></div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1517">15</a></div><div class="commentauthor"><span style="color:#666666">mark lucovsky</span> writes:</div><div class="commentdate">04 Feb 10, 07:19:16</div><div class="commentbody">very nice work!</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1518">16</a></div><div class="commentauthor"><span style="color:#666666">Dhruv</span> writes:</div><div class="commentdate">04 Feb 10, 09:00:41</div><div class="commentbody">Why don't you use the OS VM and mmaped files as memory instead of implementing your own VM? For keys, you can have sticky memory maps (which will never be swapped). Create 2 custom allocators, one for the keys and one for the values, which allocate memory from the appropriate mmapped regions?</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1519">17</a></div><div class="commentauthor"><span style="color:#666666">antirez</span> writes:</div><div class="commentdate">04 Feb 10, 09:09:13</div><div class="commentbody"><span class="commenttarget">@Paul:</span> sorry I was not clear in my previous comment: what I mean is that Redis objects are made in stages. For instance Redis lists are composed of different LPUSH commands. You don't know beforehand how elements there will be in a list (and this changes over time), but you want that elements from the same list are allocated in the same page: so you need to pre-allocate *per object*.<br /><br />How much? At least a small multiple of 4096. Even if you pre-allocate 3 pages per object you still have just a single guaranteed &quot;whole&quot; page as you don't have alignment guarantees.<br /><br />It's worst than this. What about fragmentation? For instance in many applications there are Sets composed of many elements changing over time: you end with many pre-allocated blocks you can't free because there is a singe element inside.<br /><br />It's not viable at all in my opinion.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1520">18</a></div><div class="commentauthor"><span style="color:#666666">antirez</span> writes:</div><div class="commentdate">04 Feb 10, 09:12:03</div><div class="commentbody"><span class="commenttarget">@Dhruv:</span> many Redis objects are composed of sub-objects and change continuously.  The allocator should be object-aware, I should be able to tell, I need a new redisObject structure *near* this one.<br /><br />Also I've object sharing at many levels (even when shareobjects is disabled). The Redis VM is able to check all this, because it's user space. It is able to transfer objects on disk specially encoded to save a lot of space (10x is common!). And is a self-contained subsystem.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1521">19</a></div><div class="commentauthor"><span style="color:#666666">antirez</span> writes:</div><div class="commentdate">04 Feb 10, 09:12:40</div><div class="commentbody"><span class="commenttarget">@matt b:</span> thanks, fixing</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1522">20</a></div><div class="commentauthor"><span style="color:#666666">Dhruv</span> writes:</div><div class="commentdate">04 Feb 10, 09:17:42</div><div class="commentbody"><span class="commenttarget">@antirez:</span> Yes, the compression is a big plus in the manual approach.<br />As far as the locality is concerned, I agree with you. However, you can't now have a partial object in memory with manual VM. A value is either completely in memory or completely on disk. If a (size 100) linked list's head if accessed many more times, then the whole Linked List will be in memory if I understand correctly, or am I mistaken?</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1523">21</a></div><div class="commentauthor"><span style="color:#666666">antirez</span> writes:</div><div class="commentdate">04 Feb 10, 09:32:25</div><div class="commentbody"><span class="commenttarget">@Dhruv:</span> yes, I'm not supporting partial retrieving of objects for a few reasons I'll expose. It was a design decision because I may even implement it for Lists, and maybe the mmapped solution would more or less work with Lists *assuming* there is a way to solve the locality poblem, but what about sets, sorted sets, and hashes? This are currently implemented with an in-memory hash table, a few key lookups will scan many memory pages (also think at resizing of hash tables).<br /><br />But here are my arguments:<br /><br />Well let me trow in some number: a 10k elements list where every element is &quot;a&quot; is, serialized on disk, 20k, and in memory 1MB. To load a whole list from disk to memory requires very little I/O, and the whole VM concept is that you are trying to have the working set in mem and cache misses, especially of large values, should be rare.<br /><br />So my point is that for many aggregate objects composed even of 10k elements to read 20k from disk or a small string value is going to be more or less the same speed, and it is performed on an I/O thread.<br /><br />My second point is that OS VM *is blocking*!<br /><br />All clients are going to wait while Redis is swapping. And swapping 10 to 50 times the amonut of data, as you can see from my serialized/live 10k elements linked list.<br /><br />Finally, if you change the OS, you'll see different behaviors. This is going to be completely out of the control. Will the OS aging algorithm will be as good as our that has all the domain specific info?</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1524">22</a></div><div class="commentauthor"><span style="color:#666666">chh</span> writes:</div><div class="commentdate">04 Feb 10, 11:12:48</div><div class="commentbody">How about compressing data in-memory?</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1525">23</a></div><div class="commentauthor"><span style="color:#666666">Dhruv</span> writes:</div><div class="commentdate">04 Feb 10, 12:40:12</div><div class="commentbody"><span class="commenttarget">@antirez:</span> I think that compression is a big win with your approach. However, if you switch to the mmap() approach, you have just to ensure that all memory comes from the mmapped region. No re-coding required.<br />Yes, reads will block, and this might be a very bad thing as far as performance is concerned -- but only when the memory runs out.<br /><br />Linked Lists: Starting from the head (or tail considering a circular linked list), the boundary elements will be cached.<br /><br />Ordered Sets: I am assuming ordered sets are implemented as some sort of a binary tree. In this case, the nodes near the root will be in main memory.<br /><br />Hash Sets: The most accessed nodes will be in memory, and the corresponding bucket pointers as well. Yes, resize will touch all the bucket pointers, but not the data itself.<br /><br />Pros: Easy to code (this is an understatement!!), partial data structures present in memory, hence memory is optimally used (modulo fragmented values in data sturectures), easy on the CPU since no compression. Hence, you can use sendfile() to stream the data over the socket.<br /><br />Cons: Blocking on every I/O, no compression possible, will take up more space on disk, and hence more I/O time.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1526">24</a></div><div class="commentauthor"><span style="color:#666666">antirez</span> writes:</div><div class="commentdate">04 Feb 10, 13:56:53</div><div class="commentbody"><span class="commenttarget">@chh:</span> Redis already does it for integers. With strings it's also trivial but for now I'm not doing it as most of the strings are small enough to be impossible to compress with standard algorithms (so I developed one btw, called smaz, you can find more in my github page).<br /><br />When writing on disk we can compress much more for a reason: we lose the structure of data. A list or a set all become just a simple string consisting of elements with a separator. So there in memory it's not possible to compress the same way as you need the right connections and organization of data in order to ensure the expected time complexity.<br /><br /><span class="commenttarget">@Dhruv:</span> yes I see how there are good and bad things about the two different approaches, I just think that everything considered the user-land VM is the best compromise, at least for Redis. But for other kind of applications the best can be exactly the reverse, to build a vertical allocator or even simpler just using the OS paging, and I think this is the first approach to try. When there are no alternatives there is to implement an user-land VM that is indeed more complex but has its big advantages.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1527">25</a></div><div class="commentauthor"><span style="color:#666666">Dhruv</span> writes:</div><div class="commentdate">04 Feb 10, 15:09:26</div><div class="commentbody">Actually, I am looking to use redis for a persistence store for a message queue. Do you know if there is anyone using it in that way?</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1528">26</a></div><div class="commentauthor"><span style="color:#666666">antirez</span> writes:</div><div class="commentdate">04 Feb 10, 15:16:58</div><div class="commentbody"><span class="commenttarget">@Dhruv:</span> Resque! :) <a href="http://github.com/blog/542-introducing-resque" title="http://github.com/blog/542-introducing-resque" rel="nofollow">http://github.com/blog/542-introducing-resque</a><br /><br />Also check this: <a href="http://github.com/gleicon/restmq" title="http://github.com/gleicon/restmq" rel="nofollow">http://github.com/gleicon/restmq</a><br /><br />It is one of the top use cases for Redis.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1529">27</a></div><div class="commentauthor"><span style="color:#666666"><a href="http://code.google.com/p/servicestack/wiki/ServiceStackRedis">Demis Bellot</a></span> writes:</div><div class="commentdate">04 Feb 10, 15:38:15</div><div class="commentbody">Awesome work again antirez!<br /> - You are quickly eliminating any reasons for not using Redis.<br /><br />It is already the most versatile key-value store around and the best technology I've seen yet to come out of the NO-SQL movement.<br /><br />Keep up the good work!</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1530">28</a></div><div class="commentauthor"><span style="color:#666666">Dhruv</span> writes:</div><div class="commentdate">05 Feb 10, 04:26:11</div><div class="commentbody"><span class="commenttarget">@antirez:</span> Nice, resque looks good :)</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1541">29</a></div><div class="commentauthor"><span style="color:#666666"><a href="http://www.ashwinjayaprakash.com/">Ashwin Jayaprakash</a></span> writes:</div><div class="commentdate">24 Feb 10, 21:17:10</div><div class="commentbody">I may have misunderstood your explanation (very likely) but I thought I saw some similarities between your &quot;VM&quot; implementation and the problems explained here - <a href="http://varnish-cache.org/wiki/ArchitectNotes#Sowhatswrongwith1975programming" title="http://varnish-cache.org/wiki/ArchitectNotes#Sowhatswrongwith1975programming" rel="nofollow">http://varnish-cache.org/wiki/ArchitectNotes#Sowha...</a></div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1542">30</a></div><div class="commentauthor"><span style="color:#666666">antirez</span> writes:</div><div class="commentdate">24 Feb 10, 21:29:05</div><div class="commentbody"><span class="commenttarget">@Ashwin:</span> a very big part of the article is about why this can't be used for Redis ;)</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1544">31</a></div><div class="commentauthor"><span style="color:#666666">Joe</span> writes:</div><div class="commentdate">26 Feb 10, 18:58:15</div><div class="commentbody">Is there a way to get the 160 bytes per key down?  My actual keys are on average 15 bytes and the value is only 1 byte.  I have over 100 million records but using 16GB just for the keys is a killer.  currently using multiple cdb files.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1550">32</a></div><div class="commentauthor"><span style="color:#666666"><a href="http://www.catrionamackechnie.com/Catalog.asp?Subcat=245">mimi holliday</a></span> writes:</div><div class="commentdate">11 Mar 10, 15:43:45</div><div class="commentbody">I also want to know about what @Joe has asked. Can anyone answer this.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1551">33</a></div><div class="commentauthor"><span style="color:#666666">antirez</span> writes:</div><div class="commentdate">11 Mar 10, 15:49:50</div><div class="commentbody">Joe: mimi: Yes with 2.0 it is possible to use hashes to group different fields. This is 4 times more memory efficient or even more.<br /><br />Even when a user does not need hashes, still they can be used to setup a much more memory efficient setup. For instance insetad to set &quot;key:192&quot; and &quot;key194&quot; one can set &quot;key:19&quot; as hash with fields &quot;2&quot; and &quot;4&quot;, and so forth.<br /><br />I bet that once 2.0 is released we'll have many libs doing this automagically for you.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1618">34</a></div><div class="commentauthor"><span style="color:#666666"><a href="http://www.marisic.net">Chris Marisic</a></span> writes:</div><div class="commentdate">09 Apr 10, 23:22:22</div><div class="commentbody">Any ETA on the release of 2.0?</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1619">35</a></div><div class="commentauthor"><span style="color:#666666">antirez</span> writes:</div><div class="commentdate">10 Apr 10, 08:31:12</div><div class="commentbody">ETA for 2.0: probably mid June, but maybe mostly stable pre-releases will be available in mid May.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1624">36</a></div><div class="commentauthor"><span style="color:#666666">clara</span> writes:</div><div class="commentdate">14 Apr 10, 14:46:44</div><div class="commentbody">Great work, Antirez. Thanks! I look forward to play with REDIS in the next few days. I have been waiting for a key,value store that supports set operation for quite some time!<br />I have one confusion in my mind...<br />The second reason you gave for using your own VM scheme is that objects take less space in disk when using your scheme due to the fact that Redis does a very good job at encoding them. But when swapping to disk you are swapping pages. Are you doing encoding when swapping to disk??? I don't fully understand the reasoning here.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1661">37</a></div><div class="commentauthor"><span style="color:#666666"><a href="http://youdontknowwhatvirtualmemoryis.blogspot.com/">josh</a></span> writes:</div><div class="commentdate">04 Jun 10, 19:52:50</div><div class="commentbody">um...dude, i don't think you know what virtual memory is.  then again, most people don't.<br /><br /><a href="http://youdontknowwhatvirtualmemoryis.blogspot.com/" title="http://youdontknowwhatvirtualmemoryis.blogspot.com/" rel="nofollow">http://youdontknowwhatvirtualmemoryis.blogspot.com...</a></div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1662">38</a></div><div class="commentauthor"><span style="color:#666666">Navigatore Anonimo</span> writes:</div><div class="commentdate">04 Jun 10, 19:57:18</div><div class="commentbody"><span class="commenttarget">@josh:</span> as long as you know we feel pretty relaxed, as the bulwark of knowledge is in your hards.<br /><br />While I agree that the Redis VM is actually an implementation of &quot;paging&quot; , one of the main goals of virtual memory is to allow paging (even if there are many other goals). I bet that calling this feature of Redis &quot;paging&quot; would result in misunderstandings compared to &quot;Virtual Memory&quot;.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1663">39</a></div><div class="commentauthor"><span style="color:#666666">josh</span> writes:</div><div class="commentdate">04 Jun 10, 20:26:43</div><div class="commentbody">oh yeah, you're proly right.  i mean, the content of this blog covers memchached, threads, key-value pairs and all that - but whoa, paging vs. vm?  that's WAY too complicated to explain.<br /><br />so yeah, you're right - it's probably better to completely misuse a well defined technical term so that we make sure there is no &quot;misunderstandings&quot;.  good call navigatore.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1664">40</a></div><div class="commentauthor"><span style="color:#666666">antirez</span> writes:</div><div class="commentdate">04 Jun 10, 20:34:56</div><div class="commentbody"><span class="commenttarget">@josh:</span> this blog entry is for people who care about the implementation of Redis, but a big part of the audience has no idea at all about OS theory, CPUs MMU and so forth.<br /><br />Btw if we want to be very specific, either term is not 100% correct, as in some way it's virtual memory, and in some way is paging. It's an high level implementation of both.<br /><br />For instance, Redis takes an in-memory page table, that is similar to VM (but Redis PT only contains information about used/free pages). Instead the translation between &quot;virtual&quot; addresses and physical is implemented using &quot;VM pointer&quot; objects translating a pointer in memory to a pointer in the disk, so it's like if this &quot;virtual&quot; space is mapped to a physical page of memory that is somebody else (on disk).<br /><br />This looks pretty similar to VM to me.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1665">41</a></div><div class="commentauthor"><span style="color:#666666">josh</span> writes:</div><div class="commentdate">04 Jun 10, 20:56:17</div><div class="commentbody">um, whatever dude.  your blog is an exposition, and it failed to explain that paging is a common component of virtual memory systems, but virtual memory is not paging.<br /><br />just go fix your crap and carry on.  <br /><br />cheers.  :-)</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1667">42</a></div><div class="commentauthor"><span style="color:#666666">NoDoubt</span> writes:</div><div class="commentdate">16 Jun 10, 06:27:07</div><div class="commentbody">Josh--  No one cares about this nonsense.  In 1978 when we upgraded from a PDP-10 to a 20, it was great to get Segmented Virtual Memory.  But, all the Paged Virtual Memory systems were better and that is all there is now.  When there is one choice, the words no longer matter.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1678">43</a></div><div class="commentauthor"><span style="color:#666666">Nicolas</span> writes:</div><div class="commentdate">23 Jul 10, 14:50:17</div><div class="commentbody">Great article, the why information is very important to understand how things get implemented in the end.  Keep up the good work.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1680">44</a></div><div class="commentauthor"><span style="color:#666666">rafal98</span> writes:</div><div class="commentdate">24 Jul 10, 16:52:22</div><div class="commentbody">Redis appears to be amazing with lot of high level features. Anyway, concerning this topic on VM, I think that have keys mandatory in RAM is a real limitation. I usualy use some others nosql DB to store billions small records. Each records is about 20 to 40 bytes, but in your demonstration 1 billion keys means 160 GB. It's very expensive to have a computer with 160 GB ... (and my key is 16 bytes so it's probably more ram).<br /><br />Anyway, congratulation for this wonderfull free DB.<br /><br />Regards</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1681">45</a></div><div class="commentauthor"><span style="color:#666666">euhost</span> writes:</div><div class="commentdate">25 Jul 10, 20:29:50</div><div class="commentbody"><span class="commenttarget">@rafal98:</span> what other nosql DB do you use for your workload? thanks for sharing</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1682">46</a></div><div class="commentauthor"><span style="color:#666666">rafal98</span> writes:</div><div class="commentdate">05 Aug 10, 21:24:44</div><div class="commentbody">At the moment our product use a commercial DB: &quot;RDM&quot; from Birdstep (formerly Raima). It's a kind of graph DB with SQL layer if you need it. Index is only B+tree, no hash :( Redis appear to be very cool too</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1694">47</a></div><div class="commentauthor"><span style="color:#666666">Danny Chin</span> writes:</div><div class="commentdate">31 Aug 10, 05:12:19</div><div class="commentbody">I do agree with Rafal98. For a user base of 500m having 100k object (let say a facebook clone) will require 50,000 Giga Keys which will transform into USD300m for RAM alone or USD billions of dollars if we includes additional availability,scalability and machine hardware for the RAM facility. It is probably not only dollars but wheather it is cost effective to do so because not all objects are hotspot. eg. Probably not many people will want to read your long outdated posts. <br /><br />    I guess, beside the values, swapping out the key or expire the key and later load it back is inevitable for this scenario. Then this will go back to memcached+datastore strategy. But Redis is already has a persisted datastore, it can be made into used rather than having duplicate datastore for &quot;Key Expiring/Swapping/Loading&quot; operation. Anyway, no offense, just some idea.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1924">48</a></div><div class="commentauthor"><span style="color:#666666">wholesale designer clothing</span> writes:</div><div class="commentdate">19 Nov 10, 08:25:02</div><div class="commentbody">&lt;a href=&quot;<a href="http://www.withthesale.com/&quot" title="http://www.withthesale.com/&quot" rel="nofollow">http://www.withthesale.com/&quot</a>;&gt;True Religion Jeans&lt;/a&gt;<br /><br />My friendS told me that this blog is competitive.  i will continue to read.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1925">49</a></div><div class="commentauthor"><span style="color:#666666">cheap fashion clothes</span> writes:</div><div class="commentdate">19 Nov 10, 08:25:31</div><div class="commentbody"><a href="http://www.belowbulk.com" title="http://www.belowbulk.com" rel="nofollow">http://www.belowbulk.com</a><br /><br />&lt;a href=&quot;<a href="http://www.belowbulk.com/&quot" title="http://www.belowbulk.com/&quot" rel="nofollow">http://www.belowbulk.com/&quot</a>;&gt;clothing for sale&lt;/a&gt;<br /><br />I have never read such a wonderful article and I am coming back tomorrow to continue</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1926">50</a></div><div class="commentauthor"><span style="color:#666666">cheap designer clothing</span> writes:</div><div class="commentdate">19 Nov 10, 08:26:10</div><div class="commentbody">&lt;a href=&quot;<a href="http://www.belowbulk.com/&quot" title="http://www.belowbulk.com/&quot" rel="nofollow">http://www.belowbulk.com/&quot</a>;&gt;clothing for sale&lt;/a&gt;<br /><br />The article is worth reading, I like it very much. I will keep your new articles.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1927">51</a></div><div class="commentauthor"><span style="color:#666666">wholesale designer clothes</span> writes:</div><div class="commentdate">19 Nov 10, 08:26:36</div><div class="commentbody">&lt;a href=&quot;<a href="http://www.wholesaleexport.net/&quot" title="http://www.wholesaleexport.net/&quot" rel="nofollow">http://www.wholesaleexport.net/&quot</a>;&gt;fashion clothes&lt;/a&gt;<br /><br />These information helps me consider some useful things, keep up the good work.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1928">52</a></div><div class="commentauthor"><span style="color:#666666">wholesale designer handbags</span> writes:</div><div class="commentdate">19 Nov 10, 08:26:53</div><div class="commentbody">&lt;a href=&quot;<a href="http://www.wholesalebulksite.com/&quot" title="http://www.wholesalebulksite.com/&quot" rel="nofollow">http://www.wholesalebulksite.com/&quot</a>;&gt;coach handbags&lt;/a&gt;<br /><br />This article is informative and interesting,I enjoy reading it.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment0">
+<div class="commentnum"><a name="c1929">53</a></div><div class="commentauthor"><span style="color:#666666">wholesale jordan shoes</span> writes:</div><div class="commentdate">19 Nov 10, 08:27:11</div><div class="commentbody">&lt;a href=&quot;<a href="http://www.chinabulksite.com/&quot" title="http://www.chinabulksite.com/&quot" rel="nofollow">http://www.chinabulksite.com/&quot</a>;&gt;new jordan shoes&lt;/a&gt;<br /><br />I really like this website , and hope you will write more ,thanks a lot for your information.</div>
+<div class="commentinfo"></div>
+</div>
+<div class="comment comment1">
+<div class="commentnum"><a name="c1930">54</a></div><div class="commentauthor"><span style="color:#666666">authentic air jordans</span> writes:</div><div class="commentdate">19 Nov 10, 08:27:29</div><div class="commentbody">&lt;a href=&quot;<a href="http://www.airjordani.com/&quot" title="http://www.airjordani.com/&quot" rel="nofollow">http://www.airjordani.com/&quot</a>;&gt;cheap jordan shoes&lt;/a&gt;<br /><br />This is a really quality post.I find this information through Google. Great job.</div>
+<div class="commentinfo"></div>
+</div>
+
+<form id="f" method="post" action="http://antirez.com/addblogcomment.php" onsubmit="return sillyCheck()">
+<div id="postcomment">
+<b>Send a comment</b><br/><br/>
+<table>
+<tr>
+<td>name</td>
+<td><input type="text" name="name" size="50" value="" /></td>
+</tr>
+<tr>
+<td valign="top">comment body</td>
+<td><textarea name="body" rows="5" cols="55"></textarea></td>
+</tr>
+<tr>
+<td colspan="2">Write <b>limone</b> here if you are human -&gt;
+<input type="text" name="silly" size="6" value="" /><img style="vertical-align: bottom;" src="limone.png" alt="citrix antispam" /> <small style="color:#666666;">citrix antispam</small></td>
+</tr>
+<tr>
+<td colspan="2" align="right">
+<input type="submit" name="doit" value="Send comment" />
+</td>
+</tr>
+</table>
+<input type="hidden" name="postid" value="203" />
+</div>
+</form>
+
+<script type="text/javascript">
+function sillyCheck() {
+    var f = document.getElementById('f');
+    if (f.silly.value != "limone") {
+        alert("You must write 'limone' where specified!");
+        return false;
+    }
+    return true;
+}
+</script>
+
+</div>
+<div id="footer">
+<div class="infoboxdiv">
+<h3>PROGRAMMING AND WEB</h3>
+<div id="about">
+Welcome, this blog is about programming, web, open source projects I develop, and rants I love to share from time to time. From the point of view of a programmer that loves to define himself a craftsman.
+</div>
+</div>
+
+<div class="infoboxdiv">
+<h3>HOT ARTICLES</h3>
+<ul><li><a href="http://antirez.com/post/what-is-wrong-with-2006-programming.html">What's wrong with 2006 programming?</a></li>
+<li><a href="http://antirez.com/post/redis-memcached-benchmark.html">On Redis, Memcached, Speed, Benchmarks and The Toilet</a></li>
+<li><a href="http://antirez.com/post/autocomplete-with-redis.html">Auto Complete with Redis</a></li>
+<li><a href="http://antirez.com/post/a-few-key-problems-in-redis-persistence.html">A few key problems in Redis persistence</a></li>
+<li><a href="http://antirez.com/post/redis-as-LRU-cache.html">Redis as an LRU cache</a></li>
+<li><a href="http://antirez.com/post/fsync-different-thread-useless.html">fsync() on a different thread: apparently a useless trick</a></li>
+<li><a href="http://antirez.com/post/update-on-memcached-redis-benchmark.html">An update on the Memcached/Redis benchmark</a></li>
+<li><a href="http://antirez.com/post/vmware-the-new-redis-home.html">VMware: the new Redis home</a></li>
+<li><a href="http://antirez.com/post/redis-weekly-update-7.html">Redis weekly update #7 - Full of keys</a></li>
+<li><a href="redis-virtual-memory-story.html">Redis Virtual Memory: the story and the code</a></li>
+</ul><a href="http://antirez.com/topposts.php"><strong>&raquo; full listing</strong></a>
+</div>
+
+<div class="infoboxdiv">
+<h3>NEWSLETTER</h3>
+<form style="padding:3px;" action="http://www.feedburner.com/fb/a/emailverify" method="post"><p>It's possible to receive new posts in your mailbox writing your email address and hitting the <i>subscribe</i> button:</p><p><input type="text" style="width:140px" name="email"/><input type="hidden" value="http://feeds.feedburner.com/~e?ffid=844731" name="url"/><input type="hidden" value="antirez weblog" name="title"/><input type="submit" value="Subscribe" /></p><p>Delivered by <a href="http://www.feedburner.com">FeedBurner</a></p></form>
+</div>
+
+
+<!--
+<div class="infoboxdiv">
+<h3 title="ordine inverso alla data di inserimento">BLOG LIST</h3>
+<ul>
+<li><a href="http://hatingline.splinder.com/">Hatingline</a></li>
+<li><a href="http://riffraff.blogsome.com/">PDI^2</a></li>
+<li><a href="http://pollycoke.wordpress.com/">Pollycoke</a></li>
+<li><a href="http://exploit.blogosfere.it/">Exploit</a></li>
+<li><a href="http://lenergia.net/">Blog su energia e fonti rinnovabili</a></li>
+</ul>
+</div>
+-->
+<form method="post" action="http://antirez.com/sendfeedbacks.php" id="fb" onsubmit="return feedbacks()">
+<div id="feedbacks">
+Send me a feedback:
+<select name="fbsubject">
+<option>I wish to see an article about</option>
+<option>You can improve your blog by doing...</option>
+<option>antirez, I want to tell you...</option>
+<option>Instead to write this crap go to...</option>
+</select>
+<input type="hidden" name="fbrealvalue" value="" />
+<input type="text" name="fbvalue" size="15" />
+<input type="submit" name="doit" value="send" />
+</div>
+</form>
+<div id="copyright">Copyright (C) 2006-2010 Salvatore Sanfilippo - <a href="http://validator.w3.org/check?uri=referer">Valid xhtml strict</a> -
+<a href="http://antirez.com/m">mobile edition</a></div>
+</div>
+<script src="http://embed.technorati.com/linkcount" type="text/javascript"></script>
+<script type="text/javascript"><!--
+lloogg_clientid = "20bb9c026e";
+//--></script>
+<script type="text/javascript" src="http://lloogg.com/l2.js"></script>
+</body>
+</html>

@@ -10,11 +10,11 @@ W tym rozdziale opisane zostaną dwie bazy klucz-wartość: Redis i Riak.
 \subsection*{Wstęp} 
 
 Redis jest jedną z najbardziej popularnych baz NoSQL.
-Swoją popularność zawdzięcza on niezwykle bogatemu jak na bazę typu klucz-wartość API, oraz bardzo dużej wydajności.
+Swoją popularność zawdzięcza on niezwykle bogatemu jak na bazę typu klucz-wartość API, oraz bardzo dużej wydajności\footnote{Wraz z instalacją systemu dostępne jest narzędzie redis-benchmark, które to dla komputera klasy PC pokazało wydajność ponad 140 tysięcy operacji GET i SET na sekundę.}.
 Bardzo często system ten jest wykorzystywany w aplikacjach internetowych równolegle z relacyjnymi bazami danych, najczęściej jako kolejka zadań albo w zastępstwie Memcached jako cache oraz baza, w której przechowywana jest sesja użytkownika.
 
 Mimo, że jest on klasyfikowany jako baza typu klucz-wartość, Redis nie jest horyzontalnie skalowalny.
-Nie jest to zazwyczaj bardzo dużym problemem, ponieważ Redis jest w większości przypadków wystarczająco wydajny, aby jeden węzeł był w stanie obsłużyć wszystkie zapytania generowane przez aplikację.
+Nie jest to zazwyczaj bardzo dużym problemem, ponieważ Redis jest w większości przypadków wystarczająco wydajny aby jeden węzeł był w stanie obsłużyć wszystkie zapytania generowane przez aplikację.
 
 \subsection*{Protokół komunikacji}
 
@@ -39,6 +39,10 @@ Rozwiązanie takie pozwala na zwiększenie wydajności.
 Redis nie obsługuje partycjonowania w wersji 2.0.
 Niektóre biblioteki pozwalają wprawdzie na implementację partycjonowania po stronie klienta, ale są to bardzo prymitywne rozwiązania, które nie mogą w żaden sposób konkurować z partycjonowaniem po stronie serwera, jakie jest zaimplementowane np. w omawianym w kolejnym rozdziale systemie Riak.
 
+W przypadku systemów typu klucz-wartość samodzielna implementacja partycjonowania i replikacji kluczy jest zazwyczaj najprostsza z pośród wszystkich typów nierelacyjnych baz danych.
+Redis jednak obsługuje złożone typy danych, których wielkość dla pojedynczego klucza może potencjalnie przekroczyć wielkość dostępnej pamięci RAM, a których nie da się w żaden prosty sposób podzielić na wiele węzłów.
+Dlatego dopóki nie zostanie zaimplementowany \emph{Redis Cluster}, systemowi temu będzie daleko do konkurencji pod względem skalowalności.
+
 \subsubsection*{Redis Cluster}
 
 W planach jest implementacja tak zwanego \emph{Redis Cluster}, który pozwoli na horyzontalne skalowanie systemu poprzez replikację i partycjonowanie danych.
@@ -50,21 +54,36 @@ W systemie będą występować cztery rodzaje węzłów:
  Skalowanie systemu odbywa się poprzez zwiększanie liczby tych węzłów.
 
  \item[Configuration Node] (węzeł konfiguracyjny) - węzeł przechowujący metadane o całym systemie, takie jak listy \emph{Data Node} i \emph{Proxy Node}.
- W razie awarii tego węzła, system wprawdzie nie zaprzestaje normalnej pracy, ale nie jest w stanie obsłużyć sytuacji awaryjnych takich jak awaria innego węzła.
- Ten węzeł tylko przechowuje dane konfiguracyjne, węzłem odpowiedzialnym za ich obsługę jest Handling Node.
+ W razie awarii tego węzła, system wprawdzie nie zaprzestaje normalnej pracy, ale nie jest w stanie obsłużyć sytuacji wyjątkowych takich jak awaria innego węzła.
+ Ten węzeł tylko przechowuje dane konfiguracyjne, węzłem odpowiedzialnym za ich obsługę jest \emph{Handling Node}.
 
  \item[Proxy Node] (węzeł proxy) - węzły odpowiedzialne za koordynację zapytań w systemie.
  Zapytania w systemie są zawsze kierowane do węzłów Proxy, które przekazują je następnie do jednego (w przypadku odczytów) lub wszystkich (w przypadku operacji zmieniających dane) węzłów, na których odpowiednie rekordy są zapisane.
- Awarie są wykrywane przez Proxy Node i informacja o nich jest zapisywana w węźle konfiguracyjnym.
+ Awarie są wykrywane przez \emph{Proxy Node} i informacja o nich jest zapisywana w węźle konfiguracyjnym.
 
  \item[Handling Node] (węzeł zarządzający) - to klient, który obsługuje dane zapisane w węźle konfiguracyjnym.
  Zajmuje się on zmianą przydziału zakresów kluczy do węzłów w razie dodania lub usunięcia węzła, lub jego awarii.
- Najczęściej Handling Node i Configuration Node są umieszczone na tym samym fizycznym węźle.
+ Najczęściej \emph{Handling Node} i \emph{Configuration Node} powinny być umieszczone na tym samym fizycznym węźle.
 \end{description}
 
 \subsection*{Persystencja}
 
-Persystencja
+\subsubsection*{Snapshotting}
+
+Redis zawdzięcza swoją szybkość temu, że zarówno operacje zapisu, jak i operacje odczytu nie muszą operować na danych zapisanych na dysku twardym, tylko na danych w pamięci RAM.
+Domyślnie Redis pracuje w trybie zapisywania zrzutów aktualnego stanu (ang. \emph{snapshotting}) co pewien czas w zależności od liczby wykonanych operacji.
+Typową konfiguracją w tej opcji jest zapis danych na dysk co 60 sekund jeżeli zostało dokonanych przynajmniej 100 zmian, albo do 1000 sekund, jeżeli została wykonana co najmniej jedna zmiana.
+
+\subsubsection*{Append Only File}
+
+Alternatywą dla periodycznego zrzucania stanu bazy na dysk jest \emph{Append Only File} (plik tylko do dopisywania).
+Technika ta polega na dopisywaniu zmian w bazie na koniec pliku, przypominającego dziennik transakcji.
+Przy starcie systemu plik ten jest odczytywany i zmiany w nim zawarte są aplikowane po kolei aby przywrócić stan bazy.
+Oczywiście plik ten rośnie z czasem, co powoduje także wydłużenie czasu startu systemu, dlatego dostępna jest komenda służąca do przepisania pliku z postaci dziennika do postaci zrzutu bazy - pozwala to zaoszczędzić miejsce na dysku i znacznie przyspieszyć start systemu.
+
+W przypadku \emph{Append Only File} domyślnie dane są zapisywane na dysk co sekundę przy pomocy wywołania systemowego \verb+fsync()+, które gwarantuje że dane zostaną zapisane na dysku.
+Alternatywnie możliwe jest wywołanie \verb+fsync()+ po każdej modyfikującej operacji, ale obija się to tak bardzo negatywnie na wydajności, że nie jest to zalecana konfiguracja.
+Można także skonfigurować Redis tak, aby nigdy sam nie dokonywał operacji \verb+fsync()+ i powierzył odpowiedzialność za regularne zapisywanie danych na dysk systemowi operacyjnemu, co zwiększa wydajność kosztem bezpieczeństwa danych.
 
 \subsection*{Wersjonowanie}
 
@@ -77,6 +96,19 @@ Wyszukiwanie
 \subsection*{Unikalne cechy}
 
 Unikalne cechy
+
+\subsubsection*{Pamięć Wirtualna}
+
+Redis jest przeznaczony do pracy ze zbiorami danych, które w całości mieszczą się w pamięci operacyjnej serwera.
+Ponieważ jednak w rzeczywistości często występują zbiory danych, których nie da się zmieścić w pamięci RAM, ale których niektóre fragmenty są odczytywane i zapisywane dużo częściej niż inne, Redis implementuje własną wersję pamięci wirtualnej.
+
+Bardzo często pada pytanie dlaczego Redis implementuje coś, co jest już zaimplementowane w systemie operacyjnym.
+Szeroko odpowiada na to artykuł na blogu autora tej bazy \cite{antirez-redis-vm}.
+Jedną z zalet własnej implementacji jest to, że pozwala to na stronicowanie na poziomie rekordów, podczas gdy system operacyjny operuje na poziomie stron pamięci, które mogą zawierać zarówno często, jak i rzadko używane rekordy.
+Inną zaletą jest to, że rekord zapisany na dysku nie musi mieć identycznej postaci jak w pamięci.
+Poprzez nie zapisywanie metadanych i różnych wskaźników, zapisywane rekordy mogą zajmować na dysku 10 razy mniej miejsca niż w pamięci operacyjnej.
+Zaletą nie wymienioną przez autora jest to, że kiedy korzystamy z wirtualnej pamięci, ustalony zostaje maksymalny rozmiar pamięci zajmowanej przez system.
+Dzięki temu Redis może koegzystować na jednej maszynie z innymi aplikacjami takimi jak serwer aplikacyjny i nie konkurować z nimi o RAM.
 
 \subsection*{Typowe zastosowania}
 
