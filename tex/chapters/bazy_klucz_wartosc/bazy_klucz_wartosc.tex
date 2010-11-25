@@ -87,13 +87,68 @@ Można także skonfigurować Redis tak, aby nigdy sam nie dokonywał operacji \v
 
 \subsection*{Wersjonowanie}
 
-Wersjonowanie
+Redis nie posiada mechanizmu wersjonowania rekordów - dla klucza jest przechowywana tylko jego aktualna wartość i nie ma identyfikatorów wersji.
+System ten jednak obsługuje transakcje (operacja \verb+MULTI+) oraz komendę \verb+WATCH+, które pozwalają na uniknięcie przypadkowego nadpisania rekordu.
+
+\subsubsection*{Zmiana rekordu bez użycia MULTI i WATCH}
+
+\begin{enumerate}
+ \item Klienci A oraz B odczytują wartość klucza (\verb+GET nazwa_klucza+)
+ \item Klienci A oraz B przetwarzają otrzymaną wartość klucza i zmienia ją
+ \item Klient A zapisuje nową wartość dla klucza (\verb+SET nazwa_klucza nowa_wartosc1+)
+ \item Klient B zapisuje nową wartość dla klucza (\verb+SET nazwa_klucza nowa_wartosc2+) nadpisując tym samym zmiany dokonane przez klienta A.
+\end{enumerate}
+
+\subsubsection*{Zmiana rekordu z użyciem transakcji}
+
+\begin{enumerate}
+ \item Klienci A oraz B oznaczają klucz jako obserwowany (\verb+WATCH nazwa_klucza+)
+ \item Klienci A oraz B odczytują wartość klucza (\verb+GET nazwa_klucza+)
+ \item Klienci A oraz B przetwarzają otrzymaną wartość klucza i zmienia ją
+ \item Klienci A oraz B rozpoczynają transakcję w celu zapisania nowej wartości (\verb+MULTI+)
+ \item Klient A zapisuje nową wartość dla klucza (\verb+SET nazwa_klucza nowa_wartosc1+)
+ \item Klient B zapisuje nową wartość dla klucza (\verb+SET nazwa_klucza nowa_wartosc2+)
+ \item Klient A kończy transakcję (\verb+EXEC+) - transakcja kończy się powodzeniem
+ \item Klient B kończy transakcję (\verb+EXEC+) - transakcja kończy się niepowodzeniem, ponieważ klient A zmodyfikował obserwowany klucz.
+ Zmiana dokonana przez klienta B jest wycofana.
+ \item Klient B musi wykonać całą operację od początku, odczytując tym samym wartość zapisaną przez klienta A.
+\end{enumerate}
+
 
 \subsection*{Wyszukiwanie}
 
-Wyszukiwanie
+Redis implementuje operacje na kilku różnych strukturach danych.
+Wyróżnia go to spośród innych systemów typu klucz-wartość, sprawiając że jest on tym samym o wiele łatwiejszy w użyciu i wymaga mniej pracy od programisty.
+
+Podobnie jak inne systemy typu klucz-wartość Redis nie udostępnia możliwości indeksowania zapisanych wartości, ale samodzielne tworzenie takich indeksów jest nieco ułatwione dzięki istnieniu takich struktur danych jak zbiór czy lista.
+
+\subsubsection*{Obsługiwane struktury danych}
+
+\begin{description}
+ \item[Ciąg znaków] - jest to podstawowa struktura danych.
+ Dostępne są między innymi operacje odczytujące i zapisujące wartość dla klucza, oraz (nietypowo) operacje pozwalające na dopisanie ciągu znaków na koniec klucza oraz na odczytanie jedynie jego fragmentu.
+
+ \item[Lista] - pozwala na zapisanie sekwencji wartości.
+ Możliwe jest atomowe dodanie wartości na początek bądź koniec listy oraz atomowe pobranie wartości z początku lub końca.
+ Dostępna jest także blokująca wersja pobrania wartości.
+ Listy są bardzo przydatne do implementacji kolejek zadań.
+ Stosuje się je także do łączenia wielu rekordów w kolekcje (zapisując ich klucze na liście), ale warto pamiętać, że stronicowanie takiego zbioru ma złożoność liniową do wielkości listy, więc powinno się go raczej unikać.
+
+ \item[Zbiór] - umożliwia wykonywania operacji na zbiorach (sprawdzenie członkostwa elementu, suma, przecięcie, różnica).
+ Możliwe jest pobranie jednego, losowego elementu, albo wszystkich elementów zbioru.
+
+ \item[Posortowany Zbiór] - umożliwia zapisanie posortowanej sekwencji wartości.
+ Możliwe jest wykonanie przecięcia i sumy, ale nie różnicy posortowanych zbiorów.
+ Możliwe jest także, podobnie jak dla list, stronicowanie zbioru.
+
+ \item[Tablica mieszająca] - często rekordy w Redisie są zapisywane w taki sposób, że kluczowi identyfikującemu rekord przypisujemy wartość, którą jest obiekt, zserializowany, np. do formatu JSON.
+ Jest to akceptowalne, jeżeli zawsze chcemy odczytywać rekordy w całości, ale jeżeli rekord jest duży, a potrzebne jest nam tylko kilka jego pól, to lepiej każde z nich zapisać pod osobnym kluczem.
+ Tablica mieszająca jest strukturą, która optymalizuje właśnie to zastosowanie.
+\end{description}
 
 \subsection*{Unikalne cechy}
+
+\subsubsection*{Publish-Subscribe}
 
 Unikalne cechy
 
@@ -107,7 +162,7 @@ Szeroko odpowiada na to artykuł na blogu autora tej bazy \cite{antirez-redis-vm
 Jedną z zalet własnej implementacji jest to, że pozwala to na stronicowanie na poziomie rekordów, podczas gdy system operacyjny operuje na poziomie stron pamięci, które mogą zawierać zarówno często, jak i rzadko używane rekordy.
 Inną zaletą jest to, że rekord zapisany na dysku nie musi mieć identycznej postaci jak w pamięci.
 Poprzez nie zapisywanie metadanych i różnych wskaźników, zapisywane rekordy mogą zajmować na dysku 10 razy mniej miejsca niż w pamięci operacyjnej.
-Zaletą nie wymienioną przez autora jest to, że kiedy korzystamy z wirtualnej pamięci, ustalony zostaje maksymalny rozmiar pamięci zajmowanej przez system.
+Zaletą nie wymienioną przez autora jest to, że kiedy korzystamy z wirtualnej pamięci, ustalony zostaje maksymalny rozmiar pamięci zajmowanej przez system\footnote{Opcja ta może być włączona także bez włączania pamięci wirtualnej, ale włączenie jej w takiej sytuacji może prowadzić do zrywania połączeń z klientami a nawet utraty danych.}.
 Dzięki temu Redis może koegzystować na jednej maszynie z innymi aplikacjami takimi jak serwer aplikacyjny i nie konkurować z nimi o RAM.
 
 \subsection*{Typowe zastosowania}
