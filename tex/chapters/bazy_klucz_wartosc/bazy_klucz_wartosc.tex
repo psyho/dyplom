@@ -114,7 +114,6 @@ System ten jednak obsługuje transakcje (operacja \verb+MULTI+) oraz komendę \v
  \item Klient B musi wykonać całą operację od początku, odczytując tym samym wartość zapisaną przez klienta A.
 \end{enumerate}
 
-
 \subsection*{Wyszukiwanie}
 
 Redis implementuje operacje na kilku różnych strukturach danych.
@@ -127,6 +126,7 @@ Podobnie jak inne systemy typu klucz-wartość Redis nie udostępnia możliwośc
 \begin{description}
  \item[Ciąg znaków] - jest to podstawowa struktura danych.
  Dostępne są między innymi operacje odczytujące i zapisujące wartość dla klucza, oraz (nietypowo) operacje pozwalające na dopisanie ciągu znaków na koniec klucza oraz na odczytanie jedynie jego fragmentu.
+ Możliwe jest także określenie czasu życia klucza, po którym może on zostać przez system usunięty.
 
  \item[Lista] - pozwala na zapisanie sekwencji wartości.
  Możliwe jest atomowe dodanie wartości na początek bądź koniec listy oraz atomowe pobranie wartości z początku lub końca.
@@ -148,9 +148,17 @@ Podobnie jak inne systemy typu klucz-wartość Redis nie udostępnia możliwośc
 
 \subsection*{Unikalne cechy}
 
+Redis posiada wiele funkcjonalności, które go wyróżniają na tle innych systemów typu klucz-wartość.
+Wśród nich poczesne miejsce zajmuje na pewno opisana wcześniej obsługa różnych typów danych, ale można do nich zaliczyć także mechanizm obsługi zdarzeń (Publish-Subscribe) oraz implementacja pamięci wirtualnej wewnątrz systemu, bez polegania na funkcjonalności systemu operacyjnego.
+
 \subsubsection*{Publish-Subscribe}
 
-Unikalne cechy
+W ostatnich latach aplikacje internetowe coraz częściej uaktualniają zawartość strony bez potrzeby odświeżenia jej przez użytkownika.
+Często potrzebne jest aby takie aktualizacje były dostarczane do klienta w czasie niemal rzeczywistym (na przykład Google Wave pokazuje użytkownikowi tekst wpisywany przez innych użytkowników litera po literze).
+W takich przypadkach mechanizm obsługi zdarzeń ma największe zastosowanie.
+Mechanizm ten, nazywany również wzorcem Publish-Subscribe, polega na tym, że klienci mogą zapisywać się na otrzymywanie zdarzeń publikowanych w określonych kanałach.
+Dzięki istnieniu takich kanałów, zapisani na zdarzenia nie muszą wiedzieć o publikujących i vice versa.
+Natomiast dzięki temu, że zapisani na zdarzenia są o ich zajściu informowani bezpośrednio po fakcie, nie jest konieczne regularne odpytywanie serwera, co zmniejsza jego obciążenie, oraz skraca okres czasu pomiędzy zajściem zdarzenia a pokazaniem jego efektów użytkownikowi.
 
 \subsubsection*{Pamięć Wirtualna}
 
@@ -167,19 +175,39 @@ Dzięki temu Redis może koegzystować na jednej maszynie z innymi aplikacjami t
 
 \subsection*{Typowe zastosowania}
 
-Typowe zastosowania
+Dzięki temu, że Redis posiada obsługę list z atomową i blokującą operacją pobrania pierwszego lub ostatniego elementu listy, system ten jest powszechnie wykorzystywany do przechowywania kolejek zadań.
+Wykorzystując posortowane zbiory i mechanizm opisany w sekcji ,,Wersjonowanie'', możliwa jest także implementacja kolejek priorytetowych.
+
+Ze względu na bardzo dużą wydajność oraz możliwość określania czasu życia kluczy Redis jest także wykorzystywany często jako cache dla aplikacji internetowych.
+
+Redis nie jest często wykorzystywany jako podstawowa baza danych, ale zdobył on popularność wśród twórców gier internetowych, gdzie jego stosunkowo prosty model danych nie jest przeszkodą, a wydajność jest bardzo dużą zaletą.
 
 \subsection*{Przeciwwskazania}
 
-Przeciwwskazania
+Redis został stworzony z myślą o zbiorach danych, które można pomieścić w pamięci operacyjnej serwera, dlatego (mimo istnienia pamięci wirtualnej) nie jest zalecane stosowanie tego systemu w połączeniu z bardzo dużymi zbiorami danych.
+Jedną z podstawowych zalet tego systemu jest duża wydajność, którą traci on całkowicie jeżeli zastosowany zostanie Append Only File z opcją zapisu na dysk po każdej transakcji.
+W związku z tym, jeżeli ryzyko utraty danych z ostatniej sekundy przed awarią jest nie do przyjęcia, Redis nie jest najlepszym rozwiązaniem w takim przypadku.
 
 \subsection*{Dokumentacja i wsparcie}
 
-Dokumentacja i wsparcie
+Dokumentacja Redisa jest na bardzo wysokim poziomie.
+Każda komenda jest dobrze opisana (włączając w to opis złożoności obliczeniowej), a ponadto rozwiązania takie jak transakcje, Publish-Subscribe czy pamięć wirtualna są opisane w osobnych artykułach, najczęściej z przykładami.
+W internecie można znaleźć wiele przykładów zastosowania Redisa i bibliotek na licencji open source, które z niego korzystają, co ułatwia lepsze poznanie tego systemu.
+
+Redis został stworzony i jest rozwijany przez Salvatore Sanfilippo, a od niedawna jego rozwój jest sponsorowany przez firmę VMWare.
 
 \subsection*{Pomocne odnośniki}
  
-Pomocne odnośniki
+Poniżej zamieszczono kilka odnośników do stron WWW związanych z Redisem.
+
+\begin{description}
+ \item [http://code.google.com/p/redis/] - strona domowa projektu
+ \item [http://code.google.com/p/redis/wiki/CommandReference] - spis wszystkich komend
+ \item [http://retwis.antirez.com/] - klon Twittera korzystający z Redisa
+ \item [http://ohm.keyvalue.org/] - strona domowa biblioteki Ohm (odpowiednik ORM dla Redisa)
+ \item [http://www.rediscookbook.org/] - Redis Cookbook, opis rozwiązań niektórych typowych problemów
+ \item [https://github.com/defunkt/resque] - popularna implementacja kolejki zadań stworzona na potrzeby serwisu GitHub
+\end{description}
 
 \section{Riak}
 \label{sec:riak}
