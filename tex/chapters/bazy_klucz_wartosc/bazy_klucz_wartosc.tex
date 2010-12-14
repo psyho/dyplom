@@ -12,6 +12,7 @@ W tym rozdziale opisane zostaną dwie bazy klucz-wartość: Redis i Riak.
 Redis jest jedną z najbardziej popularnych baz NoSQL.
 Swoją popularność zawdzięcza on niezwykle bogatemu jak na bazę typu klucz-wartość API, oraz bardzo dużej wydajności\footnote{Wraz z instalacją systemu dostępne jest narzędzie redis-benchmark, które to dla komputera klasy PC pokazało wydajność ponad 140 tysięcy operacji GET i SET na sekundę.}.
 Bardzo często system ten jest wykorzystywany w aplikacjach internetowych równolegle z relacyjnymi bazami danych, najczęściej jako kolejka zadań albo w zastępstwie Memcached jako cache oraz baza, w której przechowywana jest sesja użytkownika.
+System ten jest dostępny za darmo na licencji open source (New BSD License).
 
 Mimo, że jest on klasyfikowany jako baza typu klucz-wartość, Redis nie jest horyzontalnie skalowalny.
 Nie jest to zazwyczaj bardzo dużym problemem, ponieważ Redis jest w większości przypadków wystarczająco wydajny aby jeden węzeł był w stanie obsłużyć wszystkie zapytania generowane przez aplikację.
@@ -214,31 +215,102 @@ Poniżej zamieszczono kilka odnośników do stron WWW związanych z Redisem.
 
 \subsection*{Wstęp} 
 
-Wstęp
+Riak jest napisaną w Erlangu, dopiero zdobywającą popularność bazą typu klucz-wartość, która mocno bazuje na opisanych w artykule o Amazon Dynamo technikach (patrz strona \pageref{sec:dynamo-techniki}).
+System ten jest dostępny w dwóch wersjach: darmowej na licencji open source (Apache License 2.0), oraz rozszerzonej, płatnej wersji o nazwie Riak Enterprise DS.
+
+Niniejszy rozdział nie zagłębia się w opisane już techniki, tylko zamiast tego opisuje szczegóły, które nie występują w Dynamo, a zostały zaimplementowane na potrzeby Riaka.
 
 \subsection*{Protokół komunikacji}
 
-Protokół komunikacji
+Riak obsługuje trzy protokoły komunikacji - natywny w Erlangu\footnote{Erlang jest językiem, który bardzo dobrze obsługuje komunikację między procesową w środowisku rozproszonym (praktycznie bez różnicy czy procesy są częścią tego samego procesu systemu operacyjnego, czy znajdują się na różnych maszynach) - ten klient wykorzystuje właśnie ten protokół komunikacji.}, interfejs REST po HTTP (wewnętrznie używający klienta w Erlangu) oraz interfejs w technologii Protocol Buffers\footnote{Protocol Buffers jest technologią serializacji i definicji interfejsu RPC opublikowaną przez Google w 2008 roku i używaną wewnętrznie w wielu projektach tej firmy. Więcej szczegółów jest dostępnych na stronie domowej projektu http://code.google.com/p/protobuf/}.
+Większość bibliotek wykorzystuje PBC (Protocol Buffers Client) do komunikacji z Riakiem, ze względu na przewagę jaką ten protokół ma pod względem wydajności nad HTTP.
+
+Riak nie obsługuje żadnych mechanizmów autentykacji ani autoryzacji użytkowników.
+W opinii autorów systemu funkcjonalność taka nie jest potrzebna, gdyż z założenia Riak jest przeznaczony do pracy w sieci lokalnej.
+W przypadku interfejsu HTTP łatwo można użyć tak zwanego reverse-proxy, aby dodać tą funkcjonalność (polega to na umieszczeniu przed bazą dodatkowych serwerów z którymi komunikują się klienci i które przekazują odpowiednio zautentykowane połączenia dalej).
 
 \subsection*{Replikacja}
 
-Replikacja
+W Riaku każdy rekord jest identyfikowany przez parę (kubełek\footnote{ang. \emph{bucket}}, klucz).
+Konfiguracji replikacji dokonuje się na poziomie kubełka określając (tak jak w Amazon Dynamo) liczbę węzłów N, na które klucz ma być replikowany.
+Węzły te są wybierane zgodnie z algorytmem Consistent Hashing opisanym we wcześniejszym rozdziale (strona \pageref{sec:dynamo-consistent-hashing}).
+W przypadku awarii wykorzystywany jest opisany na stronie \pageref{sec:dynamo-hinted-handoff} mechanizm Hinted Handoff.
+
+Przy odczytach i zapisach stosowane są znane już czytelnikowi parametry R i W, które oznaczają odpowiednio ile węzłów (z N przechowujących wartość) musi odpowiedzieć zanim operacja zwróci rezultat.
+W przypadku odczytów jest zastosowany mechanizm Read Repair, który polega na tym, że jeżeli któryś z węzłów zwróci nieaktualną wartość (ale nie wartość będącą w konflikcie z inną zwróconą - patrz zegary wektorowe strona \pageref{sec:dynamo-vector-clocks}), to wartość na tym węźle zostanie automatycznie uaktualniona, a klientowi zostanie zwrócona tylko jedna, najnowsza wersja. 
 
 \subsection*{Partycjonowanie}
 
-Partycjonowanie
+Partycjonowanie w Riaku wykorzystuje dokładnie ten sam mechanizm co Amazon Dynamo - Consistent Hashing.
+Dzięki temu łatwo można do klastra dodawać oraz usuwać z niego węzły.
 
 \subsection*{Persystencja}
 
-Persystencja
+Riak obsługuje możliwość wymiany mechanizmu zapisu danych (ang. \emph{Pluggable Backends}).
+Polega to na tym, że w konfiguracji możemy zapisać nazwę i parametry konfiguracyjne \emph{backendu}, które obowiązują dla wszystkich kluczy przechowywanych przez ten węzeł.
+Przy wykorzystaniu specjalnego \emph{backendu} o nazwie \verb+riak_kv_multi_backend+, możliwe jest ustalenie osobnego \emph{backendu} dla każdego kubełka.
+
+Dostępne \emph{backendy} dzielimy na dwie podstawowe kategorie: zapisujące dane na dysk (trwałe) i zapisujące dane w pamięci operacyjnej (nietrwałe).
+Przy zapisie oprócz podania parametru W oznaczającego ile węzłów musi potwierdzić zapis, możliwe jest także podanie parametru DW\footnote{\emph{Durable Writes}, z ang. \emph{durable} = trwały}, które określa ile węzłów musi dokonać zapisu do trwałego \emph{backendu} aby operacja zwróciła wynik.
+
+Riak oferuje kilka wbudowanych \emph{backendów}, ale dostępne są też inne, niestandardowe.
+Wbudowane backendy to: DETS (domyślny), Bitcask (zapis do plików typu \emph{append-only}), ETS (w pamięci), gb\_trees (drzewo w pamięci), fs (każdy klucz w osobnym pliku na dysku), cache (dostępnych kila wariantów) oraz multi\_backend, który pozwala na konfigurację backendu dla kubełków. 
+
+Niestety nie ma sposobu na zapewnienie replikacji klucza na określoną liczbę węzłów zapisujących na dysk albo w pamięci (z artykułu o Amazon Dynamo można wywnioskować, że mechanizm taki tam występuje, podobnie jak zapewnienie, że jedna z replik znajduje się w innym centrum obliczeniowym).
 
 \subsection*{Wersjonowanie}
 
-Wersjonowanie
+Riak wykorzystuje ten sam mechanizm wersjonowania, który został już opisany w rozdziale na temat Amazon Dynamo (patrz strona \pageref{sec:dynamo-vector-clocks}).
+Do dyspozycji użytkownika pozostają dwie opcje konfiguracyjne, obie ustawiane jako właściwości dla każdego kubełka z osobna: \verb+allow_mult+ oraz \verb+last_write_wins+.
+Pierwszy z nich kontroluje możliwość tworzenia wielu wersji rekordu (włączany jest jeżeli rekord może być modyfikowany przez wielu użytkowników systemu), drugi zaś upraszcza mechanizm rozwiązywania konfliktów - w przypadku wystąpienia kilku różnych wersji, użytkownikowi zaprezentowana zostanie najnowsza wersja.
 
 \subsection*{Wyszukiwanie}
 
-Wyszukiwanie
+W odróżnieniu od Redisa, Riak nie obsługuje różnorodnych struktur danych.
+Poza podstawowym dla baz typu klucz-wartość interfejsem dostępu do danych (zapisz rekord o danym kluczu, odczytaj rekord o danym kluczu) Riak obsługuje kilka mechanizmów pozwalających na stosunkowo łatwe wyszukiwanie rekordów: MapReduce, Link Walking oraz aplikację Riak Search.
+
+\subsubsection*{MapReduce}
+
+Map-Reduce w Riaku istotnie się różni od Google MapReduce opisanego w rozdziale \ref{sec:google-map-reduce}.
+Powodem istnienia tych różnic jest przede wszystkim to, że MapReduce w Riaku jest stosowane przede wszystkim jako mechanizm wyszukiwania i wykonywania różnego rodzaju operacji podsumowujących, podczas gdy framework Google jest stosowany przede wszystkim do przetwarzania ogromnych ilości danych.
+
+Największą różnicą między tymi dwoma implementacjami jest to, że w Riaku operacja Reduce jest wykonywana na węźle, który zainicjował wykonanie operacji MapReduce, podczas gdy framework Google umożliwia określenie liczby węzłów, które mają wykonać operację Reduce, dzięki czemu wynikiem tej operacji może być zbiór danych większy niż można zmieścić na pojedynczym węźle.
+
+W przypadku MapReduce traktowanego jako mechanizm wyszukiwania w bazie nie jest to wielkim problemem: typowe zapytanie wykorzysta jedną lub więcej faz Map aby wyszukać pożądane rekordy, a następnie w fazie Reduce posortuje je (albo po prostu utworzy z nich listę) i zwróci wynik do klienta.
+W przypadku takich zapytań liczba zwróconych rekordów zazwyczaj jest wystarczająco mała aby zmieścić się w pamięci operacyjnej węzła zlecającego operację.
+Dla porównania, sztandarowy przykład aplikacji MapReduce - zliczanie liczby wystąpień słów, ze względu na wymagania pamięciowe jest niepraktyczny do wykonania w Riaku.
+W tym przypadku dla każdego rekordu w systemie zostałaby wygenerowana bardzo duża liczba kluczy pośrednich, które z kolei musiałyby zostać przesłane przez sieć do węzła zlecającego operację.
+Sam narzut komunikacyjny jest w takim przypadku bardzo duży, ale dodatkowo wynikiem tej operacji może być zbiór danych większy niż dostępna pamięć operacyjna czy nawet przestrzeń dyskowa pojedynczego węzła.
+W planach jest zniesienie tego ograniczenia, ale w momencie pisania tych słów nie wiadomo jeszcze kiedy to nastąpi\footnote{http://blog.basho.com/2010/07/27/webinar-recap---mapreduce-querying-in-riak/}.
+
+Kolejną różnicą jest to, że w Riaku operacja MapReduce składa się z dowolnej, większej od zera liczby faz.
+Każda faza może być jedną z: Map, Link oraz Reduce.
+Fazy mogą występować w dowolnej kolejności, a każdy kolejny krok otrzymuje wynik poprzedniego.
+Funkcje Map i Reduce mogą być specyfikowane w dwóch językach programowania: Erlang i JavaScript i mogą albo być podane jako argument zapytania, albo być zapisane na serwerze.
+Faza Link jest specjalnym rodzajem operacji Reduce, która umożliwia trawersowanie grafu rekordów przy pomocy linków (patrz niżej).
+
+\subsubsection*{Link Walking}
+
+W Riaku rekordy mogą być powiązane między sobą krawędziami (zwanymi linkami) tworząc w ten sposób graf skierowany.
+Każda krawędź jest opisana etykietą, dzięki czemu różne krawędzie mogą mieć różne ,,znaczenie''.
+
+W odróżnieniu od baz grafowych, krawędzie nie mają właściwości, oraz nie ma możliwości szybkiego (w czasie O(1)) znalezienia rekordów, których krawędzie wskazują na określony rekord - graf można trawersować tylko i wyłącznie zgodnie z kierunkiem wyznaczonym przez krawędź.
+Kolejną różnicą jest brak API, które umożliwiłoby wyszukiwanie w grafie przy pomocy algorytmu BFS albo DFS.
+
+Wyszukiwanie powiązanych przy pomocy krawędzi rekordów jest możliwe albo jako faza Link w MapReduce albo na poziomie API (co w praktyce jest równoważne operacji MapReduce składającej się tylko z jednej fazy Link).
+
+\subsubsection*{Riak Search}
+
+Riak Search to silnik wyszukiwania pełnotekstowego, który bazuje na Riaku. 
+Pozwala on na wyszukiwanie rekordów używając składni zapytań zapożyczonej z Apache Lucene oraz przy pomocy interfejsu REST który jest kompatybilny z Apache Solr.
+Jest to nowy produkt, dostępny na licencji open source Apache 2.0, wciąż jeszcze w wersji beta, ale jest już używany w systemach produkcyjnych.
+
+Ponieważ Riak KV\footnote{Riak KV to pełna nazwa opisywanej w tym rozdziale bazy.} jest częścią Riak Search, nic nie przeszkadza w wykorzystywaniu tych samych węzłów do przechowywania indeksu silnika wyszukiwania i danych.
+Riak Search posiada wbudowaną obsługę formatu JSON (który jest najczęściej wykorzystywanym formatem serializacji danych w Riaku), dzięki czemu indeksowanie rekordów przechowywanych w bazie jest bardzo proste - sprowadza się do określenia tzw. \emph{hooka} (odpowiednik znanych z relacyjnych baz danych triggerów) dla kubełka, który zleci indeksowanie rekordu przy jego zapisie.
+
+Język zapytań wykorzystywany w tej aplikacji jest wystarczająco rozbudowany aby zastąpić proste zapytania MapReduce.
+Możliwe jest wyszukiwanie rekordów, które mają pole o określonej wartości (lub w przedziale wartości), warunki mogą być łączone przy pomocy operatorów logicznych, możliwe jest nawet wyszukiwanie wykorzystujące w warunku metrykę Levenshteina.
+Ponieważ zapytania Riak Search wykorzystują indeks, wymagają one znaczniej mniej czasu aby zwrócić wynik niż zapytania wykorzystujące MapReduce.
 
 \subsection*{Unikalne cechy}
 
@@ -246,7 +318,14 @@ Unikalne cechy
 
 \subsection*{Typowe zastosowania}
 
-Typowe zastosowania
+W ostatnich latach termin Cloud Computing (w wolnym tłumaczeniu - obliczenia w chmurze) zyskał znacznie na popularności.
+Cloud Computing polega na tym, że firmy zamiast tworzyć i zarządzać własnymi centrami obliczeniowymi, wynajmują wirtualne maszyny od wyspecjalizowanych dostawców, dzięki czemu firmy te nie muszą się przejmować takimi problemami jak awarie sprzętu, czy administracją nim.
+Dużą zaletą tego modelu jest także to, że płaci się w tych rozwiązaniach z dokładnością do godziny, dzięki czemu można wynajmować więcej maszyn w godzinach szczytu (lub w sezonie większego obciążenia), a mniej na przykład w nocy.
+
+Niestety Cloud Computing ma też wady.
+Na Amazon Elastic Computing Cloud (Amazon EC2 - najpopularniejszy dostawca Cloud Computing) należy liczyć się z tym, że wynajęte maszyny mogą być regularnie wyłączne i włączane, co w przypadku takich baz jak Redis czy MongoDB może grozić regularną utratą danych.
+
+Dwie cechy Riaka czynią go idealnym kandydatem do wykorzystania ,,w chmurze'': nie posiada on wyróżnionych węzłów, więc restart dowolnego z nich nigdy nie spowoduje chwilowej niedostępności całego systemu, a ponadto posiada bardzo dobrą obsługę dodawania oraz usuwania węzłów, dzięki czemu można go łatwo skalować w górę lub w dół w zależności od obciążenia, czy pory dnia.
 
 \subsection*{Przeciwwskazania}
 

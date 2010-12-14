@@ -188,6 +188,7 @@ Wiele z tych systemów zapewnia \emph{Read-your-writes Consistency} co stanowi d
 Możliwość konfiguracji parametrów R, W i N stopniowo staje się standardem wśród systemów NoSQL obsługujących partycjonowanie danych.
 
 \section{Google MapReduce}
+\label{sec:google-map-reduce}
 
 \subsection*{Wprowadzenie}
 
@@ -365,11 +366,13 @@ Autorzy Amazon Dynamo określili takie założenia co do architektury:
 \end{itemize}
 
 \subsection*{Stosowane techniki}
+\label{sec:dynamo-techniki}
 
 Amazon Dynamo łączy w sobie wiele ciekawych technik rozwiązujących problemy takie jak partycjonowanie, wersjonowanie rekordów czy wykrywanie awarii.
 Niniejszy rozdział przybliży je czytelnikowi.
 
 \subsubsection*{Partycjonowanie - Consistent Hashing} 
+\label{sec:dynamo-consistent-hashing}
 
 W systemie takim jak Dynamo, który ma za zadanie skalować się do setek węzłów, horyzontalne partycjonowanie jest nieuniknione.
 W Amazon Dynamo za podział na partycje odpowiada zmodyfikowany algorytm Consistent Hashing.
@@ -426,6 +429,7 @@ Lista węzłów odpowiedzialnych za przechowywanie klucza jest nazywana \emph{li
 Lista ta zazwyczaj zawiera więcej niż N adresów, na wypadek awarii jednego lub więcej z N podstawowych węzłów.
 
 \subsubsection*{Wersjonowanie - Zegary Wektorowe}
+\label{sec:dynamo-vector-clocks}
 
 Amazon Dynamo jest systemem, w którym dane są replikowane asynchronicznie i który zachowuje dostępność nawet w wypadku podziałów sieci, czy awarii poszczególnych węzłów.
 Konsekwencją tego podejścia jest możliwość występowania wielu wersji rekordu równocześnie w systemie, a w przypadku długotrwałych podziałów sieci możliwe jest nawet istnienie równoległych ,,drzew historii'' dla tego rekordu.
@@ -475,6 +479,7 @@ W przypadku wykorzystania zegarów wektorowych nie jest to możliwe, gdyż w zeg
 Koordynacja zapytań przez klienta zmniejsza opóźnienia (ang. \emph{latency}) w systemie o ponad połowę, zarówno dla wartości średnich, jak i dla 99.9\% zapytań.
 
 \subsubsection*{Obsługa awarii - Hinted Handoff}
+\label{sec:dynamo-hinted-handoff}
 
 W poprzednich rozdziałach opisane zostały listy preferencyjne oraz mechanizm koordynacji operacji zapisu i odczytu.
 Przypomnijmy, że Amazon Dynamo na liście preferencyjnej zawiera więcej węzłów, niż liczba N podana przez użytkownika, a w razie awarii części węzłów przechowujących dany zakres kluczy, klient będzie kierował swoje zapytania do węzłów znajdujących się dalej na liście preferencyjnej, pomijając te, które uległy awarii.
@@ -581,7 +586,7 @@ Oba te systemy zostały opisane nieco bliżej w sekcji ,,Zależności'' (patrz s
 
 \subsubsection*{Podział węzłów}
 
-\missingfigure{Typy węzłów BigTable}
+\myfigure{chapters/studium_literatury/bigtable-nodes.png}{Typy węzłów BigTable}{fig:bigtable-nodes}
 
 Węzły BigTable dzielimy na trzy rodzaje:
 
