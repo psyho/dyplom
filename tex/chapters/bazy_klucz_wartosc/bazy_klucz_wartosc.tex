@@ -314,7 +314,10 @@ Ponieważ zapytania Riak Search wykorzystują indeks, wymagają one znaczniej mn
 
 \subsection*{Unikalne cechy}
 
-Unikalne cechy
+Większość baz dostępnych aktualnie na rynku należy albo do kategorii CP (Consistent-Partition Tolerant) albo CA (Consistent-Available).
+Riak jest jednym z bardzo niewielu produktów, który przynależy do kategorii AP (Available-Partition Tolerant).
+Bardzo interesującą właściwością tego systemu (podobnie jak Amazon Dynamo) jest to, że jest on w stanie przyjmować zapisy praktycznie zawsze, o ile choć jeden węzeł nie uległ awarii.
+Niestety, jedynie komercyjna wersja Riaka posiada możliwość replikacji między centrami danych, a ponieważ awarie całych centrów obliczeniowych nie są niespotykane, jeżeli komuś zależy na wysokiej dostępności, to musi on za nią zapłacić\footnote{Basho oferuje wersję komercyjną Riaka po promocyjnych cenach dla start-upów (według modelu \emph{,,pay what you can''}), stąd nie jest to koniecznie dużą przeszkodą dla nowych firm.}.
 
 \subsection*{Typowe zastosowania}
 
@@ -329,12 +332,24 @@ Dwie cechy Riaka czynią go idealnym kandydatem do wykorzystania ,,w chmurze'': 
 
 \subsection*{Przeciwwskazania}
 
-Przeciwwskazania
+Riak posiada wiele zalet, ale w praktyce wszystkie z nich nabierają znaczenia wraz ze wzrostem liczby węzłów systemu.
+Jeżeli aplikacja nie wymaga przechowywania bardzo dużych ilości danych, albo prawie stuprocentowej dostępności (a zdecydowana większość aplikacji ich nie wymaga), to zastosowanie takiej bazy jak Riak jest raczej niepotrzebne.
 
 \subsection*{Dokumentacja i wsparcie}
 
-Dokumentacja i wsparcie
+Riak posiada dość dobrą oficjalną dokumentację w postaci wiki, dostępne są też w internecie nagrania wideo z prezentacji na różnych konferencjach na jego temat.
+Wiele ciekawych informacji można także znaleźć na blogu firmy Basho, gdzie opisywane są nie tylko niektóre techniki zastosowane w Riaku, ale także pewne szczegóły implementacyjne.
+System ten zdobywa stopniowo popularność, dzięki czemu można znaleźć coraz więcej informacji na jego temat na różnych blogach oraz forach dyskusyjnych.
+
+Riak jest tworzony przez firmę Basho, która oferuje także komercyjną wersję tej bazy (w cenie tej oferty są także szkolenia, wsparcie oraz porady dotyczące architektury i implementacji).
 
 \subsection*{Pomocne odnośniki}
  
-Pomocne odnośniki
+Poniżej zamieszczono kilka odnośników do stron WWW związanych z Riakiem.
+
+\begin{description}
+ \item [https://wiki.basho.com/display/RIAK/Riak] - strona wiki z dokumentacją projektu
+ \item [http://www.basho.com/] - strona domowa projektu
+ \item [http://blog.basho.com/] - oficjalny blog, na którym można znaleźć wiele ciekawych informacji na temat Riaka
+ \item [http://seancribbs.github.com/ripple/] - biblioteka dla języka Ruby implementująca zarówno niskopoziomowego klienta Riaka, ale także bibliotekę mapującą obiekty na rekordy w Riaku (odpowiednik ORM).
+\end{description}
