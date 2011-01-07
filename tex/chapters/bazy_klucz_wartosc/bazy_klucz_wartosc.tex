@@ -1,8 +1,9 @@
 \chapter{Bazy Klucz-Wartość}
 
 \section*{Streszczenie}
-W tym rozdziale opisane zostaną dwie bazy klucz-wartość: Redis i Riak.
-\todo{Rozszerzyć wstęp}
+W tym rozdziale opisane zostaną dwie bazy typu klucz-wartość: Redis i Riak.
+Pierwsza z nich, ciesząca się bardzo dużą i ciągle wzrastającą popularnością wychodzi poza prosty model klucz-wartość dodając operacje na różnego typu strukturach danych (listach, zbiorach, tablicach mieszających) oraz oferuje bardzo dużą wydajność, ale - przynajmniej w obecnej wersji - nie oferuje żadnych mechanizmów automatycznego partycjonowania danych.
+Druga z nich dzięki architekturze, w której żaden węzeł nie jest wyróżniony, oraz zaawansowanym mechanizmom wersjonowania rekordów (zaczerpniętym z Amazon Dynamo), cechuje się bardzo wysoką dostępnością oraz możliwością dodawania i usuwania węzłów w miarę potrzeby.
 
 \section{Redis}
 \label{sec:redis}
@@ -329,6 +330,8 @@ Niestety Cloud Computing ma też wady.
 Na Amazon Elastic Computing Cloud (Amazon EC2 - najpopularniejszy dostawca Cloud Computing) należy liczyć się z tym, że wynajęte maszyny mogą być regularnie wyłączne i włączane, co w przypadku takich baz jak Redis czy MongoDB może grozić regularną utratą danych.
 
 Dwie cechy Riaka czynią go idealnym kandydatem do wykorzystania ,,w chmurze'': nie posiada on wyróżnionych węzłów, więc restart dowolnego z nich nigdy nie spowoduje chwilowej niedostępności całego systemu, a ponadto posiada bardzo dobrą obsługę dodawania oraz usuwania węzłów, dzięki czemu można go łatwo skalować w górę lub w dół w zależności od obciążenia, czy pory dnia.
+
+W przypadku systemów mniejszej skali, Riak może być bardzo przydatny w przypadku aplikacji, gdzie niedostępność systemu nawet przez kilka-kilkadziesiąt sekund może spowodować znaczne straty finansowe.
 
 \subsection*{Przeciwwskazania}
 

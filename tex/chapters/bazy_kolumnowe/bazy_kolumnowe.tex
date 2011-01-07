@@ -1,10 +1,202 @@
 \chapter{Bazy Kolumnowe}
 
 \section*{Streszczenie}
-W tym rozdziale opisane zostaną dwie bazy kolumnowe: HBase i Cassandra.
+W tym rozdziale opisane zostaną dwie bazy kolumnowe: HBase i Apache Cassandra.
+
+\section{Apache Cassandra}
+\label{sec:cassandra}
+
+\subsection*{Wstęp}
+
+Apache Cassandra powstała na potrzeby jednej z największych stron internetowych na świecie: sieci społecznościowej Facebook. 
+Zadaniem tego systemu było zastąpienie wcześniejszej architektury opartej o MySQL do wyszukiwania w skrzynkach wiadomości użytkowników.
+Jednym z architektów nowego systemu był Avinash Lakshman, który wcześniej był współautorem Amazon Dynamo.
+W 2008 roku Facebook zdecydował się na udostępnienie swojego produktu na licencji open source.
+Przez pierwszy rok jedynie programiści firmy Facebook mieli możliwość zmiany kodu aplikacji, co w połączeniu z tym, że odmawiali oni przyjmowania zmian autorstwa innych programistów, powodowało duże napięcia w społeczności powiązanej z tym projektem i podniesienie się licznych głosów nawołujących do podziału projektu (ang. \emph{fork}).
+W marcu 2009 Facebook przekazał prawa do Cassandra fundacji Apache, która okazała się dużo bardziej sprawna w zarządzaniu tym projektem\cite{evans-cassandra}.
+W tym samym roku ukazała się także publikacja\footnote{Czytając ten artykuł warto jednak pamiętać, że odnosi się on do systemu w postaci w jakiej został on stworzony na potrzeby firmy Facebook, a nie do systemu, który ostatecznie został upubliczniony i nosi teraz nazwę Apache Cassandra. Główną różnicą między nimi jest to, że integracja z systemem Zookeeper nie została upubliczniona i nie jest częścią Apache Cassandra, a co za tym idzie różnią się one tym, że dostępna publicznie wersja systemu nie ma wyróżnionych węzłów i nie zależy od innych systemów.} omawiająca architekturę projektu autorstwa jego twórców \cite{cassandra-paper}.
+
+Apache Cassandra stanowi bardzo ciekawe połączenie modelu danych zaczerpniętego z Google BigTable z modelem replikacji i partycjonowania (a co za tym idzie konsystencji) zaczerpniętym z Amazon Dynamo.
+Podobnie jak opisany wcześniej Riak, Cassandra nie posiada wyróżnionych węzłów, ale w odróżnieniu od tej bazy typu klucz-wartość posiada ona bardziej zaawansowany model danych.
+
+\subsection*{Protokół komunikacji}
+
+Apache Cassandra posiada API wykorzystujące technologię RPC Apache Thrift\footnote{Apache Thrift został stworzony na potrzeby firmy Facebook. Jest on podobny do technologii CORBA.} do komunikacji, dzięki czemu oferuje wsparcie dla 12 języków programowania.
+Dla najpopularniejszych języków programowania takich jak Java, Python czy Ruby istnieją także biblioteki wyższego poziomu, często wzorowane na bibliotekach ORM.
+
+Cassandra pozwala na rozszerzanie podstawowego zestawu funkcjonalności systemu (na przykład zestawu komparatorów używanego do sortowania) poprzez implementację własnych klas w języku Java (w tym języku została napisana ta baza).
+Dzięki temu, że istnieje wiele języków programowania, które są kompilowane do kodu pośredniego maszyny wirtualnej Java (JVM), rozszerzenia te można pisać także w wielu innych językach.
+
+\subsection*{Replikacja}
+
+Apache Cassandra czerpie swój model replikacji z Amazon Dynamo.
+Podobnie jak w przypadku tamtej bazy użytkownik specyfikuje parametry R, W i N, określające odpowiednio ile węzłów musi odpowiedzieć na zapytanie aby odczyt się powiódł, ile musi potwierdzić zapis, oraz na ile węzłów jest replikowany dany klucz.
+
+Bardzo ciekawą właściwością tej bazy jest to, że strategia wyboru węzłów, na które zostanie replikowany dany przedział kluczy może być konfigurowana.
+Poza domyślną strategią, która podobnie jak w Amazon Dynamo replikuje klucze na N-1 kolejnych węzłów, dostępne są także dwie dodatkowe strategie: ,,Rack Aware Strategy'' oraz ,,Data Center Shard Strategy''.
+Pierwsza z nich sprawia, że dla każdego przedziału drugi węzeł na liście preferencyjnej\footnote{patrz strona \pageref{sec:dynamo-replikacja}.} będzie węzłem z innego centrum obliczeniowego, a kolejne będą z innej szafy (ang. \emph{rack}) niż koordynator.
+Druga z dodatkowych strategii pozwala na zdefiniowanie jak repliki mają zostać podzielone między centrami obliczeniowymi w przypadku gdy jest ich więcej niż dwa.
+Dla przykładu w przypadku gdy dysponujemy trzema centrami obliczeniowymi, a każdy klucz jest replikowany na sześć węzłów, możemy zdefiniować że trzy z nich będą węzłami z pierwszego centrum, dwa z drugiego i jeden z trzeciego.
+
+Podobnie jak Riak, Cassandra pozwala na specyfikowanie parametrów R i W dla zapytań nie tylko jako liczby, ale także jako wartości symboliczne, np. $ALL$ (wszystkie), czy $QUORUM$ (większość).
+Dodatkowo dostępna jest wartość $DCQUORUM$, która działa w połączeniu ze strategiami opisanymi powyżej.
+Pozwala ona na wyspecyfikowanie, że jedynie węzły z lokalnego centrum obliczeniowego mają być brane pod uwagę przy określaniu liczby węzłów potrzebnej do osiągnięcia kworum, dzięki czemu można zapewnić konsystencję na poziomie centrum danych oraz uniknąć oczekiwania na odpowiedź odległych węzłów.
+
+\subsection*{Partycjonowanie}
+
+Cassandra wykorzystuje algorytm \emph{Consistent Hashing}\footnote{patrz strona \pageref{sec:dynamo-consistent-hashing}.} w wersji podstawowej.
+Każdemu węzłowi jest przyporządkowany jeden przedział kluczy, których jest koordynatorem, a ponadto każdy klucz jest replikowany na N-1 kolejnych węzłów.
+
+Algorytm podziału kluczy na przedziały jest konfigurowalny.
+Domyślnym (i polecanym) algorytmem jest podział ,,losowy'', czyli tak samo jak w Amazon Dynamo na podstawie funkcji mieszającej MD5, dzięki czemu klucze powinny być rozłożone równomiernie pomiędzy węzłami.
+Pozostałe dwa dostępne algorytmy nie używają funkcji mieszającej, tylko porównują wartość klucza bezpośrednio z wartościami granicznymi przypisanymi poszczególnym węzłom, dzięki czemu węzły o kolejnych kluczach trafią do tego samego węzła (podobnie jak to ma miejsce w Google BigTable).
+Umożliwia to wyszukiwanie zakresów kluczy na podstawie ich wartości.
+Niestety to podejście może powodować bardzo nierównomierny rozkład obciążenia w klastrze, a co za tym idzie doprowadzić do niestabilnego działania systemu.
+Na szczęście wykorzystując dodatkową rodzinę kolumn (patrz niżej) można własnoręcznie stworzyć indeks pozwalający na dokonywanie tego typu zapytań bez narażania się na ryzyka związanie ze zmianą algorytmu partycjonowania.
+
+\subsection*{Persystencja}
+
+Cassandra, podobnie jak Google BigTable\footnote{patrz strona \pageref{sec:bigtable-architektura-serwera-tabletow}.} zapisuje dane najpierw do logu transakcji, który potem może służyć do ewentualnego odtworzenia stanu bazy w razie awarii, a następnie do struktury danych w pamięci (\emph{memtable}).
+Z pamięci co pewien czas dane są zrzucane na dysk tworząc pliki SSTable (Cassandra wykorzystuje tą samą nomenklaturę co Google BigTable).
+Ponieważ odczyty często muszą przeglądnąć więcej niż jeden plik SSTable aby znaleźć najnowszą wersję rekordu, konieczne jest łączenie tych plików co pewien czas w większe.
+
+Użytkownik bazy ma do dyspozycji dwie opcje konfiguracji wpływające na trwałość danych.
+Możliwe jest albo wykonywanie operacji \verb+fsync()+ przed potwierdzeniem każdej operacji zapisu, albo co pewien określony czas.
+W pierwszej z tych konfiguracji zaleca się aby dziennik transakcji znajdował się na innym dysku niż reszta plików, aby uniknąć opóźnienia spowodowanego przesunięciem głowicy przy każdym zapisie.
+
+\subsection*{Wersjonowanie}
+
+Cassandra, w odróżnieniu od Amazon Dynamo i Riak nie dysponuje mechanizmem zegarów wektorowych.
+W Cassandrze każda wartość (a właściwie para klucz-nazwa kolumny) ma przypisaną 64-bitową liczbę całkowitą będącą znacznikiem czasowym ostatniej modyfikacji.
+W przypadku gdy system wykryje istnienie więcej niż jednej wartości dla danej kolumny, automatycznie jest wybierana najnowsza wartość.
+
+Brak wsparcia dla mechanizmu zegarów wektorowych wydaje się być problematyczny w systemie, który podobnie jak Amazon Dynamo czy Riak należy do rodziny systemów AP w rozumieniu teorii CAP.
+Warto jednak zwrócić uwagę, że Dynamo i Riak są systemami typu klucz-wartość i tam wersjonowane są całe rekordy, a zatem jeżeli rekord zostanie zmodyfikowany przez dwóch klientów równocześnie, to nawet jeżeli ci klienci zmodyfikowali całkiem różne ,,pola''\footnote{W systemach typu klucz wartość najczęściej przypisujemy kluczowi wartość będącą zserializowanym obiektem, np. w formacie JSON. Przez pole rekordu rozumiemy tu właśnie pole tego zserializowanego obiektu.} rekordu, konflikt musi zostać rozwiązany przez aplikację.
+W przypadku Cassandry każde takie ,,pole'' ma swój znacznik wersji, a co za tym idzie wiele przypadków konfliktów napotykanych w systemach typu klucz-wartość nie ma miejsca w bazie kolumnowej.
+W większości pozostałych przypadków można uniknąć powstawania konfliktów odpowiednio modyfikując strukturę danych.
+
+\subsection*{Wyszukiwanie}
+
+\subsubsection*{Model Danych}
+
+Model danych w Apache Cassandra bardzo przypomina ten, który został wcześniej opisany przy okazji Google BigTable\footnote{patrz strona \pageref{google-bigtable-model-danych}.}, ale z pewnymi istotnymi różnicami.
+Niestety jedną z tych różnic jest wykorzystanie tej samej nomenklatury, ale w różnych znaczeniach, co może być mylące dla osób które znają model danych bazy Google, dlatego poniżej przedstawiona zostanie lista terminów dotyczących Apache Cassandra wraz z odniesieniami do odpowiadających im terminów dotyczących BigTable.
+Bardzo dobre wprowadzenie do modelu danych Apache Cassandra można znaleźć w artykule na blogu Arina Sarkissiana \cite{arin-wtf-is-a-supercolumn}.
+
+\begin{description}
+ \item[Keyspace] - dosłownie ,,przestrzeń kluczy''.
+ Pozwala na grupowanie rodzin kolumn tworząc pewien rodzaj ,,przestrzeni nazw'' i pozwalając na ustawienie różnych zmiennych konfiguracyjnych.
+ Pod wieloma względami przypomina pojęcie bazy, znane z relacyjnych systemów zarządzania bazami danych, takich jak MySQL.
+ Nie posiada odpowiednika w BigTable.
+
+ \item[Column Family] - rodzina kolumn.
+ Jest to zbiór rzędów, z których każdy posiada klucz, który go identyfikuje oraz dowolną liczbę kolumn.
+ Nie istnieje żaden schemat, który wymuszałby aby rzędy tej samej rodziny kolumn miały tą samą strukturę - każdy może mieć zupełnie inny zestaw kolumn.
+ Co więcej, kolumny należące do danej rodziny mogą być wyszukiwane po nazwie, stronicowane a ponadto są posortowane przy użyciu komparatora wybranego przez użytkownika.
+ Te właściwości sprawiają, że bardzo często dane są przechowywane w nazwach kolumn, a wartości są ignorowane.
+ W BigTable odpowiednikiem rodziny kolumn jest tabela.
+
+ \item[Column] - kolumna.
+ Jest to trójka (nazwa, wartość, czas ostatniej modyfikacji).
+ Nazwa i wartość kolumny nie może przekroczyć rozmiary dwóch gigabajtów.
+ W odróżnieniu od Google BigTable (gdzie jest przechowywanych wiele wersji wartości), Cassandra przechowuje tylko najnowszą wersję, a znacznik czasowy jest używany tylko przy rozstrzyganiu konfliktów.
+
+ \item[Super Column] - super kolumna.
+ Jest to struktura pozwalająca na grupowanie wielu kolumn.
+ W odróżnieniu od rodziny kolumn, super kolumny nie posiadają kluczy.
+ Odpowiednikiem super kolumn w BigTable są rodziny kolumn.
+
+ \item[Super Column Family] - rodzina super kolumn.
+ Zwykła rodzina kolumn nie pozwala na to aby jej rzędy składały się z kolumn i super kolumn, dopuszczalne są tylko kolumny.
+ Rodzina super kolumn z kolei pozwala jedynie aby jej rzędy składały się z super kolumn.
+ Stanowi to różnicę w stosunku do BigTable, gdzie rząd tabeli mógł składać się z kolumn zarówno pogrupowanych w rodziny jak i nie.
+\end{description}
+
+Do wersji 0.7 Apache Cassandra nie była możliwa zmiana listy rodzin kolumn i przestrzeni kluczy bez ponownego uruchomienia serwera, ale najnowsze wydanie tej bazy wprowadza taką możliwość.
+
+\subsubsection*{Wyszukiwanie rekordów}
+
+Apache Cassandra posiada rozbudowane API pozwalające na filtrowanie i stronicowanie kolumn w ramach pojedynczego rekordu.
+Przy wykorzystaniu odpowiedniego mechanizmu partycjonowania, możliwe jest także wyszukiwanie rekordów zakresami po kluczu głównym.
+
+Od wersji 0.7 możliwe jest już tworzenie indeksów drugiego poziomu, co pozwala na wyszukiwanie rekordów po wartości kolumny.
+Wcześniej, aby uzyskać taką samą funkcjonalność należało samodzielnie zaimplementować taki indeks poprzez dodanie kolejnej rodziny kolumn, gdzie kluczem byłaby wartość, po której chcemy wyszukać, a nazwami kolumn byłyby identyfikatory wyszukiwanych rekordów.
+
+\subsubsection*{MapReduce}
+
+Cassandra nie posiada własnego, wbudowanego frameworku MapReduce.
+Posiada natomiast integrację z systemem Hadoop, dla którego może służyć zarówno jako zbiór danych wejściowych, jak i danych wyjściowych (od wersji 0.7).
+
+\subsection*{Unikalne cechy}
+
+Cassandra łączy w sobie model danych, który jest znacznie bogatszy i łatwiejszy w użyciu niż spotykane w systemach typu klucz-wartość, z technikami znanymi z Amazon Dynamo, które pozwalają na osiągnięcie bardzo wysokiej dostępności systemu.
+Dzięki temu, że użytkownikowi jest pozostawiony wybór między konsystencją a dostępnością w obliczu awarii czy podziałów sieci, możliwe jest także stosunkowo proste dopasowanie zachowania systemu do potrzeb aplikacji z niego korzystającej.
+
+Wart uwagi jest fakt, że Apache Cassandra jako jeden z bardzo nielicznych systemów pozwala na taką konfigurację, aby mógł bezproblemowo pracować będąc rozproszonym między wieloma centrami obliczeniowymi, co stawia go w czołówce systemów oferujących najwyższe gwarancje dostępności.
+
+\subsection*{Typowe zastosowania}
+
+Jeszcze zanim ten system został upubliczniony, dowiódł on swojej przydatności w firmie Facebook, gdzie umożliwił wyszukiwanie w miliardach wiadomości które użytkownicy tego serwisu wysyłają do siebie codziennie.
+Nie jest zatem przypadkiem, że baza ta została później zaadoptowana przez innych wielkich graczy na rynku aplikacji internetowych: Twitter, Digg i Reddit.
+Zainteresowanie jakim Cassandra cieszy się pośród inżynierów największych aplikacji internetowych, świadczy o tym, że system ten należy do grupy najlepiej skalowalnych baz danych dostępnych aktualnie na rynku.
+
+Do tej pory jednak Cassandra nie zdobyła dużej popularności wśród twórców mniejszych aplikacji.
+Jest to najprawdopodobniej związane z tym, że tworzenie aplikacji opartych o ten system jest dość trudne i wymaga znacznie większych nakładów pracy niż w przypadku dokumentowych baz danych, czy nawet baz klucz-wartość takich jak Riak, które mogą się pochwalić wbudowanym frameworkiem MapReduce. 
+Pomiędzy wersjami 0.6 i 0.7\footnote{W momencie pisania tych słów data wydania wersji 0.7 nie jest jeszcze znana, ale dostępna jest już wersja \emph{Release Candidate} 4.} zostało jednak wprowadzonych wiele zmian (na czele z indeksami drugiego poziomu i możliwością zmiany schematu bez ponownego uruchamiania serwera), które sprawiają, że system ten jest znacznie bardziej przyjazny dla użytkownika niż jeszcze przed rokiem, a zatem jest bardzo prawdopodobne, że nabierze on tym samym większej popularności.
+
+Podobnie jak Riak, Cassandra jest systemem, który powinien dobrze radzić sobie ,,w chmurze''.
+Posiada on nawet wbudowane mechanizmy pozwalające na określenie topologii sieci w środowisku Amazon EC2 na potrzeby strategii replikacji.
+
+\subsection*{Przeciwwskazania}
+
+Apache Cassandra jest systemem, w którym odczyty trwają zazwyczaj dłużej niż zapisy, dlatego ten system lepiej się sprawdza w aplikacjach, które wymagają dużej liczby zapisów i modyfikacji.
+Znanym ograniczeniem tego systemu jest to, że nie można w nim przechowywać dużych plików, ze względu na to, że protokół Thrift nie udostępnia opcji strumieniowania danych.
+Brak transakcji i zegarów wektorowych sprawia także, że problematyczne może być stworzenie w oparciu o ten system aplikacji, w której różni klienci często dokonywaliby zmian tych samych rekordów. 
+
+\subsection*{Dokumentacja i wsparcie}
+
+W internecie jest dostępnych wiele źródeł informacji na temat Apache Cassandra.
+Wiele użytecznych informacji znajduje się na wiki projektu, jednak struktura tej strony jest nieprzejrzysta i utrudnia dotarcie do tych danych.
+
+Projekt ten jest aktywnie rozwijany i wyraźnie nabiera co raz większej popularności.
+
+Od dość niedawna możliwe jest też uzyskanie płatnego wsparcia oraz szkoleń dzięki firmie Riptano.
+
+\subsection*{Pomocne odnośniki}
+
+Poniżej zamieszczono kilka odnośników do stron WWW związanych z Apache Cassandra:
+
+\begin{description}
+ \item [http://cassandra.apache.org/] - strona domowa projektu
+ \item [http://wiki.apache.org/cassandra/] - strona wiki z dokumentacją
+ \item [http://www.riptano.com/docs/0.6/index] - alternatywna dokumentacja dla wersji 0.6 oferowana przez firmę Riptano
+ \item [http://arin.me/blog/wtf-is-a-supercolumn-cassandra-data-model] - bardzo dobry artykuł opisujący model danych systemu
+ \item [http://www.parleys.com/\#st=5\&id=1866] - prezentacja wideo oferująca bardzo dobre wprowadzenie
+\end{description}
 
 \section{HBase}
 \label{sec:hbase}
 
-\section{Cassandra}
-\label{sec:cassandra}
+\subsection*{Wstęp} 
+
+\subsection*{Protokół komunikacji}
+
+\subsection*{Replikacja}
+
+\subsection*{Partycjonowanie}
+
+\subsection*{Persystencja}
+
+\subsection*{Wersjonowanie}
+
+\subsection*{Wyszukiwanie}
+
+\subsection*{Unikalne cechy}
+
+\subsection*{Typowe zastosowania}
+
+\subsection*{Przeciwwskazania}
+
+\subsection*{Dokumentacja i wsparcie}
+
+\subsection*{Pomocne odnośniki}

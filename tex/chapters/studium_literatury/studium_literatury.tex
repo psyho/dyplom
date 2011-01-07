@@ -410,6 +410,7 @@ Rysunek \ref{fig:consistent-hashing-03} przedstawia opisaną powyżej wersję al
 \myfigure{chapters/studium_literatury/consistent-hashing-03.png}{Consistent Hashing z rozdziałem partycjonowania i pozycjonowania rekordów}{fig:consistent-hashing-03}
 
 \subsubsection*{Replikacja}
+\label{sec:dynamo-replikacja}
 
 Mechanizm opisany w poprzednim rozdziale przydziela przedziały kluczy do węzłów, które są \emph{koordynatorami} tych przedziałów.
 Nazwa ,,koordynator'' może być dość myląca ponieważ węzeł ten niczego w rzeczywistości nie koordynuje, jedyne jego wyróżnienie polega na tym, że jest pierwszym węzłem na liście węzłów przechowujących dany przedział kluczy.
@@ -639,6 +640,7 @@ Węzeł master komunikuje się co pewien czas ze wszystkimi serwerami tabletów,
 Jeżeli master nie jest w stanie się połączyć z serwerem tabletów, lub jeżeli odpowie on, że stracił blokadę na pliku, master próbuje zdobyć tą blokadę i w przypadku powodzenia, usuwa plik powodując tym samym restart serwera tabletów.
 
 \subsection*{Architektura serwera tabletów}
+\label{sec:bigtable-architektura-serwera-tabletow}
 
 \missingfigure{Serwer tabletów}
 
