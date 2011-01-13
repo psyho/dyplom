@@ -1,0 +1,822 @@
+/*
+Theme Name:		The New Duckk
+Theme URI:		http://www.phatduckk.com
+Description:	The new theme for phatduckk.com
+Version:		1.0
+Author:			Arin Sarkissian
+Author URI:		http://www.phatduckk.com/
+*/
+
+BODY {
+    background: url(bg-small.png);
+    color: white;                                
+}
+
+BODY, P, DIV, SPAN, LABEL, LEGEND, UL, LI, PRE, *, SUP {
+    font-family: Verdana;
+    font-size: 9pt;
+}
+
+P {
+	line-height: 140%;
+}
+
+PRE {
+    font-family: ;    
+}
+
+DIV#content {
+    margin: 40px auto;
+    width: 1000px;
+}
+
+A IMG {
+    border: 0px;
+}
+
+A {
+    text-decoration: none;
+}
+
+A:hover {
+    text-decoration: underline;
+}       
+
+H1 {
+    margin-bottom: 20px;
+    padding: 0px;   
+    margin-top: 0px;
+    font-size: 12pt; 
+}
+
+H1 SPAN {
+    color: #67D4FF;
+}
+
+/************ NAV *****************/
+DIV#nav {
+    margin-bottom: 25px;
+}
+
+DIV#nav DIV {
+    margin-top: 8px;
+    font-size: 9px;
+    vertical-align: middle;
+    width: 250px;
+    position: relative;
+}
+
+DIV#nav DIV SPAN {
+    position: absolute;
+    right: 0px;
+}
+
+DIV#nav DIV A {
+    font-size: 9px;
+    color: #37abe2;
+    font-weight: bold;
+    text-transform: uppercase;    
+}            
+
+/************ 2 col layout *****************/            
+DIV#entry, DIV#sideCol {
+    float: left;
+}
+
+DIV#entry {
+    width: 700px;
+    margin-right: 23px;
+}            
+
+DIV#sideCol {
+    width: 248px;
+}                        
+
+/************ entry *****************/            
+DIV.entry {
+    width: 700px;
+    color: black;
+    margin-bottom: 20px;    
+}
+
+DIV.entry DIV.top, DIV.entry DIV.bottom {
+    height: 5px;    
+}
+
+/**
+DIV.entry DIV.top {
+    background: url(images/entry-top.png);
+}
+
+DIV.entry DIV.bottom {
+    background: url(images/entry-bottom.png);
+}
+**/                   
+
+DIV.entry DIV.main {
+    background-color: white;
+    padding-left: 0px;
+}
+
+DIV.entry DIV.main DIV.body A {
+    /** color: #666; **/
+    color: #447ecd;
+    text-decoration: underline;
+}
+
+DIV.body H2 {
+	font-size: 15px;
+}
+
+DIV.body H3 {
+	font-size: 12px;
+}
+
+DIV.entry DIV.meta {
+    background-color: #eaeae7;
+    padding: 10px;
+}                        
+
+DIV.entry DIV.meta,
+DIV.entry DIV.meta A {
+    font-size: 14px;
+    color: #2db4f5;
+}
+
+DIV.entry DIV.meta SPAN.comments {
+    float: right;
+}
+
+DIV.entry DIV.meta SPAN.cat {
+    font-weight: bold;
+}
+
+DIV.entry DIV.meta SPAN.comments A {
+    color: #828181;
+    text-decoration: underline;
+    height: 14px;
+    font-size: 12px;
+    background-image: url(pencil.png);
+    background-repeat: no-repeat;
+    padding: 0px 0px 3px 24px;
+}
+
+SPAN.commentDetails {
+	color: #666;
+}
+
+DIV.entry DIV.main DIV.body {
+    padding: 10px;
+}  
+
+DIV.entry DIV.main DIV.pageBody {
+    padding-top: 0px;
+    margin-top: 0px;
+}  
+
+DIV.entry DIV.main DIV.share {              
+    text-align: right;
+    padding-right: 10px;
+}
+
+DIV.entry DIV.main DIV.tags {              
+    padding: 10px;
+    padding-top: 0px;
+    position: relative;
+}
+
+DIV.entry DIV.main DIV.tags *,
+DIV.entry DIV.main DIV.tags {
+    font-size: 8pt;
+}
+
+DIV.entry DIV.main DIV.tags A {
+    color: #2db4f5;
+    font-weight: bold;
+}
+
+DIV.entry DIV.title {
+    padding: 3px 0px 8px 10px;
+    min-height: 36px;    
+} 
+
+DIV.entry DIV.pageTitle {
+    min-height: 0px;    
+    padding-bottom: 4px;
+} 
+
+DIV.entry DIV.title DIV.date {
+    color: #6c6a6a;
+    font-weight: bold;
+    padding-top: 1px;
+    font-size: 11px;
+}
+
+DIV.entry DIV.title DIV.date SPAN {
+    font-weight: 200;    
+}
+
+DIV.entry DIV.title SPAN.entry-icon {
+    float: left;
+    margin-right: 10px;
+    margin-top: 1px;
+}
+
+DIV.entry DIV.title H2 {
+    margin: 0px;
+    padding: 0px;                
+}
+
+DIV.entry DIV.title H2 A {
+    font-size: 18px;
+    color: #325076;
+}
+
+DIV.entry DIV.pageTitle {
+    padding: 3px 0px 0px 10px;    
+}
+
+DIV.entry DIV.pageTitle H2 {
+    font-size: 18px;
+    color: #325076;
+    padding: 0px;
+    margin: 0px;
+}
+
+DEL {
+    color: red;
+}
+
+DIV.entry DIV.main DIV.image,
+DIV.entry DIV.main DIV.img {
+    text-align: center;
+}
+
+DIV.entry DIV.main DIV.image IMG,
+DIV.entry DIV.main DIV.img IMG {
+    padding: 2px;
+    border: 1px solid #666;
+}
+
+/***** sidebar stuff ******/
+DIV.side H3 {    
+    color: #b0b4b6;
+    margin: 0px;
+    padding: 0px;
+    margin-bottom: 4px;
+    padding-top: 1px;
+}
+
+DIV.side {
+    margin-bottom: 20px;
+    clear: both;
+}
+            
+/***** search widget ******/           
+DIV#searchContainer {
+    background-image: url(bg-search.png);
+    background-repeat: no-repeat;
+    width: 228px;
+    height: 45px;
+    padding: 10px;
+    padding-top: 5px;                                
+}
+
+DIV.side FORM INPUT {
+    font-size: 16px;
+    width: 170px;
+    height: 25px;
+    float: left;
+    border: 1px solid #b0b4b6;
+    margin-right: 5px;
+}            
+
+DIV.side FORM BUTTON {
+    background: url(btn-go.jpg) no-repeat scroll left top;
+    width: 40px;
+    height: 28px;
+    border: 0px;
+    margin: 0px;
+    float: right;
+}
+
+DIV.side FORM BUTTON SPAN {
+    display: none;
+}
+
+/***** twitter widget ******/       
+DIV#tweet {            
+    position: relative;       
+}        
+
+DIV#tweet IMG.bird {
+    position: absolute;
+    left: -10px;
+    top: -15px;
+}
+
+DIV#tweet IMG.pix {
+    float: left;
+    margin: 0px 8px 8px 0px;
+    width: 68px;
+}
+
+DIV#tweet DIV.follow {
+    position: absolute;
+    bottom: 0px;
+    right: 15px;
+    font-size: 9px;             
+}
+
+DIV#tweet DIV.follow A {            
+    color: #003b87;
+}
+
+DIV#tweet DIV.top {
+    height: 5px;
+    background-image: url(tweet-top.png);
+}
+
+DIV#tweet DIV.bottom {
+    height: 5px;
+    background-image: url(tweet-bottom.png);
+}   
+
+DIV#tweet DIV.main {
+    padding: 5px;
+    color: white;
+    background-color: #3a9dcc;
+    position: relative;
+    min-height: 30px;
+    padding-bottom: 15px;    
+}    
+
+DIV#tweet DIV.main SPAN {
+    whitespace: nowrap;
+    font-size: 9pt;
+}
+
+DIV#tweet DIV.main SPAN A.aktt_tweet_time,
+DIV#tweet DIV.main SPAN A.aktt_tweet_reply {
+    font-size: 8pt;
+}
+
+DIV#tweet DIV.main SPAN A {
+    color: #ccc;    
+    color: #67D4FF;    
+}
+
+DIV#tweet DIV.main SPAN A.aktt_username {
+    color: #67D4FF;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+DIV#tweet DIV.main SPAN A.aktt_tweet_time {
+    color: #ccc;
+    white-space: nowrap;
+}
+
+DIV#tweet DIV.main A.atReply {
+    font-size: 11px; 
+    color: #003b87;   
+}
+
+DIV#tweet DIV.main DIV.txt {
+    margin-bottom: 5px;
+}      
+
+/***** blip widget ******/       
+DIV#blip {            
+    position: relative;       
+}        
+
+DIV#blip IMG.icon {
+    float: left;
+    margin: 2px 20px 2px 7px;
+}
+
+DIV#blip IMG.pix {
+    float: left;
+    margin: 0px 8px 8px 0px;
+    width: 68px;
+    height: 50px;
+}
+
+DIV#blip DIV.follow {
+    position: absolute;
+    bottom: 0px;
+    right: 15px;
+    font-size: 9px;             
+}
+
+DIV#blip DIV.follow A {            
+    color: #003b87;
+}
+
+DIV#blip DIV.top {
+    height: 5px;
+    background-image: url(blip-top.png);
+}
+
+DIV#blip DIV.bottom {
+    height: 5px;
+    background-image: url(blip-bottom.png);
+}   
+
+DIV#blip DIV.main {
+    padding: 5px;
+    color: black;
+    background-color: #ddebff;  
+    position: relative;
+    min-height: 30px;
+    padding-bottom: 15px;
+}    
+
+DIV#blip DIV.main DIV.blip {
+    margin-top: 5px;
+}
+
+DIV#blip DIV.main DIV.title {
+    font-size: 10px;    
+}
+
+DIV#blip DIV.main DIV.title A {
+   color: #00337b;
+}
+
+DIV#blip DIV.main SPAN A {
+    color: #ccc;    
+    font-size: 9px;    
+}
+
+DIV#blip DIV.main SPAN A.atReply {
+    font-size: 10px; 
+    color: #003b87;   
+}
+
+DIV#blip DIV.main DIV.txt {
+    margin-bottom: 5px;
+}      
+
+/***** category widget ******/    
+DIV#cat {
+    
+}                       
+
+DIV#cat DIV.top {
+    height: 5px;
+    background-image: url(cat-top.png);                
+}            
+
+DIV#cat DIV.bottom {
+    height: 5px;
+    background-image: url(cat-bottom.png);                
+}     
+
+DIV#cat DIV.main {                   
+   background-color: #eaeaea;   
+   padding: 10px;
+   padding-top: 0px;
+}
+
+DIV#cat DIV.main H3 {                               
+    color: #68696a;
+}
+
+DIV#cat DIV.main UL {
+    margin: 0px;
+    padding: 0px;
+    list-style: none;
+}
+
+DIV#cat DIV.main UL LI {
+    position: relative;
+    margin: 10px 0 10px 0px;
+    color: #949697;
+    border-bottom: 1px solid #dedddd;
+    padding-bottom: 10px;
+}            
+
+DIV#cat DIV.main UL LI:last {            
+    border-bottom: 0px;
+    padding-bottom: 0px;
+}
+
+DIV#cat DIV.main UL LI A:hover {
+    text-decoration: none;
+}                
+
+DIV#cat DIV.main UL LI A {            
+    color: #3898c6;
+    font-weight: bold;
+    font-size: 12px;
+    display: block;
+}
+
+DIV#cat DIV.main UL SPAN {
+    position: absolute;
+    right: 6px;
+    font-size: 20px;
+    top: -5px;
+} 
+
+DIV#cat DIV.main UL LI A SPAN {
+    color: #949697;
+    font-weight: 200;
+} 
+
+DIV#cat DIV.main UL LI A:hover {
+    color: #325076;    
+}
+
+/***** blogroll widget ******/    
+DIV#blogroll {
+    border: 0px;
+}                       
+
+DIV#blogroll DIV.top2 {
+    height: 5px;
+    background-image: url(blogroll-top.png);                
+}            
+
+DIV#blogroll DIV.bottom {
+    height: 5px;
+    background-image: url(blogroll-bottom.png);                
+}     
+
+DIV#blogroll DIV.middle {                   
+   background-image: url(blogroll-middle.png);   
+   padding: 10px;
+   padding-top: 0px;
+   padding-bottom: 0px;
+}
+
+DIV#blogroll DIV.main H3 {                               
+    color: #68696a;
+}
+
+DIV#blogroll DIV.middle UL {
+    margin: 0px;
+    padding: 5px 0px 15px 30px;
+}
+
+DIV#blogroll DIV.middle UL LI {
+    margin-bottom: 4px;    
+}
+
+DIV#blogroll DIV.middle UL LI A {
+    color: #bdd5e1;
+}
+
+/***** Comments ******/   
+DIV#comments {
+    color: black;
+}
+
+DIV#comments H2 {
+    margin: 0px;
+    padding: 0px;  
+    color: white;              
+}
+
+DIV#comments DIV.top {
+    background-image: url(comments-top.png);  
+    height: 5px;    
+}
+
+DIV#comments DIV.bottom {
+    background-image: url(comments-bottom.png);  
+    height: 5px;
+}
+
+DIV#comments DIV.middle {
+	padding: 10px;
+    background-color: #333333;
+    background-image: url(comments-middle.png);      
+    color: white;
+}
+
+DIV#comments STRONG A {
+    color: #bdd5e1;    
+}
+
+DIV#comments H3 {                               
+    color: #aaa;
+}
+
+P.commentUser A,
+STRONG.commentAuthorLink {
+	color: #bdd5e1;
+}
+
+P.commentUser A,
+STRONG.commentAuthorLink A {
+	text-decoration: underline;
+}
+
+DIV#comments DIV.single {
+    border-bottom: 1px solid #68696a; 
+    margin-bottom: 20px;
+}
+
+DIV#comments DIV.single DIV.entry {
+    color: white;    
+    width: 680px;
+}
+
+DIV#comments DIV.single DIV.entry A {
+    color: #bdd5e1;
+}
+
+DIV#comments FORM {
+    margin-top: 0px;
+    padding-top: 0px;
+}
+
+DIV#comments FORM TEXTAREA {
+    width: 680px;    
+}
+
+DIV#comments FORM DIV.controls {
+    position: relative;  
+    height: 15px;
+    margin-bottom: 8px;
+}
+
+DIV#comments FORM DIV.c  {
+    clear: both;
+}
+
+DIV#comments LABEL {
+    width: 50px;
+    float: left;
+    font-weight: bold;
+    color: #ccc;
+    text-align: right;
+    margin-right: 10px;
+}
+
+DIV#comments FORM BUTTON {
+    background: url(btn-post-comment.jpg) no-repeat scroll left top;
+    width: 161px;
+    height: 28px;
+    border: 0px;
+    margin-bottom: 10px;
+    position: absolute;
+    right: 0px;        
+}
+
+DIV#comments FORM BUTTON SPAN {
+    display: none;    
+}
+
+DIV#comments .mod {
+    color: #c13a7f;
+}
+
+DIV#comments H2 {
+    margin-left: 10px;  
+    margin-bottom: 10px;  
+}
+
+.text_input {
+    width: 350px;
+}
+
+DIV#comments DIV.option {
+    float: left;
+    border: 0px;
+}
+
+DIV#comments DIV.option H4 {
+    margin-top: 0px;
+    padding-top: 0px;
+}
+
+DIV#comments DIV.fbc {
+    margin-left: 70px;
+}
+
+/************ pagination *****************/
+DIV.pagination {
+    position: relative;
+}
+
+DIV.pagination DIV.prev {
+    position: absolute;
+    left: 0px;
+}
+
+DIV.pagination DIV.next {
+    position: absolute;
+    right: 0px;
+}
+
+DIV.pagination DIV.next A,
+DIV.pagination DIV.prev A {
+    font-size: 16px;
+    color: #bdd5e1;    
+}
+
+/************ footer *****************/
+DIV#footer {
+    padding-top: 35px;
+    clear: both;
+    color: red;
+    text-align: right;
+    color: #ccc;
+    padding-right: 20px;
+}
+
+/************ stuff inside entries *****************/
+DIV.video {
+    text-align: center;
+    margin: 20px 0px;
+}
+
+/************ entry "sections" *****************/
+DIV.ibox {
+	margin-bottom: 30px;	
+}
+
+DIV.g {
+    line-height: 0px;	
+}
+
+DIV.ibox H4 {
+	font-size: 12px;
+	margin-bottom: 0px;
+	padding-bottom: 0px;
+}
+
+DIV.ibox DIV.il {
+	float: left;
+	margin: 0px 8px 5px 0px;
+}
+
+BLOCKQUOTE {
+    margin: 0 0 0 10px;
+    padding-left: 10px;
+    border-left: 3px solid #ccc;
+    font-style: italic;
+}
+
+/************ CODE *****************/
+CODE *,
+CODE {
+    font-family: Monaco,Liberation Mono,Lucida Console,Monospace;
+
+}
+DIV.code {
+	padding: 10px;
+	background-color: #f8f8f8;	
+}
+DIV.code BR {
+	line-height: 0px;
+}
+DIV.terminal {
+	padding: 10px;
+	background-color: black;	
+	color: green;	
+}
+DIV.terminal SPAN {
+	font-weight: bold;
+	color: white;	
+}
+
+#player1, #player2, #player3 {text-align: center;}
+
+DIV.flickrTag_container {
+	text-align: center;
+	margin-left: 5px;
+}
+
+DIV.sociable {
+    position: absolute;
+    right: 10px;
+    bottom: -10px;
+}
+
+.sideh1 h1 {
+    padding-top: 10px;
+}
+
+/************ facebook connect *****************/
+.fbc_profile_pic {
+    display: none;
+}
+
+DIV.fbc_loginstate_top {
+    background-color: none;
+}
+
+.fbc_profile_header {
+    background-color: none;
+    background: none;
+}
+
+.flickrTag_container {
+	padding: 18px;
+	border: 1px solid #e8e8e8;
+}

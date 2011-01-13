@@ -171,32 +171,148 @@ Poniżej zamieszczono kilka odnośników do stron WWW związanych z Apache Cassa
  \item [http://wiki.apache.org/cassandra/] - strona wiki z dokumentacją
  \item [http://www.riptano.com/docs/0.6/index] - alternatywna dokumentacja dla wersji 0.6 oferowana przez firmę Riptano
  \item [http://arin.me/blog/wtf-is-a-supercolumn-cassandra-data-model] - bardzo dobry artykuł opisujący model danych systemu
- \item [http://www.parleys.com/\#st=5\&id=1866] - prezentacja wideo oferująca bardzo dobre wprowadzenie
+ \item [http://www.parleys.com/\#st=5\&id=1866] - prezentacja wideo oferująca bardzo dobre wprowadzenie do projektu
 \end{description}
 
 \section{HBase}
 \label{sec:hbase}
 
-\subsection*{Wstęp} 
+\subsection*{Wstęp}
+
+Apache HBase to system wzorowany na Google BigTable.
+Podobnie jak tamten system HBase zależy od dwóch innych systemów: Apache Hadoop i Apache ZooKeeper, pierwszy z których zapewnia replikację (podobnie jak GFS), a drugi przechowuje konfigurację i pozwala na wybór węzła master (tak jak Google Chubby).
+HBase powstało początkowo jako rozszerzenie do projektu Hadoop, ale z czasem zostało wydzielone jako osobny projekt, który początkowo przyjął tą samą numerację wersji i harmonogram wydań co projekt-rodzic, ale od najnowszej, jeszcze nie wydanej wersji 0.90, także ta więź zostanie zerwana.
+
+Apache Hadoop, na którym opiera się HBase, to implementacja Google MapReduce w Javie, jednak ponieważ tamten framework zależy od GFS, który nie jest publicznie dostępny, to Hadoop posiada własną implementację rozproszonego systemu plików.
 
 \subsection*{Protokół komunikacji}
 
+Istnieją trzy różne protokoły komunikacji z HBase: Java, Thrift oraz REST (dzięki nakładce o nazwie Stargate).
+Najczęściej aktualizowanym i w związku z tym oferującym najwięcej możliwości i najszybciej reagującym na zmiany jest API w Javie, ale pozostałe dwa nie są daleko w tyle.
+HBase jest wykorzystywane głównie w połączeniu z aplikacjami pisanymi w języku Java (prawdopodobnie głównie ze względu na ścisłe powiązanie z Apache Hadoop), ale dostępne są też biblioteki dla innych języków programowania.
+
+Podobnie jak większość systemów NoSQL, HBase nie posiada żadnych bardziej zaawansowanych mechanizmów kontroli dostępu.
+Jest jednak prawdopodobne, że w przyszłych wersjach taka funkcjonalność zostanie dodana dzięki koprocesorom, czyli funkcjonalności, która ma pojawić się w HBase 0.92 (patrz dalej).
+Istnieje już nawet implementacja on nazwie \emph{Secure HBase}, która to umożliwia\footnote{http://hbaseblog.com/2010/10/11/secure-hbase-access-controls/}.
+
 \subsection*{Replikacja}
+
+Podobnie jak Google BigTable, HBase pozostawia replikację rozproszonemu systemowi plików, na którym zapisuje dane.
+Teoretycznie, HBase może być wykorzystane z praktycznie dowolnym rozproszonym systemem plików, ale w rzeczywistości system ten jest wykorzystywany tylko w połączeniu z HDFS (\emph{Hadoop Distributed File System}), oraz o wiele rzadziej z KFS (dawniej \emph{Kosmos File System}, teraz \emph{CloudStore}).
+
+\subsubsection*{HDFS}
+
+HDFS jest systemem plików przypominającym swoją architekturą Google File System.
+Została ona opisana bliżej w artykule z 2007 roku \cite{hdfs-architecture}, który wprawdzie daje dobry pogląd o tym jak działa ten system, ale jest niestety na tyle stary, że nie jest już autorytatywnym źródłem na ten temat.
+
+Podobnie jak GFS występują w tym systemie dwa typy węzłów: NameNode (jeden w klastrze, odpowiednik węzła Master) oraz DataNode (wszystkie pozostałe, odpowiedniki \emph{chunk-server}).
+Tak samo jak GFS, HDFS jest stworzony z myślą przede wszystkim o dużych i bardzo dużych plikach, które podobnie jak w systemie Google są przechowywane podzielone na fragmenty o domyślnej wielkości 64MB, które to fragmenty są także jednostką replikacji.
+
+Największą różnicą między HDFS a GFS jest to, że w systemie Apache awaria węzła NameNode powoduje awarię całego systemu i konieczność jego ponownego uruchomienia.
+Jest to o tyle istotne, że węzeł NameNode HDFS pozostaje jedyną ,,piętą Achillesową''\footnote{czyt. \emph{Single Point of Failure}} HBase, które wprawdzie także posiada węzeł Master, ale od niedawna jego awaria już nie powoduje awarii całego systemu.
+
+Inną istotną różnicą między tymi systemami jest to, że ponieważ HDFS powstał na potrzeby narzędzia MapReduce (Hadoop), które z natury nie potrzebuje modyfikować plików po tym jak zostaną one już zapisane, to system ten nie posiada żadnej funkcjonalności przypominającej tą znaną z GFS, która pozwala na dopisywanie ,,rekordów'' na koniec plików przez wielu klientów równocześnie.
+Początkowo HDFS był całkowicie pozbawiony możliwości zmieniania zawartości plików, a same pliki były dostępne do odczytu dopiero gdy zostały poprawnie zamknięte\footnote{W związku z tym, HBase jeszcze do niedawna traciło dane w przypadku awarii węzła zapisującego, ponieważ nie dało się ich odczytać z nie zamkniętego poprawnie pliku. W najnowszej wersji (niestabilnej) błąd ten już został naprawiony i da się odzyskiwać dane zapisane w ten sposób.}, później jednak została dodana operacja \verb+append()+, która pozwala na dopisywanie na koniec pliku, ale ponieważ okazało się że nie działa ona całkowicie poprawnie, operacja ta jest dostępna dopiero po ustawieniu odpowiedniej opcji w konfiguracji.
 
 \subsection*{Partycjonowanie}
 
+Apache HBase wykorzystuje ten sam sposób partycjonowania danych co Google BigTable.
+Podobnie jak w tamtym systemie, tabele są podzielone na fragmenty o konfigurowalnej wielkości (domyślnie 256MB) nazywane regionami (w BigTable tabletami).
+Tak samo jak w BigTable, rzędy są sortowane, ale w odróżnieniu od Apache Cassandra nie jest możliwa zmiana algorytmu sortowania.
+
+Węzły systemu HBase dzielą się na węzeł master oraz serwery regionów (ang. \emph{Region Server}), które są odpowiednikami serwerów tabletów z BigTable.
+Każdy serwer regionów (tak jak w Apache Cassandra i BigTable) zapisuje wszystkie zmiany w dzienniku (\verb+HLog+), a następnie odwzorowuje je w pamięci (\verb+MemStore+).
+Struktura danych w pamięci jest regularnie zapisywana na dysk do plików (\verb+HFile+), które formatem przypominają pliki SSTable znane z BigTable, a te z kolei co pewien czas są łączone aby uniknąć wyszukiwania w dużej liczbie plików przy odczycie.
+Architektura ta jest dokładniej opisana w artykule na blogu jednego z programistów tworzących HBase Larsa George \cite{george-hbase-storage}, z którego zaczerpnięty został Rysunek \ref{fig:hbase-files}. 
+
+\myfigure{chapters/bazy_kolumnowe/hbase-files.png}{Architektura HBase}{fig:hbase-files}
+
+W starszych wersjach HBase, w przypadku awarii węzła master cały system musiał być uruchomiony ponownie, ale od wersji 0.20 została wprowadzona integracja z odpowiednikiem Google Chubby - Apache ZooKeeper, co pozwoliło na usunięcie tego problemu.
+
 \subsection*{Persystencja}
+
+Za trwałość danych w HBase odpowiada wybrany przez użytkownika system plików.
+Jednym z głównych problemów HBase, który został rozwiązany dopiero w nowej, niestabilnej wersji jest wspomniany już problem utraty danych w przypadku awarii serwera regionów, która sprawi, że plik ten nie zostanie poprawnie zamknięty.
+Pomijając ten problem, ponieważ każda operacja zmiany wymaga aby dane zostały poprawnie zreplikowane na skonfigurowaną przez użytkownika\footnote{stopień replikacji} liczbę węzłów, to dane zapisane w HBase są zapisywane w sposób trwały w porównaniu z innymi systemami.
 
 \subsection*{Wersjonowanie}
 
+Podobnie jak w Google BigTable, dane są wersjonowane przy pomocy znaczników czasowych (albo innych wartości liczbowych podanych przez użytkownika) i przechowywane są wszystkie wersje wartości, a nie tylko najnowsza jak w Apache Cassandra.
+
+Ponieważ Apache HBase jest systemem CP w rozumieniu Teorii CAP, to przechowywanie wielu wersji każdej wartości ma mniejsze znaczenie niż w systemach typu AP, gdzie konflikty są bardziej prawdopodobne.
+Znaczenie to jest tym mniejsze, że HBase posiada możliwość zakładania blokad na rzędy, dzięki czemu możliwe jest zaimplementowanie transakcji w obrębie pojedynczego rekordu (opcjonalnie można też włączyć możliwość blokowania wielu rzędów równocześnie, ale może to się wiązać z negatywnymi skutkami dla wydajności).
+
 \subsection*{Wyszukiwanie}
+
+\subsubsection*{Model Danych}
+
+Model danych HBase jest praktycznie identyczny do modelu danych BigTable\footnote{patrz strona \pageref{google-bigtable-model-danych}.}, oraz w odróżnieniu od Apache Cassandra posługuje się tą samą nomenklaturą nie zmieniając znaczenia poszczególnych terminów.
+
+W HBase jednostką najwyższego poziomu jest \emph{tabela}, która jest posortowanym zbiorem rzędów, z których każdy jest identyfikowany przez klucz, który jest ciągiem bajtów.
+Sortowanie odbywa się po kluczu, w porządku leksykalnym, bajtowo.
+Każdy rząd może składać się z dowolnej liczby kolumn oraz rodzin kolumn, które z kolei także mogą zawierać kolumny.
+Oczywiście tak jak we wszystkich bazach kolumnowych, ,,puste'' wartości nie zajmują miejsca na dysku, a dowolne dwa rzędy mogą się całkowicie różnić zestawem kolumn.
+
+W odróżnieniu od Apache Cassandra nie ma potrzeby deklarowania z góry tabel, mogą one być tworzone dynamicznie, w trakcie działania aplikacji i bez potrzeby restartowania czegokolwiek.
+
+\subsubsection*{Wyszukiwanie rekordów}
+
+Jak przystało na kolumnową bazę, HBase posiada bardzo ograniczone API.
+Możliwe jest pobieranie rzędów używając klucza albo zakresu kluczy, a ponadto na poziomie pojedynczego wiersza limitowanie pobranych kolumn (także rodzin kolumn) oraz liczby i zakresu wersji wartości.
+
+Funkcjonalność oferowana przez HBase w zakresie wyszukiwania nie należy do rozbudowanych, stąd też większość ciężaru spoczywa w tym przypadku na użytkowniku, który musi własnoręcznie implementować indeksy umożliwiające znajdowanie rekordów.
 
 \subsection*{Unikalne cechy}
 
+\subsubsection*{Integracja z Apache Hadoop}
+
+Apache Hadoop jest projektem stworzonym z myślą o przetwarzaniu gigantycznych zbiorów danych, a Apache HBase z myślą o przechowywaniu takich zbiorów.
+Funkcjonalność oferowana przez ten framework MapReduce stanowi bardzo istotne rozszerzenie dla HBase, ponieważ umożliwia dokonywanie różnego rodzaju obliczeń i transformacji danych, których dane wejściowe i wyjściowe mogą być w niej zapisywane, a co za tym idzie ułatwia tworzenie indeksów, zmaterializowanych widoków, a nawet import i eksport danych.
+
+\subsubsection*{Coprocessor API}
+
+Jedną z ciekawszych funkcjonalności, które będą dostępne w przyszłym wydaniu Apache HBase są koprocesory (ang. \emph{coprocessor}).
+Mogą one być porównane do \emph{triggerów} w relacyjnych bazach danych.
+
+Koprocesorem w HBase jest klasa (napisana w Javie), której metody są wywoływane w przestrzeni adresowej serwera w przypadku zajścia różnych zdarzeń.
+Do zdarzeń tych należą między innymi zdarzenia związane z tworzeniem i łączeniem plików HFile, oraz zdarzenia, które mają miejsce przy zapisie, odczycie itp. pojedynczych wierszy.
+W przyszłości planowane jest także zastosowanie koprocesorów w celu optymalizacji przetwarzania danych na serwerze, w celu zmniejszenia narzutu komunikacyjnego, jaki ma miejsce przy wykorzystaniu Hadoop do wykonywania operacji Map-Reduce.
+
 \subsection*{Typowe zastosowania}
+
+HBase, jako silnie konsystentna baza danych oferuje prostszy model programowania niż na przykład Apache Cassandra, ale z drugiej strony ma także mniejsze możliwości jeżeli chodzi o wyszukiwanie rekordów i filtrowanie kolumn, co sprawia, że nie jest wcale o wiele łatwiejszym systemem w użyciu.
+Największą zaletą tej bazy jest bardzo dobra integracja z Apache Hadoop, która czyni ją kuszącą opcją dla aplikacji, które przechowują ogromne ilości danych przetwarzanych na różne sposoby, czyli na przykład wyszukiwarek internetowych.
+
+Do najbardziej znanych aplikacji korzystających z HBase należy StumbleUpon - spersonalizowany silnik rekomendacji różnego rodzaju treści online.
+HBase i Hadoop są także wykorzystywane przez wyszukiwarkę internetową firmy Microsoft - Bing\footnote{http://www.theregister.co.uk/2009/05/07/microsoft\_search\_built\_on\_open\_source/}.
 
 \subsection*{Przeciwwskazania}
 
+Apache HBase w swojej obecnej ,,stabilnej'' wersji (0.20.6) nie jest jeszcze bazą wystarczająco stabilną, aby można ją było polecić do zastosowania w środowisku produkcyjnym.
+Szczególnie problematyczne jest tu ryzyko utraty danych w przypadku awarii węzła.
+
+Nie wskazane (choć oczywiście możliwe) jest też uruchamianie HBase na platformie Amazon EC2 ze względu na istnienie pojedynczego punktu awarii, a mianowicie węzła NameNode HDFS.
+
+W internecie można znaleźć informacje, że HBase jest zbyt wolne aby nadawać się dla aplikacji on-line\footnote{http://www.metabrew.com/article/anti-rdbms-a-list-of-distributed-key-value-stores/}, jednak przykład StumbleUpon pokazuje, że nie jest to prawdą.
+
 \subsection*{Dokumentacja i wsparcie}
 
+HBase, w odróżnieniu od większości systemów NoSQL nie jest tworzone głównie przez programistów jednej firmy, ale przez osoby należące do wielu różnych instytucji.
+Zaletą takiego układu jest to, że łatwiej jest uzyskać darmową pomoc od ludzi, którzy pracują nad tą aplikacją ponieważ ich firmy nie zarabiają na sprzedawaniu tych usług.
+Wadą jest jednak to, że brakuje firmy, która oferowałaby wyspecjalizowane usługi, szkolenia i gwarantowane wsparcie dla tego produktu.
+
+Od września 2009 HBase zostało włączone do pakietu produktów opartych o Apache Hadoop oferowanego przez firmę Cloudera, co przynajmniej częściowo mityguje tą wadę.
+
+Dokumentacja projektu, podobnie jak w przypadku Apache Cassandra jest dość chaotyczna i dostępna jedynie w postaci wiki.
+W internecie jest dostępnych stosunkowo niewiele wideo-prezentacji opisujących tą bazę, ale za to można znaleźć dość dużo informacji o tym systemie na różnych blogach.
+
 \subsection*{Pomocne odnośniki}
+
+Poniżej zamieszczono kilka odnośników do stron WWW związanych z Apache HBase:
+
+\begin{description}
+ \item [http://hbase.apache.org/] - strona domowa projektu
+ \item [http://wiki.apache.org/hadoop/Hbase] - strona wiki z dokumentacją
+ \item [http://www.parleys.com/parleysserver/indexing/presentation.form?id=1859] - prezentacja wideo oferująca bardzo dobre wprowadzenie do projektu
+ \item [http://nosqltapes.com/video/ryan-rawson-on-hbase-at-stumbleupon] - wywiad z jednym z twórców bazy, który opowiada między innymi o zastosowaniach HBase w firmie StumbleUpon
+\end{description}

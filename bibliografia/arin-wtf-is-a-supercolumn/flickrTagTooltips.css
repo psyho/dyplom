@@ -1,0 +1,31 @@
+.flickrTag_container {
+	position: relative;
+}
+
+.flickrTag_tooltip {
+	position: absolute;
+	overflow: hidden;
+	border: none;
+
+	font-family: sans-serif;
+	font-size: 10px;
+	line-height: 120%;
+	color: black;
+
+	margin: 0px;
+	padding: 0px;
+	width: 250px;
+
+	background:transparent url(top.gif) no-repeat scroll left top;
+}
+
+.flickrTag_tooltip .text {
+	background: #FFFFFF none repeat scroll 0%;
+
+	border: 1px solid #666666;
+	border-top: none;
+
+	margin: 0px;
+	margin-top: 13px;
+	padding: 5px;
+}

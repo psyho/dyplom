@@ -1,0 +1,1776 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html dir='ltr' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
+<head>
+<link href='https://pip.verisignlabs.com/server' rel='openid.server'/>
+<link href='http://larsgeorge.pip.verisignlabs.com/' rel='openid.delegate'/>
+<link href='http://pip.verisignlabs.com/server' rel='openid2.provider'/>
+<link href='http://larsgeorge.pip.verisignlabs.com/' rel='openid2.local_id'/>
+<meta content='text/html; charset=UTF-8' http-equiv='Content-Type'/>
+<script type="text/javascript">(function() { var a=window;function c(b){this.t={};this.tick=function(d,i,e){e=e?e:(new Date).getTime();this.t[d]=[e,i]};this.tick("start",null,b)}var f=new c;a.jstiming={Timer:c,load:f};try{var g=null;if(a.chrome&&a.chrome.csi)g=Math.floor(a.chrome.csi().pageT);if(g==null)if(a.gtbExternal)g=a.gtbExternal.pageT();if(g==null)if(a.external)g=a.external.pageT;if(g)a.jstiming.pt=g}catch(h){};a.tickAboveFold=function(b){b=b;var d=0;if(b.offsetParent){do d+=b.offsetTop;while(b=b.offsetParent)}b=d;b<=750&&a.jstiming.load.tick("aft")};var j=false;function k(){if(!j){j=true;a.jstiming.load.tick("firstScrollTime")}}a.addEventListener?a.addEventListener("scroll",k,false):a.attachEvent("onscroll",k);
+ })();</script>
+<meta content='true' name='MSSmartTagsPreventParsing'/>
+<meta content='blogger' name='generator'/>
+<link href='http://www.blogger.com/favicon.ico' rel='icon' type='image/vnd.microsoft.icon'/>
+<link href='hbase-architecture-101-storage.html' rel='canonical'/>
+<link rel="alternate" type="application/atom+xml" title="Lineland - Atom" href="http://www.larsgeorge.com/feeds/posts/default" />
+<link rel="alternate" type="application/rss+xml" title="Lineland - RSS" href="http://www.larsgeorge.com/feeds/posts/default?alt=rss" />
+<link rel="service.post" type="application/atom+xml" title="Lineland - Atom" href="http://www.blogger.com/feeds/860423771829255614/posts/default" />
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://www.blogger.com/rsd.g?blogID=860423771829255614" />
+<link rel="alternate" type="application/atom+xml" title="Lineland - Atom" href="http://www.larsgeorge.com/feeds/8073228651920917483/comments/default" />
+<link rel="image_src" href="http://1.bp.blogspot.com/_Cib_A77V54U/StorLZRjHSI/AAAAAAAAAEI/4IznGhslNxw/s72-c/hbase-files.png" />
+<!--[if IE]> <script> (function() { var html5 = ("abbr,article,aside,audio,canvas,datalist,details," + "figure,footer,header,hgroup,mark,menu,meter,nav,output," + "progress,section,time,video").split(','); for (var i = 0; i < html5.length; i++) { document.createElement(html5[i]); } })(); </script> <![endif]-->
+<title>Lineland: HBase Architecture 101 - Storage</title>
+<link type='text/css' rel='stylesheet' href='http://www.blogger.com/static/v1/widgets/1743847221-widget_css_bundle.css' />
+ <link rel="stylesheet" type="text/css" href="http://www.blogger.com/dyn-css/authorization.css?targetBlogID=860423771829255614&zx=87ef3c3f-9506-4ff5-818b-eeefe5da5bd3"/>
+<style type="text/css">#navbar-iframe { display:block }
+</style>
+
+<style id='page-skin-1' type='text/css'><!--
+/*
+-----------------------------------------------
+Blogger Template Style
+Name:     Stretch Denim Light
+Designer: Darren Delaye
+URL:      www.DarrenDelaye.com
+Date:     11 Jul 2006
+-----------------------------------------------
+*/
+/* Variable definitions
+====================
+<Variable name="bgColor" description="Page Background Color"
+type="color" default="#ffffff">
+<Variable name="textColor" description="Text Color"
+type="color" default="#333333">
+<Variable name="linkColor" description="Link Color"
+type="color" default="#336699">
+<Variable name="headerBgColor" description="Page Header Background Color"
+type="color" default="#c4e1ff">
+<Variable name="headerTextColor" description="Page Header Text Color"
+type="color" default="#003366">
+<Variable name="headerCornersColor" description="Page Header Corners Color"
+type="color" default="#c4e1ff">
+<Variable name="mainBgColor" description="Main Background Color"
+type="color" default="#ffffff">
+<Variable name="borderColor" description="Border Color"
+type="color" default="#ffffff">
+<Variable name="dateHeaderColor" description="Date Header Color"
+type="color" default="#999999">
+<Variable name="sidebarTitleBgColor" description="Sidebar Title Background Color"
+type="color" default="#ffffff">
+<Variable name="sidebarTitleTextColor" description="Sidebar Title Text Color"
+type="color" default="#333333">
+<Variable name="bodyFont" description="Text Font"
+type="font" default="normal normal 100% Verdana, Arial, Sans-serif;">
+<Variable name="headerFont" description="Page Header Font"
+type="font" default="normal normal 210% Verdana, Arial, Sans-serif;">
+<Variable name="startSide" description="Start side in blog language"
+type="automatic" default="left">
+<Variable name="endSide" description="End side in blog language"
+type="automatic" default="right">
+*/
+body {
+background: #ffffff;
+margin: 0;
+padding: 0px;
+font: x-small Verdana, Arial;
+text-align: center;
+color: #333333;
+font-size/* */:/**/small;
+font-size: /**/small;
+}
+a:link {
+color: #336699;
+}
+a:visited {
+color: #336699;
+}
+a img {
+border-width: 0;
+}
+#outer-wrapper {
+font: normal normal 100% Verdana, Arial, Sans-serif;;
+}
+/* Header
+----------------------------------------------- */
+#header-wrapper {
+margin:0;
+padding: 0;
+background-color: #c4e1ff;
+text-align: left;
+}
+#header {
+margin: 0 2%;
+background-color: #c4e1ff;
+color: #003366;
+padding: 0;
+font: normal normal 210% Verdana, Arial, Sans-serif;;
+position: relative;
+}
+h1.title {
+padding-top: 38px;
+margin: 0 1% .1em;
+line-height: 1.2em;
+font-size: 100%;
+}
+h1.title a, h1.title a:visited {
+color: #003366;
+text-decoration: none;
+}
+#header .description {
+display: block;
+margin: 0 1%;
+padding: 0 0 40px;
+line-height: 1.4em;
+font-size: 50%;
+}
+/* Content
+----------------------------------------------- */
+.clear {
+clear: both;
+}
+#content-wrapper {
+margin: 0 2%;
+padding: 0 0 15px;
+text-align: left;
+background-color: #ffffff;
+border: 1px solid #ffffff;
+border-top: 0;
+}
+#main-wrapper {
+margin-left: 1%;
+width: 64%;
+float: left;
+background-color: #ffffff;
+display: inline;       /* fix for doubling margin in IE */
+word-wrap: break-word; /* fix for long text breaking sidebar float in IE */
+overflow: hidden;      /* fix for long non-text content breaking IE sidebar float */
+}
+#sidebar-wrapper {
+margin-right: 1%;
+width: 29%;
+float: right;
+background-color: #ffffff;
+display: inline;       /* fix for doubling margin in IE */
+word-wrap: break-word; /* fix for long text breaking sidebar float in IE */
+overflow: hidden;      /* fix for long non-text content breaking IE sidebar float */
+}
+/* Headings
+----------------------------------------------- */
+h2, h3 {
+margin: 0;
+}
+/* Posts
+----------------------------------------------- */
+.date-header {
+margin: 1.5em 0 0;
+font-weight: normal;
+color: #999999;
+font-size: 100%;
+}
+.post {
+margin: 0 0 1.5em;
+padding-bottom: 1.5em;
+}
+.post-title {
+margin: 0;
+padding: 0;
+font-size: 125%;
+font-weight: bold;
+line-height: 1.1em;
+}
+.post-title a, .post-title a:visited, .post-title strong {
+text-decoration: none;
+color: #333333;
+font-weight: bold;
+}
+.post div {
+margin: 0 0 .75em;
+line-height: 1.3em;
+}
+.post-footer {
+margin: -.25em 0 0;
+color: #333333;
+font-size: 87%;
+}
+.post-footer .span {
+margin-right: .3em;
+}
+.post img, table.tr-caption-container {
+padding: 4px;
+border: 1px solid #ffffff;
+}
+.tr-caption-container img {
+border: none;
+padding: 0;
+}
+.post blockquote {
+margin: 1em 20px;
+}
+.post blockquote p {
+margin: .75em 0;
+}
+/* Comments
+----------------------------------------------- */
+#comments h4 {
+margin: 1em 0;
+color: #999999;
+}
+#comments h4 strong {
+font-size: 110%;
+}
+#comments-block {
+margin: 1em 0 1.5em;
+line-height: 1.3em;
+}
+#comments-block dt {
+margin: .5em 0;
+}
+#comments-block dd {
+margin: .25em 0 0;
+}
+#comments-block dd.comment-footer {
+margin: -.25em 0 2em;
+line-height: 1.4em;
+font-size: 78%;
+}
+#comments-block dd p {
+margin: 0 0 .75em;
+}
+.deleted-comment {
+font-style:italic;
+color:gray;
+}
+.feed-links {
+clear: both;
+line-height: 2.5em;
+}
+#blog-pager-newer-link {
+float: left;
+}
+#blog-pager-older-link {
+float: right;
+}
+#blog-pager {
+text-align: center;
+}
+/* Sidebar Content
+----------------------------------------------- */
+.sidebar h2 {
+margin: 1.6em 0 .5em;
+padding: 4px 5px;
+background-color: #ffffff;
+font-size: 100%;
+color: #333333;
+}
+.sidebar ul {
+margin: 0;
+padding: 0;
+list-style: none;
+}
+.sidebar li {
+margin: 0;
+padding-top: 0;
+padding-right: 0;
+padding-bottom: .5em;
+padding-left: 15px;
+text-indent: -15px;
+line-height: 1.5em;
+}
+.sidebar {
+color: #333333;
+line-height:1.3em;
+}
+.sidebar .widget {
+margin-bottom: 1em;
+}
+.sidebar .widget-content {
+margin: 0 5px;
+}
+/* Profile
+----------------------------------------------- */
+.profile-img {
+float: left;
+margin-top: 0;
+margin-right: 5px;
+margin-bottom: 5px;
+margin-left: 0;
+padding: 4px;
+border: 1px solid #ffffff;
+}
+.profile-data {
+margin:0;
+text-transform:uppercase;
+letter-spacing:.1em;
+font-weight: bold;
+line-height: 1.6em;
+font-size: 78%;
+}
+.profile-datablock {
+margin:.5em 0 .5em;
+}
+.profile-textblock {
+margin: 0.5em 0;
+line-height: 1.6em;
+}
+/* Footer
+----------------------------------------------- */
+#footer {
+clear: both;
+text-align: center;
+color: #333333;
+}
+#footer .widget {
+margin:.5em;
+padding-top: 20px;
+font-size: 85%;
+line-height: 1.5em;
+text-align: left;
+}
+/** Page structure tweaks for layout editor wireframe */
+body#layout #header {
+width: 750px;
+}
+
+--></style>
+<script type="text/javascript">
+if (window.jstiming) window.jstiming.load.tick('headEnd');
+</script></head>
+<body>
+<div class='navbar section' id='navbar'><div class='widget Navbar' id='Navbar1'><script type="text/javascript">
+    function setAttributeOnload(object, attribute, val) {
+      if(window.addEventListener) {
+        window.addEventListener("load",
+          function(){ object[attribute] = val; }, false);
+      } else {
+        window.attachEvent('onload', function(){ object[attribute] = val; });
+      }
+    }
+  </script>
+<iframe src="http://www.blogger.com/navbar.g?targetBlogID=860423771829255614&amp;blogName=Lineland&amp;publishMode=PUBLISH_MODE_HOSTED&amp;navbarType=BLUE&amp;layoutType=LAYOUTS&amp;searchRoot=http%3A%2F%2Fwww.larsgeorge.com%2Fsearch&amp;blogLocale=en&amp;homepageUrl=http%3A%2F%2Fwww.larsgeorge.com%2F&amp;targetPostID=8073228651920917483" marginwidth="0" marginheight="0" scrolling="no" frameborder="0" height="30px" width="100%" id="navbar-iframe" allowtransparency="true" title="Blogger Navigation and Search"></iframe>
+<div></div></div></div>
+<div id='outer-wrapper'><div id='wrap2'>
+<!-- skip links for text browsers -->
+<span id='skiplinks' style='display:none;'>
+<a href='hbase-architecture-101-storage.html#main'>skip to main </a> |
+      <a href='hbase-architecture-101-storage.html#sidebar'>skip to sidebar</a>
+</span>
+<div id='header-wrapper'>
+<div class='header section' id='header'><div class='widget Header' id='Header1'>
+<div id='header-inner'>
+<div class='titlewrapper'>
+<h1 class='title'>
+<a href='http://www.larsgeorge.com/'>Lineland</a>
+</h1>
+</div>
+<div class='descriptionwrapper'>
+<p class='description'><span>Everything's a dot.</span></p>
+</div>
+</div>
+</div></div>
+</div>
+<div id='content-wrapper'>
+<div id='crosscol-wrapper' style='text-align:center'>
+<div class='crosscol section' id='crosscol'></div>
+</div>
+<div id='main-wrapper'>
+<div class='main section' id='main'><div class='widget Blog' id='Blog1'>
+<div class='blog-posts hfeed'>
+<!-- google_ad_section_start(name=default) -->
+
+          <div class="date-outer">
+        
+<h2 class='date-header'><span>Monday, October 12, 2009</span></h2>
+
+          <div class="date-posts">
+        
+<div class='post-outer'>
+<div class='post hentry'>
+<a name='8073228651920917483'></a>
+<h3 class='post-title entry-title'>
+HBase Architecture 101 - Storage
+</h3>
+<div class='post-header'>
+<div class='post-header-line-1'></div>
+</div>
+<div class='post-body entry-content'>
+One of the more hidden aspects of <a href="http://hadoop.apache.org/hbase/">HBase</a> is how data is actually stored. While the majority of users may never have to bother about it you may have to get up to speed when you want to learn what the various advanced configuration options you have at your disposal mean. "How can I tune HBase to my needs?", and other similar questions are certainly interesting once you get over the (at times steep) learning curve of setting up a basic system. Another reason wanting to know more is if for whatever reason disaster strikes and you have to recover a HBase installation. <br /><br />In my own efforts getting to know the respective classes that handle the various files I started to sketch a picture in my head illustrating the storage architecture of HBase. But while the ingenious and blessed committers of HBase easily navigate back and forth through that maze I find it much more difficult to keep a coherent image. So I decided to put that sketch to paper. Here it is.  <br /><br /><a onblur="try {parent.deselectBloggerImageGracefully();} catch(e) {}" href="http://1.bp.blogspot.com/_Cib_A77V54U/StorLZRjHSI/AAAAAAAAAEI/4IznGhslNxw/s1600-h/hbase-files.png"><img style="float:left; margin:0 10px 10px 0;cursor:pointer; cursor:hand;width: 400px; height: 202px;" src="http://1.bp.blogspot.com/_Cib_A77V54U/StorLZRjHSI/AAAAAAAAAEI/4IznGhslNxw/s400/hbase-files.png" border="0" alt=""id="BLOGGER_PHOTO_ID_5393670978492636450" /></a> Please note that this is not a UML or call graph but a merged picture of classes and the files they handle and by no means complete though focuses on the topic of this post. I will discuss the details below and also look at the configuration options and how they affect the low-level storage files.<br /><br /><u>The Big Picture</u><br /><br />So what does my sketch of the HBase innards really say? You can see that HBase handles basically two kinds of file types. One is used for the write-ahead log and the other for the actual data storage. The files are primarily handled by the <code>HRegionServer</code>'s. But in certain scenarios even the <code>HMaster</code> will have to perform low-level file operations. You may also notice that the actual files are in fact divided up into smaller blocks when stored within the Hadoop Distributed Filesystem (HDFS). This is also one of the areas where you can configure the system to handle larger or smaller data better. More on that later.<br /><br />The general flow is that a new client contacts the Zookeeper quorum (a separate cluster of Zookeeper nodes) first to find a particular row key. It does so by retrieving the server name (i.e. host name) that hosts the -ROOT- region from Zookeeper. With that information it can query that server to get the server that hosts the .META. table. Both of these two details are cached and only looked up once. Lastly it can query the .META. server and retrieve the server that has the row the client is looking for.<br /><br />Once it has been told where the row resides, i.e. in what region, it caches this information as well and contacts the <code>HRegionServer</code> hosting that region directly. So over time the client has a pretty complete picture of where to get rows from without needing to query the .META. server again. <br /><br />Note: The <code>HMaster</code> is responsible to assign the regions to each <code>HRegionServer</code> when you start HBase. This also includes the "special" -ROOT- and .META. tables.<br /><br />Next the <code>HRegionServer</code> opens the region it creates a corresponding <code>HRegion</code> object. When the <code>HRegion</code> is "opened" it sets up a <code>Store</code> instance for each <code>HColumnFamily</code> for every table as defined by the user beforehand. Each of the <code>Store</code> instances can in turn have one or more <code>StoreFile</code> instances, which are lightweight wrappers around the actual storage file called <code>HFile</code>. A <code>HRegion</code> also has a <code>MemStore</code> and a <code>HLog</code> instance. We will now have a look at how they work together but also where there are exceptions to the rule. <br /><br /><u>Stay Put</u><br /><br />So how is data written to the actual storage? The client issues a <code>HTable.put(Put)</code> request to the <code>HRegionServer</code> which hands the details to the matching <code>HRegion</code> instance. The first step is now to decide if the data should be first written to the "Write-Ahead-Log" (WAL) represented by the <code>HLog</code> class. The decision is based on the flag set by the client using <code>Put.writeToWAL(boolean)</code> method. The WAL is a standard Hadoop <code>SequenceFile</code> (although it is currently discussed if that should not be changed to a more HBase suitable file format) and it stores <code>HLogKey</code>'s. These keys contain a sequential number as well as the actual data and are used to replay not yet persisted data after a server crash.<br /><br />Once the data is written (or not) to the WAL it is placed in the <code>MemStore</code>. At the same time it is checked if the <code>MemStore</code> is full and in that case a flush to disk is requested. When the request is served by a separate thread in the <code>HRegionServer</code> it writes the data to an <code>HFile</code> located in the HDFS. It also saves the last written sequence number so the system knows what was persisted so far. Let"s have a look at the files now.<br /><br /><u>Files</u><br /><br />HBase has a configurable root directory in the HDFS but the default is <code>/hbase</code>. You can simply use the DFS tool of the Hadoop command line tool to look at the various files HBase stores.<br /><br /><pre class="brush:plain">$ hadoop dfs -lsr /hbase/docs<br />...<br />drwxr-xr-x   - hadoop supergroup          0 2009-09-28 14:22 /hbase/.logs<br />drwxr-xr-x   - hadoop supergroup          0 2009-10-15 14:33 /hbase/.logs/srv1.foo.bar,60020,1254172960891<br />-rw-r--r--   3 hadoop supergroup      14980 2009-10-14 01:32 /hbase/.logs/srv1.foo.bar,60020,1254172960891/hlog.dat.1255509179458<br />-rw-r--r--   3 hadoop supergroup       1773 2009-10-14 02:33 /hbase/.logs/srv1.foo.bar,60020,1254172960891/hlog.dat.1255512781014<br />-rw-r--r--   3 hadoop supergroup      37902 2009-10-14 03:33 /hbase/.logs/srv1.foo.bar,60020,1254172960891/hlog.dat.1255516382506<br />...<br />-rw-r--r--   3 hadoop supergroup  137648437 2009-09-28 14:20 /hbase/docs/1905740638/oldlogfile.log<br />...<br />drwxr-xr-x   - hadoop supergroup          0 2009-09-27 18:03 /hbase/docs/999041123<br />-rw-r--r--   3 hadoop supergroup       2323 2009-09-01 23:16 /hbase/docs/999041123/.regioninfo<br />drwxr-xr-x   - hadoop supergroup          0 2009-10-13 01:36 /hbase/docs/999041123/cache<br />-rw-r--r--   3 hadoop supergroup   91540404 2009-10-13 01:36 /hbase/docs/999041123/cache/5151973105100598304<br />drwxr-xr-x   - hadoop supergroup          0 2009-09-27 18:03 /hbase/docs/999041123/contents<br />-rw-r--r--   3 hadoop supergroup  333470401 2009-09-27 18:02 /hbase/docs/999041123/contents/4397485149704042145<br />drwxr-xr-x   - hadoop supergroup          0 2009-09-04 01:16 /hbase/docs/999041123/language<br />-rw-r--r--   3 hadoop supergroup      39499 2009-09-04 01:16 /hbase/docs/999041123/language/8466543386566168248<br />drwxr-xr-x   - hadoop supergroup          0 2009-09-04 01:16 /hbase/docs/999041123/mimetype<br />-rw-r--r--   3 hadoop supergroup     134729 2009-09-04 01:16 /hbase/docs/999041123/mimetype/786163868456226374<br />drwxr-xr-x   - hadoop supergroup          0 2009-10-08 22:45 /hbase/docs/999882558<br />-rw-r--r--   3 hadoop supergroup       2867 2009-10-08 22:45 /hbase/docs/999882558/.regioninfo<br />drwxr-xr-x   - hadoop supergroup          0 2009-10-09 23:01 /hbase/docs/999882558/cache<br />-rw-r--r--   3 hadoop supergroup   45473255 2009-10-09 23:01 /hbase/docs/999882558/cache/974303626218211126<br />drwxr-xr-x   - hadoop supergroup          0 2009-10-12 00:37 /hbase/docs/999882558/contents<br />-rw-r--r--   3 hadoop supergroup  467410053 2009-10-12 00:36 /hbase/docs/999882558/contents/2507607731379043001<br />drwxr-xr-x   - hadoop supergroup          0 2009-10-09 23:02 /hbase/docs/999882558/language<br />-rw-r--r--   3 hadoop supergroup        541 2009-10-09 23:02 /hbase/docs/999882558/language/5662037059920609304<br />drwxr-xr-x   - hadoop supergroup          0 2009-10-09 23:02 /hbase/docs/999882558/mimetype<br />-rw-r--r--   3 hadoop supergroup      84447 2009-10-09 23:02 /hbase/docs/999882558/mimetype/2642281535820134018<br />drwxr-xr-x   - hadoop supergroup          0 2009-10-14 10:58 /hbase/docs/compaction.dir<br /></pre><br /><br />The first set of files are the log files handled by the <code>HLog</code> instances and which are created in a directory called <code>.logs</code> underneath the HBase root directory. Then there is another subdirectory for each <code>HRegionServer</code> and then a log for each <code>HRegion</code>. <br /><br />Next there is a file called <code>oldlogfile.log</code> which you may not even see on your cluster. They are created by one of the exceptions I mentioned earlier as far as file access is concerned. They are a result of so called "log splits". When the <code>HMaster</code> starts and finds that there is a log file that is not handled by a <code>HRegionServer</code> anymore it splits the log copying the <code>HLogKey</code>'s to the new regions they should be in. It places them directly in the region's directory in a file named <code>oldlogfile.log</code>. Now when the respective <code>HRegion</code> is instantiated it reads these files and inserts the contained data into its local <code>MemStore</code> and starts a flush to persist the data right away and delete the file. <br /><br />Note: Sometimes you may see left-over <code>oldlogfile.log.old</code> (yes, there is another .old at the end) which are caused by the <code>HMaster</code> trying repeatedly to split the log and found there was already another split log in place. At that point you have to consult with the <code>HRegionServer</code> or <code>HMaster</code> logs to see what is going on and if you can remove those files. I found at times that they were empty and therefore could safely be removed.<br /><br />The next set of files are the actual regions. Each region name is encoded using a Jenkins Hash function and a directory created for it. The reason to hash the region name is because it may contain characters that cannot be used in a path name in DFS. The Jenkins Hash always returns legal characters, as simple as that. So you get the following path structure:<br /><br /><code>/hbase/&lt;tablename&gt;/&lt;encoded-regionname&gt;/&lt;column-family&gt;/&lt;filename&gt;</code><br /><br />In the root of the region directory there is also a <code>.regioninfo</code> holding meta data about the region. This will be used in the future by an HBase <code>fsck</code> utility (see <a href="http://issues.apache.org/jira/browse/HBASE-7">HBASE-7</a>) to be able to rebuild a broken <code>.META.</code> table. For a first usage of the region info can be seen in <a href="http://issues.apache.org/jira/browse/HBASE-1867">HBASE-1867</a>. <br /><br />In each column-family directory you can see the actual data files, which I explain in the following section in detail. <br /><br />Something that I have not shown above are split regions with their initial daughter reference files. When a data file within a region grows larger than the configured <code>hbase.hregion.max.filesize</code> then the region is split in two. This is done initially very quickly because the system simply creates two reference files in the new regions now supposed to host each half. The name of the reference file is an ID with the hashed name of the referenced region as a postfix, e.g. <code>1278437856009925445.3323223323</code>. The reference files only hold little information: the key the original region was split at and wether it is the top or bottom reference. Of note is that these references are then used by the <code>HalfHFileReader</code> class (which I also omitted from the big picture above as it is only used temporarily) to read the original region data files. Only upon a compaction the original files are rewritten into separate files in the new region directory. This also removes the small reference files as well as the original data file in the original region. <br /><br />And this also concludes the file dump here, the last thing you see is a <code>compaction.dir</code> directory in each table directory. They are used when splitting or compacting regions as noted above. They are usually empty and are used as a scratch area to stage the new data files before swapping them into place.<br /><br /><u>HFile</u><br /><br />So we are now at a very low level of HBase's architecture. <code>HFile</code>'s (kudos to Ryan Rawson) are the actual storage files, specifically created to serve one purpose: store HBase's data fast and efficiently. They are apparently based on Hadoop's <code>TFile</code> (see <a href="http://issues.apache.org/jira/browse/HADOOP-3315">HADOOP-3315</a>) and mimic the SSTable format used in Googles BigTable architecture. The previous use of Hadoop's <code>MapFile</code>'s in HBase proved to be not good enough performance wise. So how do the files look like?<br /><br /><a onblur="try {parent.deselectBloggerImageGracefully();} catch(e) {}" href="http://4.bp.blogspot.com/_Cib_A77V54U/SteEzNS2qPI/AAAAAAAAAD4/z13-DGcA_qs/s1600-h/hfile.png"><img style="float:left; margin:0 10px 10px 0;cursor:pointer; cursor:hand;width: 400px; height: 118px;" src="http://4.bp.blogspot.com/_Cib_A77V54U/SteEzNS2qPI/AAAAAAAAAD4/z13-DGcA_qs/s400/hfile.png" border="0" alt=""id="BLOGGER_PHOTO_ID_5392925094076393714" /></a> The files have a variable length, the only fixed blocks are the FileInfo and Trailer block. As the picture shows it is the Trailer that has the pointers to the other blocks and it is written at the end of persisting the data to the file, finalizing the now immutable data store. The Index blocks record the offsets of the Data and Meta blocks. Both the Data and the Meta blocks are actually optional. But you most likely you would always find data in a data store file.<br /><br />How is the block size configured? It is driven solely by the <code>HColumnDescriptor</code> which in turn is specified at table creation time by the user or defaults to reasonable standard values. Here is an example as shown in the master web based interface: <br /><br /><code>{NAME => 'docs', FAMILIES => [{NAME => 'cache', COMPRESSION => 'NONE', VERSIONS => '3', TTL => '2147483647', BLOCKSIZE => '65536', IN_MEMORY => 'false', BLOCKCACHE => 'false'}, {NAME => 'contents', COMPRESSION => 'NONE', VERSIONS => '3', TTL => '2147483647', BLOCKSIZE => '65536', IN_MEMORY => 'false', BLOCKCACHE => 'false'}, ...<br /></code><br /><br />The default is "64KB" (or 65535 bytes). Here is what the HFile JavaDoc explains:<br /><br /><blockquote>"Minimum block size. We recommend a setting of minimum block size between 8KB to 1MB for general usage. Larger block size is preferred if files are primarily for sequential access. However, it would lead to inefficient random access (because there are more data to decompress). Smaller blocks are good for random access, but require more memory to hold the block index, and may be slower to create (because we must flush the compressor stream at the conclusion of each data block, which leads to an FS I/O flush). Further, due to the internal caching in Compression codec, the smallest possible block size would be around 20KB-30KB."</blockquote><br /><br />So each block with its prefixed "magic" header contains either plain or compressed data. How that looks like we will have a look at in the next section.<br /><br />One thing you may notice is that the default block size for files in DFS is 64MB, which is 1024 times what the <code>HFile</code> default block size is. So the HBase storage files blocks do <u>not</u> match the Hadoop blocks. Therefore you have to think about both parameters separately and find the sweet spot in terms of performance for your particular setup.<br /><br />One option in the HBase configuration you may see is <code>hfile.min.blocksize.size</code>. It seems to be only used during migration from earlier versions of HBase (since it had no block file format) and when directly creating <code>HFile</code> during bulk imports for example.<br /><br />So far so good, but how can you see if a <code>HFile</code> is OK or what data it contains? There is an App for that!<br /><br />The <code>HFile.main()</code> method provides the tools to dump a data file:<br /><br /><pre class="brush:plain">$ hbase org.apache.hadoop.hbase.io.hfile.HFile<br />usage: HFile  [-f <arg>] [-v] [-r <arg>] [-a] [-p] [-m] [-k]<br /> -a,--checkfamily    Enable family check<br /> -f,--file <arg>     File to scan. Pass full-path; e.g.<br />                     hdfs://a:9000/hbase/.META./12/34<br /> -k,--checkrow       Enable row order check; looks for out-of-order keys<br /> -m,--printmeta      Print meta data of file<br /> -p,--printkv        Print key/value pairs<br /> -r,--region <arg>   Region to scan. Pass region name; e.g. '.META.,,1'<br /> -v,--verbose        Verbose output; emits file and meta data delimiters<br /></pre><br />Here is an example of what the output will look like (shortened here):<br /><br /><pre class="brush:plain">$ hbase org.apache.hadoop.hbase.io.hfile.HFile -v -p -m -f \<br />  hdfs://srv1.foo.bar:9000/hbase/docs/999882558/mimetype/2642281535820134018<br /><br />Scanning -> hdfs://srv1.foo.bar:9000/hbase/docs/999882558/mimetype/2642281535820134018<br />...<br />K: \x00\x04docA\x08mimetype\x00\x00\x01\x23y\x60\xE7\xB5\x04 V: text\x2Fxml<br />K: \x00\x04docB\x08mimetype\x00\x00\x01\x23x\x8C\x1C\x5E\x04 V: text\x2Fxml<br />K: \x00\x04docC\x08mimetype\x00\x00\x01\x23xz\xC08\x04 V: text\x2Fxml<br />K: \x00\x04docD\x08mimetype\x00\x00\x01\x23y\x1EK\x15\x04 V: text\x2Fxml<br />K: \x00\x04docE\x08mimetype\x00\x00\x01\x23x\xF3\x23n\x04 V: text\x2Fxml<br />Scanned kv count -> 1554<br /><br />Block index size as per heapsize: 296<br />reader=hdfs://srv1.foo.bar:9000/hbase/docs/999882558/mimetype/2642281535820134018, \<br />  compression=none, inMemory=false, \<br />  firstKey=US6683275_20040127/mimetype:/1251853756871/Put, \<br />  lastKey=US6684814_20040203/mimetype:/1251864683374/Put, \<br />  avgKeyLen=37, avgValueLen=8, \<br />  entries=1554, length=84447<br />fileinfoOffset=84055, dataIndexOffset=84277, dataIndexCount=2, metaIndexOffset=0, \<br />  metaIndexCount=0, totalBytes=84055, entryCount=1554, version=1<br />Fileinfo:<br />MAJOR_COMPACTION_KEY = \xFF<br />MAX_SEQ_ID_KEY = 32041891<br />hfile.AVG_KEY_LEN = \x00\x00\x00\x25<br />hfile.AVG_VALUE_LEN = \x00\x00\x00\x08<br />hfile.COMPARATOR = org.apache.hadoop.hbase.KeyValue\x24KeyComparator<br />hfile.LASTKEY = \x00\x12US6684814_20040203\x08mimetype\x00\x00\x01\x23x\xF3\x23n\x04<br /></pre><br />The first part is the actual data stored as <code>KeyValue</code> pairs, explained in detail in the next section. The second part dumps the internal <code>HFile.Reader</code> properties as well as the Trailer block details and finally the FileInfo block values. This is a great way to check if a data file is still healthy. <br /><br /><u>KeyValue's</u><br /><br />In essence each <code>KeyValue</code> in the <code>HFile</code> is simply a low-level byte array that allows for "zero-copy" access to the data, even with lazy or custom parsing if necessary. How are the instances arranged?<br /><br /><a onblur="try {parent.deselectBloggerImageGracefully();} catch(e) {}" href="http://2.bp.blogspot.com/_Cib_A77V54U/StZMrzaKufI/AAAAAAAAADo/ZhK7bGoJdMQ/s1600-h/KeyValue.png"><img style="float:left; margin:0 10px 10px 0;cursor:pointer; cursor:hand;width: 400px; height: 62px;" src="http://2.bp.blogspot.com/_Cib_A77V54U/StZMrzaKufI/AAAAAAAAADo/ZhK7bGoJdMQ/s400/KeyValue.png" border="0" alt=""id="BLOGGER_PHOTO_ID_5392581919240796658" /></a> The structure starts with two fixed length numbers indicating the size of the key and the value part. With that info you can offset into the array to for example get direct access to the value, ignoring the key - if you know what you are doing. Otherwise you can get the required information from the key part. Once parsed into a <code>KeyValue</code> object you have getters to access the details.<br /><br />Note: One thing to watch out for is the difference between <code>KeyValue.getKey()</code> and <code>KeyValue.getRow()</code>. I think for me the confusion arose from referring to "row keys" as the primary key to get a row out of HBase. That would be the latter of the two methods, i.e. <code>KeyValue.getRow()</code>. The former simply returns the complete byte array part representing the raw "key" as colored and labeled in the diagram. <br /><br />This concludes my analysis of the HBase storage architecture. I hope it provides a starting point for your own efforts to dig into the grimy details. Have fun!<br /><br /><b>Update:</b> Slightly updated with more links to JIRA issues. Also added Zookeeper to be more precise about the current mechanisms to look up a region.<br /><br /><b>Update 2:</b> Added details about region references.<br /><br /><b>Update 3:</b> Added more details about region lookup as requested.
+<div style='clear: both;'></div>
+</div>
+<div class='post-footer'>
+<div class='post-footer-line post-footer-line-1'><span class='post-author vcard'>
+Posted by
+<span class='fn'>Lars George</span>
+</span>
+<span class='post-timestamp'>
+at
+<a class='timestamp-link' href='hbase-architecture-101-storage.html' rel='bookmark' title='permanent link'><abbr class='published' title='2009-10-12T14:35:00-07:00'>2:35 PM</abbr></a>
+</span>
+<span class='post-comment-link'>
+</span>
+<span class='post-icons'>
+<span class='item-control blog-admin pid-2071041050'>
+<a href='http://www.blogger.com/post-edit.g?blogID=860423771829255614&postID=8073228651920917483' title='Edit Post'>
+<img alt='' class='icon-action' height='18' src='http://img2.blogblog.com/img/icon18_edit_allbkg.gif' width='18'/>
+</a>
+</span>
+</span>
+<span class='post-backlinks post-comment-link'>
+</span>
+</div>
+<div class='post-footer-line post-footer-line-2'><span class='post-labels'>
+Labels:
+<a href='http://www.larsgeorge.com/search/label/hadoop' rel='tag'>hadoop</a>,
+<a href='http://www.larsgeorge.com/search/label/hbase' rel='tag'>hbase</a>
+</span>
+</div>
+<div class='post-footer-line post-footer-line-3'><span class='post-location'>
+</span>
+</div>
+</div>
+</div>
+<div class='comments' id='comments'>
+<a name='comments'></a>
+<h4>
+16
+comments:
+        
+</h4>
+<div id='Blog1_comments-block-wrapper'>
+<dl class='avatar-comment-indent' id='comments-block'>
+<dt class='comment-author ' id='c3447493990936871822'>
+<a name='c3447493990936871822'></a>
+<div class="avatar-image-container vcard"><span dir="ltr"><a href="http://www.blogger.com/profile/13066050448176267276" rel="nofollow" onclick="" class="avatar-hovercard" id="av-0-13066050448176267276"><img src="http://img1.blogblog.com/img/blank.gif" width="35" height="35" alt="" class="delayLoad" style="display: none;" longdesc="http://1.bp.blogspot.com/_4302GByuK0E/Stlws0KSbtI/AAAAAAAAAKQ/8m_97f2Ifmo/S45/hyunsik_choi.jpg" title="Hyunsik Choi">
+
+<noscript><img src="http://1.bp.blogspot.com/_4302GByuK0E/Stlws0KSbtI/AAAAAAAAAKQ/8m_97f2Ifmo/S45/hyunsik_choi.jpg" width="35" height="35" class="photo" alt=""></noscript></a></span></div>
+<a href='http://www.blogger.com/profile/13066050448176267276' rel='nofollow'>Hyunsik Choi</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-3447493990936871822'>
+<p>
+This article is very informative to me. Thank you :)
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1255764254777#c3447493990936871822' title='comment permalink'>
+October 17, 2009 12:24 AM
+</a>
+<span class='item-control blog-admin pid-2140778074'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=3447493990936871822' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+<dt class='comment-author ' id='c3389417903227436198'>
+<a name='c3389417903227436198'></a>
+<div class="avatar-image-container vcard"><span dir="ltr"><a href="http://www.blogger.com/profile/05950246190713417811" rel="nofollow" onclick="" class="avatar-hovercard" id="av-1-05950246190713417811"><img src="http://img1.blogblog.com/img/blank.gif" width="35" height="35" alt="" class="delayLoad" style="display: none;" longdesc="http://2.bp.blogspot.com/_xvH5pQUAm8o/SZdJ3GlcM3I/AAAAAAAAAAk/h4RJdqeD3i0/S45/s767431339_695870_3740.jpg" title="stack">
+
+<noscript><img src="http://2.bp.blogspot.com/_xvH5pQUAm8o/SZdJ3GlcM3I/AAAAAAAAAAk/h4RJdqeD3i0/S45/s767431339_695870_3740.jpg" width="35" height="35" class="photo" alt=""></noscript></a></span></div>
+<a href='http://www.blogger.com/profile/05950246190713417811' rel='nofollow'>stack</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-3389417903227436198'>
+<p>
+Excellent article Lars.
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1255818372689#c3389417903227436198' title='comment permalink'>
+October 17, 2009 3:26 PM
+</a>
+<span class='item-control blog-admin pid-1970110753'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=3389417903227436198' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+<dt class='comment-author ' id='c640013029379049242'>
+<a name='c640013029379049242'></a>
+<div class="avatar-image-container vcard"><span dir="ltr"><a href="http://www.blogger.com/profile/07889700598656669041" rel="nofollow" onclick="" class="avatar-hovercard" id="av-2-07889700598656669041"><img src="http://img1.blogblog.com/img/blank.gif" width="35" height="35" alt="" class="delayLoad" style="display: none;" longdesc="http://1.bp.blogspot.com/_5wZ2Fic5QtA/SXpau4Z5qeI/AAAAAAAAACI/mUoSGnbJwis/S45/tim.jpg" title="Tim Robertson">
+
+<noscript><img src="http://1.bp.blogspot.com/_5wZ2Fic5QtA/SXpau4Z5qeI/AAAAAAAAACI/mUoSGnbJwis/S45/tim.jpg" width="35" height="35" class="photo" alt=""></noscript></a></span></div>
+<a href='http://www.blogger.com/profile/07889700598656669041' rel='nofollow'>Tim Robertson</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-640013029379049242'>
+<p>
+Thanks Lars for taking the time - excellent article
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1255870242317#c640013029379049242' title='comment permalink'>
+October 18, 2009 5:50 AM
+</a>
+<span class='item-control blog-admin pid-64941529'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=640013029379049242' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+<dt class='comment-author ' id='c831408053856941086'>
+<a name='c831408053856941086'></a>
+<div class="avatar-image-container vcard"><span dir="ltr"><a href="http://www.blogger.com/profile/12369783173503766970" rel="nofollow" onclick="" class="avatar-hovercard" id="av-3-12369783173503766970"><img src="http://img1.blogblog.com/img/blank.gif" width="35" height="35" alt="" class="delayLoad" style="display: none;" longdesc="http://2.bp.blogspot.com/_5QIU8D7GfDs/SXp9POvpqfI/AAAAAAAAAQE/0Afrh7nzTyc/S45/ken-profile-2.jpg" title="Ken">
+
+<noscript><img src="http://2.bp.blogspot.com/_5QIU8D7GfDs/SXp9POvpqfI/AAAAAAAAAQE/0Afrh7nzTyc/S45/ken-profile-2.jpg" width="35" height="35" class="photo" alt=""></noscript></a></span></div>
+<a href='http://www.blogger.com/profile/12369783173503766970' rel='nofollow'>Ken</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-831408053856941086'>
+<p>
+Thanks you Lars.  Very helpful. I previously thought that the client goes to the ZK quorum to find the master which is then used to find the region containing the row key.  Can you elaborate on how ZK is used to find the region?
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1255902577100#c831408053856941086' title='comment permalink'>
+October 18, 2009 2:49 PM
+</a>
+<span class='item-control blog-admin pid-2119787326'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=831408053856941086' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+<dt class='comment-author blog-author' id='c5989561097978709144'>
+<a name='c5989561097978709144'></a>
+<div class="avatar-image-container avatar-stock"><span dir="ltr"><a href="http://www.blogger.com/profile/18168538475015227467" rel="nofollow" onclick="" class="avatar-hovercard" id="av-4-18168538475015227467"><img src="http://img2.blogblog.com/img/b16-rounded.gif" width="16" height="16" alt="" title="Lars George">
+
+</a></span></div>
+<a href='http://www.blogger.com/profile/18168538475015227467' rel='nofollow'>Lars George</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-5989561097978709144'>
+<p>
+Hi Ken, sure can do! Will add to the &quot;The Big Picture&quot; section above.
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1255964588327#c5989561097978709144' title='comment permalink'>
+October 19, 2009 8:03 AM
+</a>
+<span class='item-control blog-admin pid-2071041050'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=5989561097978709144' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+<dt class='comment-author ' id='c4432635367495496941'>
+<a name='c4432635367495496941'></a>
+<div class="avatar-image-container avatar-stock"><span dir="ltr"><a href="http://www.katkovonline.com/" rel="nofollow" onclick="" class="avatar-hovercard" id="av-5-00789058608292997560"><img src="http://img1.blogblog.com/img/openid16-rounded.gif" width="16" height="16" alt="" title="Igor Katkov">
+
+</a></span></div>
+<a href='http://www.katkovonline.com/' rel='nofollow'>Igor Katkov</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-4432635367495496941'>
+<p>
+Very informative!<br />Would you care to explain how HBase garbage collector and major compaction works?
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1256677369047#c4432635367495496941' title='comment permalink'>
+October 27, 2009 2:02 PM
+</a>
+<span class='item-control blog-admin pid-462238256'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=4432635367495496941' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+<dt class='comment-author blog-author' id='c7858394925439621942'>
+<a name='c7858394925439621942'></a>
+<div class="avatar-image-container vcard"><span dir="ltr"><a href="http://www.blogger.com/profile/18168538475015227467" rel="nofollow" onclick="" class="avatar-hovercard" id="av-6-18168538475015227467"><img src="http://img1.blogblog.com/img/blank.gif" width="35" height="35" alt="" class="delayLoad" style="display: none;" longdesc="http://3.bp.blogspot.com/_Cib_A77V54U/StyCP1EF4XI/AAAAAAAAAEo/1IrX3DxWj9U/S45/2236d0070436f2f003151.jpg" title="Lars George">
+
+<noscript><img src="http://3.bp.blogspot.com/_Cib_A77V54U/StyCP1EF4XI/AAAAAAAAAEo/1IrX3DxWj9U/S45/2236d0070436f2f003151.jpg" width="35" height="35" class="photo" alt=""></noscript></a></span></div>
+<a href='http://www.blogger.com/profile/18168538475015227467' rel='nofollow'>Lars George</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-7858394925439621942'>
+<p>
+Ken, I added the info as suggested. <br /><br />Igor, could you have a look at http://wiki.apache.org/hadoop/Hbase/HbaseArchitecture#hregion and let me know if that is what you were after? And what do you think is missing or needs more details? I just want to avoid going off in the wrong direction :)
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1257502470159#c7858394925439621942' title='comment permalink'>
+November 6, 2009 2:14 AM
+</a>
+<span class='item-control blog-admin pid-2071041050'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=7858394925439621942' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+<dt class='comment-author ' id='c5823808565694698008'>
+<a name='c5823808565694698008'></a>
+<div class="avatar-image-container avatar-stock"><span dir="ltr"><a href="http://www.katkovonline.com/" rel="nofollow" onclick="" class="avatar-hovercard" id="av-7-00789058608292997560"><img src="http://img1.blogblog.com/img/openid16-rounded.gif" width="16" height="16" alt="" title="Igor Katkov">
+
+</a></span></div>
+<a href='http://www.katkovonline.com/' rel='nofollow'>Igor Katkov</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-5823808565694698008'>
+<p>
+I&#39;m not clear on when HBase deletes/garbage collects outdated values and extra versions of the same family-key-column.<br /><br />Suppose we have <br />columnDescriptor.setMaxVersions(10);<br />and then keep writing and re-writing some key.<br />Eventually we get load of data that is stale. <br />There will be lots of MapFiles and only few most recent would contain valid data.
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1257801679190#c5823808565694698008' title='comment permalink'>
+November 9, 2009 1:21 PM
+</a>
+<span class='item-control blog-admin pid-462238256'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=5823808565694698008' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+<dt class='comment-author ' id='c4851822805064630894'>
+<a name='c4851822805064630894'></a>
+<div class="avatar-image-container avatar-stock"><span dir="ltr"><a href="http://www.blogger.com/profile/06114951663056205324" rel="nofollow" onclick="" class="avatar-hovercard" id="av-8-06114951663056205324"><img src="http://img2.blogblog.com/img/b16-rounded.gif" width="16" height="16" alt="" title="tsuna">
+
+</a></span></div>
+<a href='http://www.blogger.com/profile/06114951663056205324' rel='nofollow'>tsuna</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-4851822805064630894'>
+<p>
+What&#39;s the &quot;key type&quot; in the key?
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1264833819921#c4851822805064630894' title='comment permalink'>
+January 29, 2010 10:43 PM
+</a>
+<span class='item-control blog-admin pid-194366938'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=4851822805064630894' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+<dt class='comment-author blog-author' id='c6833716126995589316'>
+<a name='c6833716126995589316'></a>
+<div class="avatar-image-container vcard"><span dir="ltr"><a href="http://www.blogger.com/profile/18168538475015227467" rel="nofollow" onclick="" class="avatar-hovercard" id="av-9-18168538475015227467"><img src="http://img1.blogblog.com/img/blank.gif" width="35" height="35" alt="" class="delayLoad" style="display: none;" longdesc="http://3.bp.blogspot.com/_Cib_A77V54U/StyCP1EF4XI/AAAAAAAAAEo/1IrX3DxWj9U/S45/2236d0070436f2f003151.jpg" title="Lars George">
+
+<noscript><img src="http://3.bp.blogspot.com/_Cib_A77V54U/StyCP1EF4XI/AAAAAAAAAEo/1IrX3DxWj9U/S45/2236d0070436f2f003151.jpg" width="35" height="35" class="photo" alt=""></noscript></a></span></div>
+<a href='http://www.blogger.com/profile/18168538475015227467' rel='nofollow'>Lars George</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-6833716126995589316'>
+<p>
+@tsuna, please see the new post of mine, about the write-ahead-log (i.e. WAL). It addresses that field of the KeyValue in the right context, which was missing here hence me skipping over it at the time.
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1265015897770#c6833716126995589316' title='comment permalink'>
+February 1, 2010 1:18 AM
+</a>
+<span class='item-control blog-admin pid-2071041050'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=6833716126995589316' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+<dt class='comment-author ' id='c7604356427705650106'>
+<a name='c7604356427705650106'></a>
+<div class="avatar-image-container avatar-stock"><span dir="ltr"><a href="http://www.blogger.com/profile/14578786024024748596" rel="nofollow" onclick="" class="avatar-hovercard" id="av-10-14578786024024748596"><img src="http://img2.blogblog.com/img/b16-rounded.gif" width="16" height="16" alt="" title="danny">
+
+</a></span></div>
+<a href='http://www.blogger.com/profile/14578786024024748596' rel='nofollow'>danny</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-7604356427705650106'>
+<p>
+Excellent article, thanks.
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1267106348462#c7604356427705650106' title='comment permalink'>
+February 25, 2010 5:59 AM
+</a>
+<span class='item-control blog-admin pid-1097902970'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=7604356427705650106' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+<dt class='comment-author ' id='c2680367384503053991'>
+<a name='c2680367384503053991'></a>
+<div class="avatar-image-container avatar-stock"><span dir="ltr"><a href="http://www.blogger.com/profile/08192085795453012576" rel="nofollow" onclick="" class="avatar-hovercard" id="av-11-08192085795453012576"><img src="http://img2.blogblog.com/img/b16-rounded.gif" width="16" height="16" alt="" title="tsegay">
+
+</a></span></div>
+<a href='http://www.blogger.com/profile/08192085795453012576' rel='nofollow'>tsegay</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-2680367384503053991'>
+<p>
+Excellent article, This is what i was looking for. Can you give me any idea what i can do if i want to access from my java program to read and write to tables in the hbase.
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1269008447770#c2680367384503053991' title='comment permalink'>
+March 19, 2010 7:20 AM
+</a>
+<span class='item-control blog-admin pid-1313323118'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=2680367384503053991' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+<dt class='comment-author ' id='c4619906919178716828'>
+<a name='c4619906919178716828'></a>
+<div class="avatar-image-container vcard"><span dir="ltr"><a href="http://www.blogger.com/profile/01617949656491139290" rel="nofollow" onclick="" class="avatar-hovercard" id="av-12-01617949656491139290"><img src="http://img1.blogblog.com/img/blank.gif" width="35" height="35" alt="" class="delayLoad" style="display: none;" longdesc="http://4.bp.blogspot.com/_0qE7WNGNVhA/SatgZ1SzNbI/AAAAAAAADMw/RDKONjQ-udQ/S45/Manali%2B169.JPG" title="Sandeep Kath">
+
+<noscript><img src="http://4.bp.blogspot.com/_0qE7WNGNVhA/SatgZ1SzNbI/AAAAAAAADMw/RDKONjQ-udQ/S45/Manali%2B169.JPG" width="35" height="35" class="photo" alt=""></noscript></a></span></div>
+<a href='http://www.blogger.com/profile/01617949656491139290' rel='nofollow'>Sandeep Kath</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-4619906919178716828'>
+<p>
+Well detailed article on HBase Storage. This is something I was looking for..Thanks
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1269763801900#c4619906919178716828' title='comment permalink'>
+March 28, 2010 1:10 AM
+</a>
+<span class='item-control blog-admin pid-437855134'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=4619906919178716828' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+<dt class='comment-author ' id='c3727158250582091474'>
+<a name='c3727158250582091474'></a>
+<div class="avatar-image-container avatar-stock"><span dir="ltr"><a href="http://www.blogger.com/profile/16029778625056272482" rel="nofollow" onclick="" class="avatar-hovercard" id="av-13-16029778625056272482"><img src="http://img2.blogblog.com/img/b16-rounded.gif" width="16" height="16" alt="" title="Andr&eacute; Moraes">
+
+</a></span></div>
+<a href='http://www.blogger.com/profile/16029778625056272482' rel='nofollow'>André Moraes</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-3727158250582091474'>
+<p>
+Congratulation, Very good article.
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1274195323558#c3727158250582091474' title='comment permalink'>
+May 18, 2010 8:08 AM
+</a>
+<span class='item-control blog-admin pid-1288456874'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=3727158250582091474' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+<dt class='comment-author ' id='c846953447940551877'>
+<a name='c846953447940551877'></a>
+<div class="avatar-image-container vcard"><span dir="ltr"><a href="http://www.blogger.com/profile/06813959432209815465" rel="nofollow" onclick="" class="avatar-hovercard" id="av-14-06813959432209815465"><img src="http://img1.blogblog.com/img/blank.gif" width="35" height="35" alt="" class="delayLoad" style="display: none;" longdesc="http://4.bp.blogspot.com/_cgDHMaSw-Cs/S65eJGuvxfI/AAAAAAAAAAk/oJU4rZ-IhKs/S45/Photo%2B18.jpg" title="Francis Pouatcha">
+
+<noscript><img src="http://4.bp.blogspot.com/_cgDHMaSw-Cs/S65eJGuvxfI/AAAAAAAAAAk/oJU4rZ-IhKs/S45/Photo%2B18.jpg" width="35" height="35" class="photo" alt=""></noscript></a></span></div>
+<a href='http://www.blogger.com/profile/06813959432209815465' rel='nofollow'>Francis Pouatcha</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-846953447940551877'>
+<p>
+Great Job! Thanks.
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1278161000910#c846953447940551877' title='comment permalink'>
+July 3, 2010 5:43 AM
+</a>
+<span class='item-control blog-admin pid-1881256628'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=846953447940551877' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+<dt class='comment-author ' id='c4966922159418529126'>
+<a name='c4966922159418529126'></a>
+<div class="avatar-image-container avatar-stock"><span dir="ltr"><a href="http://www.blogger.com/profile/00858093814590656812" rel="nofollow" onclick="" class="avatar-hovercard" id="av-15-00858093814590656812"><img src="http://img2.blogblog.com/img/b16-rounded.gif" width="16" height="16" alt="" title="Aswin">
+
+</a></span></div>
+<a href='http://www.blogger.com/profile/00858093814590656812' rel='nofollow'>Aswin</a>
+said...
+</dt>
+<dd class='comment-body' id='Blog1_cmt-4966922159418529126'>
+<p>
+Very good article, thanks for putting it out. One question I have is regarding the KeyValue structure, why is column family a part of this. Isn&#39;t that the info derivable from the directory the Hfiles are in. What is the purpose of this duplication of column family for every value/timestamp?
+</p>
+</dd>
+<dd class='comment-footer'>
+<span class='comment-timestamp'>
+<a href='http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html?showComment=1286902172990#c4966922159418529126' title='comment permalink'>
+October 12, 2010 9:49 AM
+</a>
+<span class='item-control blog-admin pid-1900486559'>
+<a class='comment-delete' href='http://www.blogger.com/delete-comment.g?blogID=860423771829255614&postID=4966922159418529126' title='Delete Comment'>
+<img src='http://www.blogger.com/img/icon_delete13.gif'/>
+</a>
+</span>
+</span>
+</dd>
+</dl>
+</div>
+<p class='comment-footer'>
+<div class='comment-form'>
+<a name='comment-form'></a>
+<h4 id='comment-post-message'>Post a Comment</h4>
+<p>
+</p>
+<a href='http://www.blogger.com/comment-iframe.g?blogID=860423771829255614&postID=8073228651920917483' id='comment-editor-src'></a>
+<iframe allowtransparency='true' class='blogger-iframe-colorize blogger-comment-from-post' frameborder='0' height='410' id='comment-editor' name='comment-editor' src='hbase-architecture-101-storage.html' width='100%'></iframe>
+<script type="text/javascript">
+        if (!window.google || !google.friendconnect) {
+          document.write('<script type="text/javascript"' +
+              'src="http://www.google.com/friendconnect/script/friendconnect.js">' +
+              '</scr' + 'ipt>');
+        }
+      </script>
+<script type="text/javascript">
+      if (!window.registeredBloggerCallbacks) {
+        window.registeredBloggerCallbacks = true;
+
+        
+
+        
+        gadgets.rpc.register('requestReload', function() {
+          document.location.reload();
+        });
+
+        
+        gadgets.rpc.register('requestSignOut', function(siteId) {
+          
+          google.friendconnect.container.openSocialSiteId = siteId;
+          google.friendconnect.requestSignOut();
+        });
+      }
+    </script>
+<script type="text/javascript">
+    
+    function registerGetBlogUrls() {
+      gadgets.rpc.register('getBlogUrls', function() {
+        var holder = {};
+        
+          
+            
+            
+              holder.currentPost = "http://www.blogger.com/feeds/860423771829255614/posts/default/8073228651920917483";
+            
+            
+            
+              holder.currentComments = "http://www.blogger.com/feeds/860423771829255614/8073228651920917483/comments/default";
+            
+            holder.currentPostUrl = "";
+            holder.currentPostId = 8073228651920917483
+          
+          
+          
+            holder.postFeed = "http://www.blogger.com/feeds/860423771829255614/posts/default";
+          
+          
+          
+            holder.commentFeed = "http://www.blogger.com/feeds/860423771829255614/comments/default";
+          
+          holder.currentBlogUrl = "http://www.larsgeorge.com/";
+          holder.currentBlogId = "860423771829255614";
+        
+        return holder;
+      });
+    }
+  </script>
+<script type="text/javascript">
+  if (!window.registeredCommonBloggerCallbacks) {
+    window.registeredCommonBloggerCallbacks = true;
+
+    gadgets.rpc.register('resize_iframe', function(height) {
+      var el = document.getElementById(this['f']);
+      if (el) {
+        el.style.height = height + 'px';
+      }
+    });
+
+    
+    gadgets.rpc.register('set_pref', function() {});
+
+    registerGetBlogUrls();
+  }
+  </script>
+<script type="text/javascript" src="http://www.blogger.com/static/v1/jsbin/528630121-comment_from_post_iframe.js"></script>
+<script type='text/javascript'>
+      BLOG_CMT_createIframe('http://www.blogger.com/rpc_relay.html', '11910368541242160501');
+    </script>
+</div>
+</p>
+<div id='backlinks-container'>
+<div id='Blog1_backlinks-container'>
+<a name='links'></a><h4>
+</h4>
+<p class='comment-footer'>
+<a class='comment-link' href='hbase-architecture-101-storage.html' id='Blog1_backlinks-create-link' target='_blank'>
+</a>
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="latency-8073228651920917483"></div><script type="text/javascript">if (window['tickAboveFold']) {window['tickAboveFold'](document.getElementById("latency-8073228651920917483")); } </script>
+
+        </div></div>
+      
+<!-- google_ad_section_end -->
+</div>
+<div class='blog-pager' id='blog-pager'>
+<span id='blog-pager-newer-link'>
+<a class='blog-pager-newer-link' href='http://www.larsgeorge.com/2009/10/hbase-on-cloudera-training-virtual.html' id='Blog1_blog-pager-newer-link' title='Newer Post'>Newer Post</a>
+</span>
+<span id='blog-pager-older-link'>
+<a class='blog-pager-older-link' href='http://www.larsgeorge.com/2009/10/hive-vs-pig.html' id='Blog1_blog-pager-older-link' title='Older Post'>Older Post</a>
+</span>
+<a class='home-link' href='http://www.larsgeorge.com/'>Home</a>
+</div>
+<div class='clear'></div>
+<div class='post-feeds'>
+<div class='feed-links'>
+Subscribe to:
+<a class='feed-link' href='http://www.larsgeorge.com/feeds/8073228651920917483/comments/default' target='_blank' type='application/atom+xml'>Post Comments (Atom)</a>
+</div>
+</div>
+</div><div class='widget AdSense' id='AdSense1'>
+<div class='widget-content'>
+<script type="text/javascript"><!--
+google_ad_client="pub-2924749022987032";
+google_ad_host="pub-1556223355139109";
+google_ad_host_channel="00000";
+google_ad_width=468;
+google_ad_height=60;
+google_ad_format="468x60_as";
+google_ad_type="text_image";
+google_color_border="FFFFFF";
+google_color_bg="FFFFFF";
+google_color_link="336699";
+google_color_url="336699";
+google_color_text="333333";
+//--></script>
+<script type="text/javascript"
+  src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+<div class='clear'></div>
+<span class='widget-item-control'>
+<span class='item-control blog-admin'>
+<a class='quickedit' href='http://www.blogger.com/rearrange?blogID=860423771829255614&widgetType=AdSense&widgetId=AdSense1&action=editWidget' onclick='return _WidgetManager._PopupConfig(document.getElementById("AdSense1"));' target='configAdSense1' title='Edit'>
+<img alt='' height='18' src='http://img1.blogblog.com/img/icon18_wrench_allbkg.png' width='18'/>
+</a>
+</span>
+</span>
+<div class='clear'></div>
+</div>
+</div></div>
+</div>
+<div id='sidebar-wrapper'>
+<div class='sidebar section' id='sidebar'><div class='widget Profile' id='Profile2'>
+<h2>About Me</h2>
+<div class='widget-content'>
+<a href='http://www.blogger.com/profile/18168538475015227467'><img alt='My Photo' class='profile-img' height='80' src='http://1.bp.blogspot.com/_Cib_A77V54U/StyCL3z7l0I/AAAAAAAAAEQ/mbc8p6guQDg/S220/2236d0070436f2f003151.jpg' width='60'/></a>
+<dl class='profile-datablock'>
+<dt class='profile-data'>Lars George</dt>
+<dd class='profile-textblock'>I am a Software Engineer by heart and work on large scale, distributed, failover-safe systems. Especially "NoSQL" type storage architectures and their related projects like Hadoop with HBase, Hive, Pig. Or Dynomite, Voldemort, Cassandra and so on. I am offering consulting services in this area and for these products. Contact me at <a href="mailto:info@larsgeorge.com">info@larsgeorge.com</a> or read about my <a href="http://www.larsgeorge.com/2009/05/european-hbase-ambassador.html">offer</a>!</dd>
+</dl>
+<a class='profile-link' href='http://www.blogger.com/profile/18168538475015227467'>View my complete profile</a>
+<div class='clear'></div>
+<span class='widget-item-control'>
+<span class='item-control blog-admin'>
+<a class='quickedit' href='http://www.blogger.com/rearrange?blogID=860423771829255614&widgetType=Profile&widgetId=Profile2&action=editWidget' onclick='return _WidgetManager._PopupConfig(document.getElementById("Profile2"));' target='configProfile2' title='Edit'>
+<img alt='' height='18' src='http://img1.blogblog.com/img/icon18_wrench_allbkg.png' width='18'/>
+</a>
+</span>
+</span>
+<div class='clear'></div>
+</div>
+</div><div class='widget LinkList' id='LinkList1'>
+<h2>Where I am as well</h2>
+<div class='widget-content'>
+<ul>
+<li><a href='http://www.linkedin.com/in/larsgeorge'>LinkedIn</a></li>
+<li><a href='http://www.xing.com/profile/Lars_George'>Xing</a></li>
+<li><a href='http://www.facebook.com/profile.php?id=561286383'>Facebook</a></li>
+<li><a href='http://twitter.com/larsgeorge'>Twitter</a></li>
+</ul>
+<div class='clear'></div>
+<span class='widget-item-control'>
+<span class='item-control blog-admin'>
+<a class='quickedit' href='http://www.blogger.com/rearrange?blogID=860423771829255614&widgetType=LinkList&widgetId=LinkList1&action=editWidget' onclick='return _WidgetManager._PopupConfig(document.getElementById("LinkList1"));' target='configLinkList1' title='Edit'>
+<img alt='' height='18' src='http://img1.blogblog.com/img/icon18_wrench_allbkg.png' width='18'/>
+</a>
+</span>
+</span>
+<div class='clear'></div>
+</div>
+</div><div class='widget HTML' id='HTML3'>
+<div class='widget-content'>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/de/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-sa/3.0/de/88x31.png" /></a><br />This work by <a xmlns:cc="http://creativecommons.org/ns#" href="http://larsgeorge.com" property="cc:attributionName" rel="cc:attributionURL">Lars George</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/de/">Creative Commons Attribution-Noncommercial-Share Alike 3.0 Germany License</a>.
+</div>
+<div class='clear'></div>
+<span class='widget-item-control'>
+<span class='item-control blog-admin'>
+<a class='quickedit' href='http://www.blogger.com/rearrange?blogID=860423771829255614&widgetType=HTML&widgetId=HTML3&action=editWidget' onclick='return _WidgetManager._PopupConfig(document.getElementById("HTML3"));' target='configHTML3' title='Edit'>
+<img alt='' height='18' src='http://img1.blogblog.com/img/icon18_wrench_allbkg.png' width='18'/>
+</a>
+</span>
+</span>
+<div class='clear'></div>
+</div><div class='widget HTML' id='HTML2'>
+<h2 class='title'>My Tweets</h2>
+<div class='widget-content'>
+<div id="twitter_div">
+<h2 style="display:none;" class="sidebar-title">My Tweets</h2>
+<ul id="twitter_update_list"></ul>
+<a id="twitter-link" style="display:block;text-align:right;" href="http://twitter.com/larsgeorge">follow me on Twitter</a>
+</div>
+<script src="http://twitter.com/javascripts/blogger.js" type="text/javascript"></script>
+<script src="http://twitter.com/statuses/user_timeline/larsgeorge.json?callback=twitterCallback2&amp;count=3" type="text/javascript"></script>
+</div>
+<div class='clear'></div>
+<span class='widget-item-control'>
+<span class='item-control blog-admin'>
+<a class='quickedit' href='http://www.blogger.com/rearrange?blogID=860423771829255614&widgetType=HTML&widgetId=HTML2&action=editWidget' onclick='return _WidgetManager._PopupConfig(document.getElementById("HTML2"));' target='configHTML2' title='Edit'>
+<img alt='' height='18' src='http://img1.blogblog.com/img/icon18_wrench_allbkg.png' width='18'/>
+</a>
+</span>
+</span>
+<div class='clear'></div>
+</div><div class='widget Subscribe' id='Subscribe1'>
+<div style='white-space:nowrap'>
+<h2 class='title'>Subscribe To</h2>
+<div class='widget-content'>
+<div class='subscribe-wrapper subscribe-type-POST'>
+<div class='subscribe expanded subscribe-type-POST' id='SW_READER_LIST_Subscribe1POST' style='display:none;'>
+<div class='top'>
+<span class='inner' onclick='return(_SW_toggleReaderList(event, "Subscribe1POST"));'>
+<img class='subscribe-dropdown-arrow' src='http://img2.blogblog.com/img/widgets/arrow_dropdown.gif'/>
+<img align='absmiddle' alt='' border='0' class='feed-icon' src='http://img1.blogblog.com/img/icon_feed12.png'/>
+Posts
+</span>
+<div class='feed-reader-links'>
+<a class='feed-reader-link' href='http://www.google.com/ig/add?source=bstp&feedurl=http%3A%2F%2Fwww.larsgeorge.com%2Ffeeds%2Fposts%2Fdefault' target='_blank'>
+<img src='http://img1.blogblog.com/img/widgets/subscribe-google.png'/>
+</a>
+<a class='feed-reader-link' href='http://www.netvibes.com/subscribe.php?url=http%3A%2F%2Fwww.larsgeorge.com%2Ffeeds%2Fposts%2Fdefault' target='_blank'>
+<img src='http://img1.blogblog.com/img/widgets/subscribe-netvibes.png'/>
+</a>
+<a class='feed-reader-link' href='http://www.newsgator.com/ngs/subscriber/subext.aspx?url=http%3A%2F%2Fwww.larsgeorge.com%2Ffeeds%2Fposts%2Fdefault' target='_blank'>
+<img src='http://img1.blogblog.com/img/widgets/subscribe-newsgator.png'/>
+</a>
+<a class='feed-reader-link' href='http://add.my.yahoo.com/content?url=http%3A%2F%2Fwww.larsgeorge.com%2Ffeeds%2Fposts%2Fdefault' target='_blank'>
+<img src='http://img1.blogblog.com/img/widgets/subscribe-yahoo.png'/>
+</a>
+<a class='feed-reader-link' href='http://www.larsgeorge.com/feeds/posts/default' target='_blank'>
+<img align='absmiddle' class='feed-icon' src='http://img1.blogblog.com/img/icon_feed12.png'/>
+                Atom
+              </a>
+</div>
+</div>
+<div class='bottom'></div>
+</div>
+<div class='subscribe' id='SW_READER_LIST_CLOSED_Subscribe1POST' onclick='return(_SW_toggleReaderList(event, "Subscribe1POST"));'>
+<div class='top'>
+<span class='inner'>
+<img class='subscribe-dropdown-arrow' src='http://img2.blogblog.com/img/widgets/arrow_dropdown.gif'/>
+<span onclick='return(_SW_toggleReaderList(event, "Subscribe1POST"));'>
+<img align='absmiddle' alt='' border='0' class='feed-icon' src='http://img1.blogblog.com/img/icon_feed12.png'/>
+Posts
+</span>
+</span>
+</div>
+<div class='bottom'></div>
+</div>
+</div>
+<div class='subscribe-wrapper subscribe-type-PER_POST'>
+<div class='subscribe expanded subscribe-type-PER_POST' id='SW_READER_LIST_Subscribe1PER_POST' style='display:none;'>
+<div class='top'>
+<span class='inner' onclick='return(_SW_toggleReaderList(event, "Subscribe1PER_POST"));'>
+<img class='subscribe-dropdown-arrow' src='http://img2.blogblog.com/img/widgets/arrow_dropdown.gif'/>
+<img align='absmiddle' alt='' border='0' class='feed-icon' src='http://img1.blogblog.com/img/icon_feed12.png'/>
+Comments
+</span>
+<div class='feed-reader-links'>
+<a class='feed-reader-link' href='http://www.google.com/ig/add?source=bstp&feedurl=http%3A%2F%2Fwww.larsgeorge.com%2Ffeeds%2F8073228651920917483%2Fcomments%2Fdefault' target='_blank'>
+<img src='http://img1.blogblog.com/img/widgets/subscribe-google.png'/>
+</a>
+<a class='feed-reader-link' href='http://www.netvibes.com/subscribe.php?url=http%3A%2F%2Fwww.larsgeorge.com%2Ffeeds%2F8073228651920917483%2Fcomments%2Fdefault' target='_blank'>
+<img src='http://img1.blogblog.com/img/widgets/subscribe-netvibes.png'/>
+</a>
+<a class='feed-reader-link' href='http://www.newsgator.com/ngs/subscriber/subext.aspx?url=http%3A%2F%2Fwww.larsgeorge.com%2Ffeeds%2F8073228651920917483%2Fcomments%2Fdefault' target='_blank'>
+<img src='http://img1.blogblog.com/img/widgets/subscribe-newsgator.png'/>
+</a>
+<a class='feed-reader-link' href='http://add.my.yahoo.com/content?url=http%3A%2F%2Fwww.larsgeorge.com%2Ffeeds%2F8073228651920917483%2Fcomments%2Fdefault' target='_blank'>
+<img src='http://img1.blogblog.com/img/widgets/subscribe-yahoo.png'/>
+</a>
+<a class='feed-reader-link' href='http://www.larsgeorge.com/feeds/8073228651920917483/comments/default' target='_blank'>
+<img align='absmiddle' class='feed-icon' src='http://img1.blogblog.com/img/icon_feed12.png'/>
+                Atom
+              </a>
+</div>
+</div>
+<div class='bottom'></div>
+</div>
+<div class='subscribe' id='SW_READER_LIST_CLOSED_Subscribe1PER_POST' onclick='return(_SW_toggleReaderList(event, "Subscribe1PER_POST"));'>
+<div class='top'>
+<span class='inner'>
+<img class='subscribe-dropdown-arrow' src='http://img2.blogblog.com/img/widgets/arrow_dropdown.gif'/>
+<span onclick='return(_SW_toggleReaderList(event, "Subscribe1PER_POST"));'>
+<img align='absmiddle' alt='' border='0' class='feed-icon' src='http://img1.blogblog.com/img/icon_feed12.png'/>
+Comments
+</span>
+</span>
+</div>
+<div class='bottom'></div>
+</div>
+</div>
+<div style='clear:both'></div>
+</div>
+</div>
+<div class='clear'></div>
+<span class='widget-item-control'>
+<span class='item-control blog-admin'>
+<a class='quickedit' href='http://www.blogger.com/rearrange?blogID=860423771829255614&widgetType=Subscribe&widgetId=Subscribe1&action=editWidget' onclick='return _WidgetManager._PopupConfig(document.getElementById("Subscribe1"));' target='configSubscribe1' title='Edit'>
+<img alt='' height='18' src='http://img1.blogblog.com/img/icon18_wrench_allbkg.png' width='18'/>
+</a>
+</span>
+</span>
+<div class='clear'></div>
+</div><div class='widget HTML' id='HTML1'>
+<div class='widget-content'>
+<div><script type="text/javascript">var addthis_pub="larsgeorge";</script>
+<a onmouseover="return addthis_open(this, '', '[URL]', '[TITLE]')" onmouseout="addthis_close()" href="http://www.addthis.com/bookmark.php?v=20" onclick="return addthis_sendto()"><img width="125" alt="Bookmark and Share" style="border:0" src="http://s7.addthis.com/static/btn/lg-bookmark-en.gif" height="16"/></a><script src="http://s7.addthis.com/js/200/addthis_widget.js" type="text/javascript"></script></div>
+</div>
+<div class='clear'></div>
+<span class='widget-item-control'>
+<span class='item-control blog-admin'>
+<a class='quickedit' href='http://www.blogger.com/rearrange?blogID=860423771829255614&widgetType=HTML&widgetId=HTML1&action=editWidget' onclick='return _WidgetManager._PopupConfig(document.getElementById("HTML1"));' target='configHTML1' title='Edit'>
+<img alt='' height='18' src='http://img1.blogblog.com/img/icon18_wrench_allbkg.png' width='18'/>
+</a>
+</span>
+</span>
+<div class='clear'></div>
+</div><div class='widget Followers' id='Followers2'>
+<h2 class='title'>Followers</h2>
+<div class='widget-content'>
+<div id='Followers2-wrapper'>
+<div style='margin-right:2px;'>
+<script type="text/javascript">
+        if (!window.google || !google.friendconnect) {
+          document.write('<script type="text/javascript"' +
+              'src="http://www.google.com/friendconnect/script/friendconnect.js">' +
+              '</scr' + 'ipt>');
+        }
+      </script>
+<script type="text/javascript">
+      if (!window.registeredBloggerCallbacks) {
+        window.registeredBloggerCallbacks = true;
+
+        
+
+        
+        gadgets.rpc.register('requestReload', function() {
+          document.location.reload();
+        });
+
+        
+        gadgets.rpc.register('requestSignOut', function(siteId) {
+          
+          google.friendconnect.container.openSocialSiteId = siteId;
+          google.friendconnect.requestSignOut();
+        });
+      }
+    </script>
+<script type="text/javascript">
+    
+    function registerGetBlogUrls() {
+      gadgets.rpc.register('getBlogUrls', function() {
+        var holder = {};
+        
+          
+            
+            
+              holder.currentPost = "http://www.blogger.com/feeds/860423771829255614/posts/default/8073228651920917483";
+            
+            
+            
+              holder.currentComments = "http://www.blogger.com/feeds/860423771829255614/8073228651920917483/comments/default";
+            
+            holder.currentPostUrl = "";
+            holder.currentPostId = 8073228651920917483
+          
+          
+          
+            holder.postFeed = "http://www.blogger.com/feeds/860423771829255614/posts/default";
+          
+          
+          
+            holder.commentFeed = "http://www.blogger.com/feeds/860423771829255614/comments/default";
+          
+          holder.currentBlogUrl = "http://www.larsgeorge.com/";
+          holder.currentBlogId = "860423771829255614";
+        
+        return holder;
+      });
+    }
+  </script>
+<script type="text/javascript">
+  if (!window.registeredCommonBloggerCallbacks) {
+    window.registeredCommonBloggerCallbacks = true;
+
+    gadgets.rpc.register('resize_iframe', function(height) {
+      var el = document.getElementById(this['f']);
+      if (el) {
+        el.style.height = height + 'px';
+      }
+    });
+
+    
+    gadgets.rpc.register('set_pref', function() {});
+
+    registerGetBlogUrls();
+  }
+  </script>
+<div id="div-pj0le4so9hdu" style="width: 100%; "></div>
+<script type="text/javascript">
+    var skin = {};
+    skin['FACE_SIZE'] = '32';
+    skin['HEIGHT'] = "260";
+    skin['TITLE'] = "Followers";
+    skin['BORDER_COLOR'] = "transparent";
+    skin['ENDCAP_BG_COLOR'] = "transparent";
+    skin['ENDCAP_TEXT_COLOR'] = "#333333";
+    skin['ENDCAP_LINK_COLOR'] = "#000000";
+    skin['ALTERNATE_BG_COLOR'] = "transparent";
+    
+    skin['CONTENT_BG_COLOR'] = "transparent";
+    skin['CONTENT_LINK_COLOR'] = "#000000";
+    skin['CONTENT_TEXT_COLOR'] = "#333333";
+    skin['CONTENT_SECONDARY_LINK_COLOR'] = "#FFFFFF";
+    skin['CONTENT_SECONDARY_TEXT_COLOR'] = "#000000";
+    skin['CONTENT_HEADLINE_COLOR'] = "#000000";
+    skin['FONT_FACE'] = "normal normal 100% Verdana, Arial, Sans-serif;";
+    google.friendconnect.container.setParentUrl("/");
+    google.friendconnect.container["renderMembersGadget"](
+    {id: "div-pj0le4so9hdu",
+     height: 260,
+     
+     
+     
+     site: "11910368541242160501",
+      
+     locale: 'en' },
+     skin);
+  </script>
+</div>
+</div>
+<div class='clear'></div>
+<span class='widget-item-control'>
+<span class='item-control blog-admin'>
+<a class='quickedit' href='http://www.blogger.com/rearrange?blogID=860423771829255614&widgetType=Followers&widgetId=Followers2&action=editWidget' onclick='return _WidgetManager._PopupConfig(document.getElementById("Followers2"));' target='configFollowers2' title='Edit'>
+<img alt='' height='18' src='http://img1.blogblog.com/img/icon18_wrench_allbkg.png' width='18'/>
+</a>
+</span>
+</span>
+<div class='clear'></div>
+</div>
+</div><div class='widget BlogArchive' id='BlogArchive2'>
+<h2>Blog Archive</h2>
+<div class='widget-content'>
+<div id='ArchiveList'>
+<div id='BlogArchive2_ArchiveList'>
+<ul class='hierarchy'>
+<li class='archivedate collapsed'>
+<a class='toggle' href='javascript:void(0)'>
+<span class='zippy'>
+
+          &#9658;&#160;
+        
+</span>
+</a>
+<a class='post-count-link' href='http://www.larsgeorge.com/search?updated-min=2010-01-01T00%3A00%3A00-08%3A00&updated-max=2011-01-01T00%3A00%3A00-08%3A00&max-results=9'>2010</a>
+<span class='post-count' dir='ltr'>(9)</span>
+<ul class='hierarchy'>
+<li class='archivedate collapsed'>
+<a class='toggle' href='javascript:void(0)'>
+<span class='zippy'>
+
+          &#9658;&#160;
+        
+</span>
+</a>
+<a class='post-count-link' href='http://www.larsgeorge.com/2010_10_01_archive.html'>October</a>
+<span class='post-count' dir='ltr'>(1)</span>
+<ul class='posts'>
+<li><a href='http://www.larsgeorge.com/2010/10/hadoop-on-ec2-primer.html'>Hadoop on EC2 - A Primer</a></li>
+</ul>
+</li>
+</ul>
+<ul class='hierarchy'>
+<li class='archivedate collapsed'>
+<a class='toggle' href='javascript:void(0)'>
+<span class='zippy'>
+
+          &#9658;&#160;
+        
+</span>
+</a>
+<a class='post-count-link' href='http://www.larsgeorge.com/2010_05_01_archive.html'>May</a>
+<span class='post-count' dir='ltr'>(3)</span>
+<ul class='posts'>
+<li><a href='http://www.larsgeorge.com/2010/05/hbase-file-locality-in-hdfs.html'>HBase File Locality in HDFS</a></li>
+<li><a href='http://www.larsgeorge.com/2010/05/minimal-katta-lucene-client.html'>Minimal Katta Lucene Client</a></li>
+<li><a href='http://www.larsgeorge.com/2010/05/3rd-munich-openhug-meeting.html'>3rd Munich OpenHUG Meeting</a></li>
+</ul>
+</li>
+</ul>
+<ul class='hierarchy'>
+<li class='archivedate collapsed'>
+<a class='toggle' href='javascript:void(0)'>
+<span class='zippy'>
+
+          &#9658;&#160;
+        
+</span>
+</a>
+<a class='post-count-link' href='http://www.larsgeorge.com/2010_02_01_archive.html'>February</a>
+<span class='post-count' dir='ltr'>(2)</span>
+<ul class='posts'>
+<li><a href='http://www.larsgeorge.com/2010/02/fosdem-2010-nosql-talk.html'>FOSDEM 2010 NoSQL Talk</a></li>
+<li><a href='http://www.larsgeorge.com/2010/02/ivyde-and-hbase-021-trunk.html'>IvyDE and HBase 0.21 (trunk)</a></li>
+</ul>
+</li>
+</ul>
+<ul class='hierarchy'>
+<li class='archivedate collapsed'>
+<a class='toggle' href='javascript:void(0)'>
+<span class='zippy'>
+
+          &#9658;&#160;
+        
+</span>
+</a>
+<a class='post-count-link' href='http://www.larsgeorge.com/2010_01_01_archive.html'>January</a>
+<span class='post-count' dir='ltr'>(3)</span>
+<ul class='posts'>
+<li><a href='http://www.larsgeorge.com/2010/01/hbase-architecture-101-write-ahead-log.html'>HBase Architecture 101 - Write-ahead-Log</a></li>
+<li><a href='http://www.larsgeorge.com/2010/01/2nd-munich-openhug-meeting-at-end-of.html'>2nd Munich OpenHUG Meeting</a></li>
+<li><a href='http://www.larsgeorge.com/2010/01/first-munich-openhug-meeting-summary.html'>First Munich OpenHUG Meeting - Summary</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul class='hierarchy'>
+<li class='archivedate expanded'>
+<a class='toggle' href='javascript:void(0)'>
+<span class='zippy toggle-open'>&#9660;&#160;</span>
+</a>
+<a class='post-count-link' href='http://www.larsgeorge.com/search?updated-min=2009-01-01T00%3A00%3A00-08%3A00&updated-max=2010-01-01T00%3A00%3A00-08%3A00&max-results=25'>2009</a>
+<span class='post-count' dir='ltr'>(25)</span>
+<ul class='hierarchy'>
+<li class='archivedate collapsed'>
+<a class='toggle' href='javascript:void(0)'>
+<span class='zippy'>
+
+          &#9658;&#160;
+        
+</span>
+</a>
+<a class='post-count-link' href='http://www.larsgeorge.com/2009_12_01_archive.html'>December</a>
+<span class='post-count' dir='ltr'>(1)</span>
+<ul class='posts'>
+<li><a href='http://www.larsgeorge.com/2009/12/first-munich-openhug-meeting.html'>First Munich OpenHUG Meeting</a></li>
+</ul>
+</li>
+</ul>
+<ul class='hierarchy'>
+<li class='archivedate collapsed'>
+<a class='toggle' href='javascript:void(0)'>
+<span class='zippy'>
+
+          &#9658;&#160;
+        
+</span>
+</a>
+<a class='post-count-link' href='http://www.larsgeorge.com/2009_11_01_archive.html'>November</a>
+<span class='post-count' dir='ltr'>(2)</span>
+<ul class='posts'>
+<li><a href='http://www.larsgeorge.com/2009/11/hbase-vs-bigtable-comparison.html'>HBase vs. BigTable Comparison</a></li>
+<li><a href='http://www.larsgeorge.com/2009/11/hbase-on-cloudera-training-virtual.html'>HBase on Cloudera Training Virtual Machine (0.3.2)...</a></li>
+</ul>
+</li>
+</ul>
+<ul class='hierarchy'>
+<li class='archivedate expanded'>
+<a class='toggle' href='javascript:void(0)'>
+<span class='zippy toggle-open'>&#9660;&#160;</span>
+</a>
+<a class='post-count-link' href='http://www.larsgeorge.com/2009_10_01_archive.html'>October</a>
+<span class='post-count' dir='ltr'>(3)</span>
+<ul class='posts'>
+<li><a href='http://www.larsgeorge.com/2009/10/hbase-on-cloudera-training-virtual.html'>HBase on Cloudera Training Virtual Machine (0.3.1)...</a></li>
+<li><a href='hbase-architecture-101-storage.html'>HBase Architecture 101 - Storage</a></li>
+<li><a href='http://www.larsgeorge.com/2009/10/hive-vs-pig.html'>Hive vs. Pig</a></li>
+</ul>
+</li>
+</ul>
+<ul class='hierarchy'>
+<li class='archivedate collapsed'>
+<a class='toggle' href='javascript:void(0)'>
+<span class='zippy'>
+
+          &#9658;&#160;
+        
+</span>
+</a>
+<a class='post-count-link' href='http://www.larsgeorge.com/2009_05_01_archive.html'>May</a>
+<span class='post-count' dir='ltr'>(3)</span>
+<ul class='posts'>
+<li><a href='http://www.larsgeorge.com/2009/05/hbase-schema-manager.html'>HBase Schema Manager</a></li>
+<li><a href='http://www.larsgeorge.com/2009/05/hbase-mapreduce-101-part-i.html'>HBase MapReduce 101 - Part I</a></li>
+<li><a href='http://www.larsgeorge.com/2009/05/european-hbase-ambassador.html'>European HBase Ambassador</a></li>
+</ul>
+</li>
+</ul>
+<ul class='hierarchy'>
+<li class='archivedate collapsed'>
+<a class='toggle' href='javascript:void(0)'>
+<span class='zippy'>
+
+          &#9658;&#160;
+        
+</span>
+</a>
+<a class='post-count-link' href='http://www.larsgeorge.com/2009_03_01_archive.html'>March</a>
+<span class='post-count' dir='ltr'>(4)</span>
+<ul class='posts'>
+<li><a href='http://www.larsgeorge.com/2009/03/10-years-in-one-project.html'>10 Years in one Project</a></li>
+<li><a href='http://www.larsgeorge.com/2009/03/couchdb-and-couchapp.html'>CouchDB and CouchApp</a></li>
+<li><a href='http://www.larsgeorge.com/2009/03/erlang-and-couchdb-on-macos.html'>Erlang and CouchDB on MacOS</a></li>
+<li><a href='http://www.larsgeorge.com/2009/03/hbase-vs-couchdb-in-berlin.html'>HBase vs. CouchDB in Berlin</a></li>
+</ul>
+</li>
+</ul>
+<ul class='hierarchy'>
+<li class='archivedate collapsed'>
+<a class='toggle' href='javascript:void(0)'>
+<span class='zippy'>
+
+          &#9658;&#160;
+        
+</span>
+</a>
+<a class='post-count-link' href='http://www.larsgeorge.com/2009_02_01_archive.html'>February</a>
+<span class='post-count' dir='ltr'>(4)</span>
+<ul class='posts'>
+<li><a href='http://www.larsgeorge.com/2009/02/mini-local-hbase-cluster.html'>Mini Local HBase Cluster</a></li>
+<li><a href='http://www.larsgeorge.com/2009/02/apache-fails-on-semaphores.html'>Apache fails on Semaphores</a></li>
+<li><a href='http://www.larsgeorge.com/2009/02/string-starts-with-number-in-xsl.html'>String starts with a number in XSL</a></li>
+<li><a href='http://www.larsgeorge.com/2009/02/hadoop-scripts-part-1.html'>Hadoop Scripts</a></li>
+</ul>
+</li>
+</ul>
+<ul class='hierarchy'>
+<li class='archivedate collapsed'>
+<a class='toggle' href='javascript:void(0)'>
+<span class='zippy'>
+
+          &#9658;&#160;
+        
+</span>
+</a>
+<a class='post-count-link' href='http://www.larsgeorge.com/2009_01_01_archive.html'>January</a>
+<span class='post-count' dir='ltr'>(8)</span>
+<ul class='posts'>
+<li><a href='http://www.larsgeorge.com/2009/01/changing-hbase-tables-in-code.html'>Changing HBase Tables in Code</a></li>
+<li><a href='http://www.larsgeorge.com/2009/01/how-to-use-hbase-with-hadoop.html'>How to use HBase with Hadoop</a></li>
+<li><a href='http://www.larsgeorge.com/2009/01/vserver-is-not-xen-part-2.html'>VServer is not Xen, Part 2</a></li>
+<li><a href='http://www.larsgeorge.com/2009/01/looking-for-perfect-beat.html'>Looking for the perfect beat</a></li>
+<li><a href='http://www.larsgeorge.com/2009/01/iphone-as-ipod.html'>iPhone as an iPod</a></li>
+<li><a href='http://www.larsgeorge.com/2009/01/eternal-moments.html'>Eternal Moments</a></li>
+<li><a href='http://www.larsgeorge.com/2009/01/vserver-is-not-xen.html'>VServer is not Xen</a></li>
+<li><a href='http://www.larsgeorge.com/2009/01/odd-ps-output.html'>Odd &quot;ps&quot; output</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul class='hierarchy'>
+<li class='archivedate collapsed'>
+<a class='toggle' href='javascript:void(0)'>
+<span class='zippy'>
+
+          &#9658;&#160;
+        
+</span>
+</a>
+<a class='post-count-link' href='http://www.larsgeorge.com/search?updated-min=2008-01-01T00%3A00%3A00-08%3A00&updated-max=2009-01-01T00%3A00%3A00-08%3A00&max-results=1'>2008</a>
+<span class='post-count' dir='ltr'>(1)</span>
+<ul class='hierarchy'>
+<li class='archivedate collapsed'>
+<a class='toggle' href='javascript:void(0)'>
+<span class='zippy'>
+
+          &#9658;&#160;
+        
+</span>
+</a>
+<a class='post-count-link' href='http://www.larsgeorge.com/2008_12_01_archive.html'>December</a>
+<span class='post-count' dir='ltr'>(1)</span>
+<ul class='posts'>
+<li><a href='http://www.larsgeorge.com/2008/12/winter-solstice.html'>Winter Solstice</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class='clear'></div>
+<span class='widget-item-control'>
+<span class='item-control blog-admin'>
+<a class='quickedit' href='http://www.blogger.com/rearrange?blogID=860423771829255614&widgetType=BlogArchive&widgetId=BlogArchive2&action=editWidget' onclick='return _WidgetManager._PopupConfig(document.getElementById("BlogArchive2"));' target='configBlogArchive2' title='Edit'>
+<img alt='' height='18' src='http://img1.blogblog.com/img/icon18_wrench_allbkg.png' width='18'/>
+</a>
+</span>
+</span>
+<div class='clear'></div>
+</div>
+</div><div class='widget AdSense' id='AdSense2'>
+<div class='widget-content'>
+<script type="text/javascript"><!--
+google_ad_client="pub-2924749022987032";
+google_ad_host="pub-1556223355139109";
+google_ad_host_channel="00000";
+google_ad_width=180;
+google_ad_height=150;
+google_ad_format="180x150_as";
+google_ad_type="text_image";
+google_color_border="FFFFFF";
+google_color_bg="FFFFFF";
+google_color_link="336699";
+google_color_url="336699";
+google_color_text="333333";
+//--></script>
+<script type="text/javascript"
+  src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+<div class='clear'></div>
+<span class='widget-item-control'>
+<span class='item-control blog-admin'>
+<a class='quickedit' href='http://www.blogger.com/rearrange?blogID=860423771829255614&widgetType=AdSense&widgetId=AdSense2&action=editWidget' onclick='return _WidgetManager._PopupConfig(document.getElementById("AdSense2"));' target='configAdSense2' title='Edit'>
+<img alt='' height='18' src='http://img1.blogblog.com/img/icon18_wrench_allbkg.png' width='18'/>
+</a>
+</span>
+</span>
+<div class='clear'></div>
+</div>
+</div><div class='widget Label' id='Label1'>
+<h2>Labels</h2>
+<div class='widget-content list-label-widget-content'>
+<ul>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/hbase'>hbase</a>
+<span dir='ltr'>(18)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/hadoop'>hadoop</a>
+<span dir='ltr'>(15)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/work'>work</a>
+<span dir='ltr'>(10)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/linux'>linux</a>
+<span dir='ltr'>(6)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/java'>java</a>
+<span dir='ltr'>(4)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/nosql'>nosql</a>
+<span dir='ltr'>(4)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/openhug'>openhug</a>
+<span dir='ltr'>(3)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/erlang'>erlang</a>
+<span dir='ltr'>(2)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/music'>music</a>
+<span dir='ltr'>(2)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/vserver'>vserver</a>
+<span dir='ltr'>(2)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/apache'>apache</a>
+<span dir='ltr'>(1)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/aws'>aws</a>
+<span dir='ltr'>(1)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/bigtable'>bigtable</a>
+<span dir='ltr'>(1)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/couchdb'>couchdb</a>
+<span dir='ltr'>(1)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/ec2'>ec2</a>
+<span dir='ltr'>(1)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/eclipse'>eclipse</a>
+<span dir='ltr'>(1)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/fosdem'>fosdem</a>
+<span dir='ltr'>(1)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/home'>home</a>
+<span dir='ltr'>(1)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/iphone'>iphone</a>
+<span dir='ltr'>(1)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/katta'>katta</a>
+<span dir='ltr'>(1)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/lucene'>lucene</a>
+<span dir='ltr'>(1)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/macos'>macos</a>
+<span dir='ltr'>(1)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/xen'>xen</a>
+<span dir='ltr'>(1)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/xml'>xml</a>
+<span dir='ltr'>(1)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/xsl'>xsl</a>
+<span dir='ltr'>(1)</span>
+</li>
+<li>
+<a dir='ltr' href='http://www.larsgeorge.com/search/label/xslt'>xslt</a>
+<span dir='ltr'>(1)</span>
+</li>
+</ul>
+<div class='clear'></div>
+<span class='widget-item-control'>
+<span class='item-control blog-admin'>
+<a class='quickedit' href='http://www.blogger.com/rearrange?blogID=860423771829255614&widgetType=Label&widgetId=Label1&action=editWidget' onclick='return _WidgetManager._PopupConfig(document.getElementById("Label1"));' target='configLabel1' title='Edit'>
+<img alt='' height='18' src='http://img1.blogblog.com/img/icon18_wrench_allbkg.png' width='18'/>
+</a>
+</span>
+</span>
+<div class='clear'></div>
+</div>
+</div></div>
+</div>
+<!-- spacer for skins that want sidebar and main to be the same height-->
+<div class='clear'>&#160;</div>
+</div>
+<!-- end content-wrapper -->
+<div id='footer-wrapper'>
+<div class='footer section' id='footer'></div>
+</div>
+</div></div>
+<!-- end outer-wrapper -->
+<link href='http://alexgorbatchev.com/pub/sh/2.0.320/styles/shCore.css' rel='stylesheet' type='text/css'/>
+<link href='http://alexgorbatchev.com/pub/sh/2.0.320/styles/shThemeDefault.css' rel='stylesheet' type='text/css'/>
+<script language='javascript' src='http://alexgorbatchev.com/pub/sh/2.0.320/scripts/shCore.js'></script>
+<script language='javascript' src='http://alexgorbatchev.com/pub/sh/2.0.320/scripts/shLegacy.js'></script>
+<script language='javascript' src='http://alexgorbatchev.com/pub/sh/2.0.320/scripts/shBrushJava.js'></script>
+<script language='javascript' src='http://alexgorbatchev.com/pub/sh/2.0.320/scripts/shBrushXml.js'></script>
+<script language='javascript' src='http://alexgorbatchev.com/pub/sh/2.0.320/scripts/shBrushBash.js'></script>
+<script language='javascript' src='http://alexgorbatchev.com/pub/sh/2.0.320/scripts/shBrushPlain.js'></script>
+<script language='javascript'>
+SyntaxHighlighter.config.bloggerMode = true;
+SyntaxHighlighter.defaults['font-size'] = '110%';
+SyntaxHighlighter.all();
+dp.SyntaxHighlighter.HighlightAll('code');  
+</script>
+<script type='text/javascript'>
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type='text/javascript'>
+try {
+var pageTracker = _gat._getTracker("UA-6940245-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+<!-- Insert by Lars George END -->
+<script type="text/javascript">
+if (window.jstiming) window.jstiming.load.tick('widgetJsBefore');
+</script><script type="text/javascript" src="http://www.blogger.com/static/v1/widgets/512629240-widgets.js"></script>
+<script type='text/javascript'>
+if (typeof(BLOG_attachCsiOnload) != 'undefined' && BLOG_attachCsiOnload != null) { window['blogger_templates_experiment_id'] = "templatesV1";window['blogger_blog_id'] = '860423771829255614';BLOG_attachCsiOnload('item_'); }_WidgetManager._Init('http://www.blogger.com/rearrange?blogID=860423771829255614','http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html','860423771829255614');
+_WidgetManager._SetPageActionUrl('http://www.blogger.com/display?blogID=860423771829255614','-AoUblLHlHgNEaMSrRx456bbQfI:1294939910666','AOuZoY4ftMAUMVk3GngpnIEZwQZe9pXm0g:1294939910666');
+_WidgetManager._SetDataContext([{'name': 'blog', 'data': {'title': 'Lineland', 'pageType': 'item', 'url': 'http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html', 'canonicalUrl': 'http://www.larsgeorge.com/2009/10/hbase-architecture-101-storage.html', 'homepageUrl': 'http://www.larsgeorge.com/', 'enabledCommentProfileImages': true, 'searchLabel': '', 'searchQuery': '', 'pageName': 'HBase Architecture 101 - Storage', 'pageTitle': 'Lineland: HBase Architecture 101 - Storage', 'encoding': 'UTF-8', 'locale': 'en', 'isPrivate': false, 'isMobile': false, 'mobileClass': '', 'languageDirection': 'ltr', 'feedLinks': '\74link rel\75\42alternate\42 type\75\42application/atom+xml\42 title\75\42Lineland - Atom\42 href\75\42http://www.larsgeorge.com/feeds/posts/default\42 /\76\n\74link rel\75\42alternate\42 type\75\42application/rss+xml\42 title\75\42Lineland - RSS\42 href\75\42http://www.larsgeorge.com/feeds/posts/default?alt\75rss\42 /\76\n\74link rel\75\42service.post\42 type\75\42application/atom+xml\42 title\75\42Lineland - Atom\42 href\75\42http://www.blogger.com/feeds/860423771829255614/posts/default\42 /\76\n\74link rel\75\42EditURI\42 type\75\42application/rsd+xml\42 title\75\42RSD\42 href\75\42http://www.blogger.com/rsd.g?blogID\75860423771829255614\42 /\76\n\74link rel\75\42alternate\42 type\75\42application/atom+xml\42 title\75\42Lineland - Atom\42 href\75\42http://www.larsgeorge.com/feeds/8073228651920917483/comments/default\42 /\76\n', 'meTag': '', 'openIdOpTag': '', 'imageSrcTag': '\74link rel\75\42image_src\42 href\75\42http://1.bp.blogspot.com/_Cib_A77V54U/StorLZRjHSI/AAAAAAAAAEI/4IznGhslNxw/s72-c/hbase-files.png\42 /\76\n', 'latencyHeadScript': '\74script type\75\42text/javascript\42\76(function() { var a\75window;function c(b){this.t\75{};this.tick\75function(d,i,e){e\75e?e:(new Date).getTime();this.t[d]\75[e,i]};this.tick(\42start\42,null,b)}var f\75new c;a.jstiming\75{Timer:c,load:f};try{var g\75null;if(a.chrome\46\46a.chrome.csi)g\75Math.floor(a.chrome.csi().pageT);if(g\75\75null)if(a.gtbExternal)g\75a.gtbExternal.pageT();if(g\75\75null)if(a.external)g\75a.external.pageT;if(g)a.jstiming.pt\75g}catch(h){};a.tickAboveFold\75function(b){b\75b;var d\0750;if(b.offsetParent){do d+\75b.offsetTop;while(b\75b.offsetParent)}b\75d;b\74\075750\46\46a.jstiming.load.tick(\42aft\42)};var j\75false;function k(){if(!j){j\75true;a.jstiming.load.tick(\42firstScrollTime\42)}}a.addEventListener?a.addEventListener(\42scroll\42,k,false):a.attachEvent(\42onscroll\42,k);\n })();\74/script\076', 'mobileHeadScript': ''}}]);
+_WidgetManager._RegisterWidget('_ProfileView', new _WidgetInfo('Profile2', 'sidebar', null, document.getElementById('Profile2'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_LinkListView', new _WidgetInfo('LinkList1', 'sidebar', null, document.getElementById('LinkList1'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_HTMLView', new _WidgetInfo('HTML3', 'sidebar', null, document.getElementById('HTML3'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_HTMLView', new _WidgetInfo('HTML2', 'sidebar', null, document.getElementById('HTML2'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_SubscribeView', new _WidgetInfo('Subscribe1', 'sidebar', null, document.getElementById('Subscribe1'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_HTMLView', new _WidgetInfo('HTML1', 'sidebar', null, document.getElementById('HTML1'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_FollowersView', new _WidgetInfo('Followers2', 'sidebar', null, document.getElementById('Followers2'), {'title': 'Followers', 'codeSnippet': '\74script type\75\42text/javascript\42\76\n        if (!window.google || !google.friendconnect) {\n          document.write(\47\74script type\75\42text/javascript\42\47 +\n              \47src\75\42http://www.google.com/friendconnect/script/friendconnect.js\42\76\47 +\n              \47\74/scr\47 + \47ipt\76\47);\n        }\n      \74/script\76\n\74script type\75\42text/javascript\42\76\n      if (!window.registeredBloggerCallbacks) {\n        window.registeredBloggerCallbacks \75 true;\n\n        \n\n        \n        gadgets.rpc.register(\47requestReload\47, function() {\n          document.location.reload();\n        });\n\n        \n        gadgets.rpc.register(\47requestSignOut\47, function(siteId) {\n          \n          google.friendconnect.container.openSocialSiteId \75 siteId;\n          google.friendconnect.requestSignOut();\n        });\n      }\n    \74/script\76\n\74script type\75\42text/javascript\42\76\n    \n    function registerGetBlogUrls() {\n      gadgets.rpc.register(\47getBlogUrls\47, function() {\n        var holder \75 {};\n        \n          \n            \n            \n              holder.currentPost \75 \42http://www.blogger.com/feeds/860423771829255614/posts/default/8073228651920917483\42;\n            \n            \n            \n              holder.currentComments \75 \42http://www.blogger.com/feeds/860423771829255614/8073228651920917483/comments/default\42;\n            \n            holder.currentPostUrl \75 \42\42;\n            holder.currentPostId \75 8073228651920917483\n          \n          \n          \n            holder.postFeed \75 \42http://www.blogger.com/feeds/860423771829255614/posts/default\42;\n          \n          \n          \n            holder.commentFeed \75 \42http://www.blogger.com/feeds/860423771829255614/comments/default\42;\n          \n          holder.currentBlogUrl \75 \42http://www.larsgeorge.com/\42;\n          holder.currentBlogId \75 \42860423771829255614\42;\n        \n        return holder;\n      });\n    }\n  \74/script\76\n\74script type\75\42text/javascript\42\76\n  if (!window.registeredCommonBloggerCallbacks) {\n    window.registeredCommonBloggerCallbacks \75 true;\n\n    gadgets.rpc.register(\47resize_iframe\47, function(height) {\n      var el \75 document.getElementById(this[\47f\47]);\n      if (el) {\n        el.style.height \75 height + \47px\47;\n      }\n    });\n\n    \n    gadgets.rpc.register(\47set_pref\47, function() {});\n\n    registerGetBlogUrls();\n  }\n  \74/script\76\n\74div id\75\42div-vigjzdst68pe\42 style\75\42width: 100%; \42\76\74/div\76\n\74script type\75\42text/javascript\42\76\n    var skin \75 {};\n    skin[\47FACE_SIZE\47] \75 \04732\47;\n    skin[\47HEIGHT\47] \75 \042260\42;\n    skin[\47TITLE\47] \75 \42Followers\42;\n    skin[\47BORDER_COLOR\47] \75 \42transparent\42;\n    skin[\47ENDCAP_BG_COLOR\47] \75 \42transparent\42;\n    skin[\47ENDCAP_TEXT_COLOR\47] \75 \42#333333\42;\n    skin[\47ENDCAP_LINK_COLOR\47] \75 \42#000000\42;\n    skin[\47ALTERNATE_BG_COLOR\47] \75 \42transparent\42;\n    \n    skin[\47CONTENT_BG_COLOR\47] \75 \42transparent\42;\n    skin[\47CONTENT_LINK_COLOR\47] \75 \42#000000\42;\n    skin[\47CONTENT_TEXT_COLOR\47] \75 \42#333333\42;\n    skin[\47CONTENT_SECONDARY_LINK_COLOR\47] \75 \42#FFFFFF\42;\n    skin[\47CONTENT_SECONDARY_TEXT_COLOR\47] \75 \42#000000\42;\n    skin[\47CONTENT_HEADLINE_COLOR\47] \75 \42#000000\42;\n    skin[\47FONT_FACE\47] \75 \42normal normal 100% Verdana, Arial, Sans-serif;\42;\n    google.friendconnect.container.setParentUrl(\42/\42);\n    google.friendconnect.container[\42renderMembersGadget\42](\n    {id: \42div-vigjzdst68pe\42,\n     height: 260,\n     \n     \n     \n     site: \04211910368541242160501\42,\n      \n     locale: \47en\47 },\n     skin);\n  \74/script\076'}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_BlogArchiveView', new _WidgetInfo('BlogArchive2', 'sidebar', null, document.getElementById('BlogArchive2'), {'languageDirection': 'ltr'}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_AdSenseView', new _WidgetInfo('AdSense2', 'sidebar', null, document.getElementById('AdSense2'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_LabelView', new _WidgetInfo('Label1', 'sidebar', null, document.getElementById('Label1'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_HeaderView', new _WidgetInfo('Header1', 'header'));
+_WidgetManager._RegisterWidget('_NavbarView', new _WidgetInfo('Navbar1', 'navbar'));
+_WidgetManager._RegisterWidget('_BlogView', new _WidgetInfo('Blog1', 'main', null, document.getElementById('Blog1'), {'cmtInteractionsEnabled': false, 'commentInteractionIframeUrl': 'http://www.blogger.com/comment-interaction-iframe.g?blogId\75860423771829255614', 'showBacklinks': true, 'postId': '8073228651920917483', 'mobile': false}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_AdSenseView', new _WidgetInfo('AdSense1', 'main', null, document.getElementById('AdSense1'), {}, 'displayModeFull'));
+</script>
+</body>
+</html>

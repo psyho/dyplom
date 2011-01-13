@@ -1,0 +1,2059 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:fb="http://www.facebook.com/2008/fbml">
+    <head>
+	<title>  WTF is a SuperColumn? An Intro to the Cassandra Data Model &#8212; Arin Sarkissian</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta name="generator" content="WordPress 3.0.3" /> <!-- leave this for stats -->
+    <meta name="verify-v1" content="01F0Pp3twWE1HzNEQGPL6k1xf17ggCjbzhdUQ4gu2CI=" />
+    
+	<!--[if lte IE 7]>
+	<link rel="stylesheet" type="text/css" href="http://arin.me/blog/wp-content/themes/phatduckkNew/ie7.css" />
+	<![endif]-->
+	<!--[if lte IE 6]>
+	<link rel="stylesheet" type="text/css" href="http://arin.me/blog/wp-content/themes/phatduckkNew/ie6.css" />
+	<![endif]-->
+	
+	<link rel="alternate" type="application/rss+xml" title="Arin Sarkissian RSS Feed" href="http://arin.me/blog/feed" />
+	<link rel="pingback" href="http://arin.me/blog/xmlrpc.php" />	
+	<link rel="stylesheet" href="style.css" type="text/css" media="screen" />	
+	<link rel="stylesheet" href="http://gist.github.com/stylesheets/gist/embed.css"/>
+	<!-- <link rel="stylesheet" type="text/css" href="http://arin.me/blog/wp-content/themes/phatduckkNew/plugins.css" /> -->
+	<link rel="alternate" type="application/rss+xml" title="Arin Sarkissian &raquo; WTF is a SuperColumn? An Intro to the Cassandra Data Model Comments Feed" href="http://arin.me/blog/wtf-is-a-supercolumn-cassandra-data-model/feed" />
+<link rel='stylesheet' id='sociable-front-css-css'  href='sociable.css%3Fver=3.0.3.css' type='text/css' media='all' />
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://arin.me/blog/xmlrpc.php?rsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://arin.me/blog/wp-includes/wlwmanifest.xml" /> 
+<link rel='index' title='Arin Sarkissian' href='http://arin.me/blog' />
+<link rel='start' title='phatduckk.com is Alive' href='http://arin.me/blog/phatduckkcom-is-alive' />
+<link rel='prev' title='Giving You Money Shouldn&#039;t Be A Pain In My Ass' href='http://arin.me/blog/giving-you-money-shouldnt-be-a-pain-in-my-ass' />
+<link rel='next' title='Just Add an Index' href='http://arin.me/blog/just-add-an-index' />
+<meta name="generator" content="WordPress 3.0.3" />
+<link rel='canonical' href='wtf-is-a-supercolumn-cassandra-data-model.html' />
+<link rel='shortlink' href='http://arin.me/blog/?p=683' />
+<script type='text/javascript' src='jquery.js%3Fver=1.4.2'></script>
+			<script type="text/javascript" src="flickrTagTooltips.js"></script>
+
+			<link href="flickrTagTooltips.css" type="text/css" rel="stylesheet"/>
+	
+		<link href="flickrTag.css" type="text/css" rel="stylesheet"/>
+	
+			<link rel="stylesheet" type="text/css" href="index.php%3Fak_action=aktt_css&amp;v=2.4.css" />
+			<script type="text/javascript" src="index.php%3Fak_action=aktt_js&amp;v=2.4"></script>
+		<meta property="og:site_name" content="Arin Sarkissian" /><meta property="og:title" content="WTF is a SuperColumn? An Intro to the Cassandra Data Model" /></head>
+
+<body>    
+    <div id="content">
+        <div id="nav">
+            <a href="http://arin.me/blog" title="Arin Sarkissian">
+                <img src="arin-sarkissian.png" alt="Arin Sarkissian's Blog"/></a>
+            <div>                
+                                <a href="http://arin.me/blog">BLOG</a> | <a href="http://arin.me/blog/about" title="About Me">About Me</a> |
+<a href="http://arin.me/blog/contact" title="Contact Me">Contact Me</a> |
+<a href="http://arin.me/blog/projects" title="Projects">Projects</a>                 <span>
+                   <a href="http://arin.me/blog/feed"><img src="feed-icon-12.png" /></a>
+                </span>
+            </div>                                        
+        </div>
+        
+		
+	                <div id="entry">
+                <div class="entry">
+    <div class="top"><img src="entry-top.png" /></div>                    
+    <div class="main">
+        <div class="title">
+            <span class="entry-icon">
+                <img src="entry-icon-txt.jpg" /></span>
+            <div class="date">September 1st, 2009</div>
+            <h2><a href="wtf-is-a-supercolumn-cassandra-data-model.html">WTF is a SuperColumn? An Intro to the Cassandra Data Model</a></h2>
+        </div>                        
+        <div class="meta">
+            <span class="comments">
+                <a href="wtf-is-a-supercolumn-cassandra-data-model.html#comments" title="Comment on WTF is a SuperColumn? An Intro to the Cassandra Data Model">100 comments</a>            </span>                        
+            <span class="cat">
+                <a href="http://arin.me/blog/category/work" title="View all posts in Work" rel="category tag">Work</a>            </span>                            
+        </div>
+        <div class="body">
+            <p>For the last month or two the Digg engineering team has spent quite a bit of time looking into, playing with and finally deploying <a href="http://incubator.apache.org/cassandra/">Cassandra</a> in production. It&#8217;s been a super fun project to take on &#8211; but even before the fun began we had to spend quite a bit of time figuring out Cassandra&#8217;s data model&#8230; the phrase &#8220;WTF is a &#8216;super column&#8217;&#8221; was uttered quite a few times. <img src='icon_smile.gif' alt=':)' class='wp-smiley' /> </p>
+<p>If you&#8217;re coming from an RDBMS background (which is almost everyone) you&#8217;ll probably trip over some of the naming conventions while learning about Cassandra&#8217;s data model. It took me and my team members at Digg a couple days of talking things out before we &#8220;got it&#8221;. In recent weeks a <a href="http://mail-archives.apache.org/mod_mbox/incubator-cassandra-dev/200908.mbox/%3cb6f68fc60908111037ofdc0d6csa39543857e3583a2@mail.gmail.com%3e">bikeshed</a> went down in the dev mailing list proposing a completely new naming scheme to alleviate some of the confusion. Throughout this discussion I kept thinking: &#8220;maybe if there were some decent examples out there people wouldn&#8217;t get so confused by the naming.&#8221; So, this is my stab at explaining Cassandra&#8217;s data model; It&#8217;s intended to help you get your feet wet &#038; doesn&#8217;t go into every single detail but, hopefully, it helps clarify a few things.</p>
+<p><em>BTW: this is long. If you&#8217;d rather have a PDF version of this you can <a href="http://arin.s3.amazonaws.com/pub/docs/WTF-is-a-SuperColumn.pdf">download it here</a>.</em></p>
+<h2>The Pieces</h2>
+<p>Let&#8217;s first go thru the building blocks before we see how they can all be stuck together:</p>
+<h3>Column</h3>
+<p>The <code>column</code> is the lowest/smallest increment of data. It&#8217;s a <a href="http://en.wikipedia.org/wiki/Tuple">tuple (triplet)</a> that contains a name, a value and a timestamp.</p>
+<p>Here&#8217;s a <code>column</code> represented in JSON-ish notation:</p>
+<div class="code"><code>
+<pre>
+{  // this is a column
+    name: "emailAddress",
+    value: "arin@example.com",
+    timestamp: 123456789
+}
+</pre>
+<p></code></div>
+<p>That&#8217;s all it is. For simplicity sake let&#8217;s ignore the timestamp. Just think of it as a name/value pair.</p>
+<p>Also, it&#8217;s worth noting is that the <code>name</code> and <code>value</code> are both binary (technically <code>byte[]</code>) and can be of any length.</p>
+<h3>SuperColumn</h3>
+<p>A <code>SuperColumn</code> is a tuple w/ a binary name &#038; a value which is a map containing an unbounded number of <code>Column</code>s &#8211; keyed by the <code>Column</code>&#8216;s name. Keeping with the JSON-ish notation we get:</p>
+<div class="code"><code>
+<pre>
+{   // this is a SuperColumn
+    name: "homeAddress",
+    // with an infinite list of Columns
+    value: {
+        // note the keys is the name of the Column
+        street: {name: "street", value: "1234 x street", timestamp: 123456789},
+        city: {name: "city", value: "san francisco", timestamp: 123456789},
+        zip: {name: "zip", value: "94107", timestamp: 123456789},
+    }
+}
+</pre>
+<p></code></div>
+<h3>Column vs SuperColumn</h3>
+<p><code>Column</code>s and <code>SuperColumn</code>s are both a tuples w/ a name &#038; value. The  key difference is that a standard <code>Column</code>&#8216;s value is a &#8220;string&#8221; and in a <code>SuperColumn</code> the value is a Map of <code>Column</code>s. That&#8217;s the main difference&#8230; their values contain different types of data. Another minor difference is that <code>SuperColumn</code>&#8216;s don&#8217;t have a timestamp component to them.</p>
+<h3>Before We Get Rolling</h3>
+<p>Before I move on I wanna simplify our notation a couple ways: 1) ditch the timestamps from <code>Column</code>s &#038; 2) pull the <code>Column</code>s&#8217; &#038; <code>SuperColumn</code>s&#8217; names component out so that it looks like a key/value pair. So we&#8217;re gonna go from:</p>
+<div class="code"><code>
+<pre>
+{ // this is a super column
+    name: "homeAddress",
+    // with an infinite list of columns
+    value: {
+        street: {name: "street", value: "1234 x street", timestamp: 123456789},
+        city: {name: "city", value: "san francisco", timestamp: 123456789},
+        zip: {name: "zip", value: "94107", timestamp: 123456789},
+    }
+}
+</pre>
+<p></code></div>
+<p>to</p>
+<div class="code"><code>
+<pre>
+homeAddress: {
+    street: "1234 x street",
+    city: "san francisco",
+    zip: "94107",
+}
+</pre>
+<p></code></div>
+<h2>Grouping &#8216;Em</h2>
+<p>There&#8217;s a single structure used to group both the <code>Column</code>s and <code>SuperColumn</code>s&#8230;this structure is called a <code>ColumnFamily</code> and comes in 2 varieties <code>Standard</code> &#038; <code>Super</code>.</p>
+<h3>ColumnFamily</h3>
+<p>A <code>ColumnFamily</code> is a structure that contains an infinite number of <code>Row</code>s. Huh, did you say <code>Row</code>s? Ya &#8211; <code>rows</code> <img src='icon_smile.gif' alt=':)' class='wp-smiley' />  To make it sit easier in your head just think of it as a table in an RDBMS.</p>
+<p>OK &#8211; each <code>Row</code> has a client supplied (that means you) key &#038; contains a map of <code>Column</code>s. Again, the keys in the map are the names of the <code>Column</code>s and the values are the <code>Column</code>s themselves:</p>
+<div class="code"><code>
+<pre>
+UserProfile = { // this is a ColumnFamily
+    phatduckk: {   // this is the key to this Row inside the CF
+        // now we have an infinite # of columns in this row
+        username: "phatduckk",
+        email: "phatduckk@example.com",
+        phone: "(900) 976-6666"
+    }, // end row
+    ieure: {   // this is the key to another row in the CF
+        // now we have another infinite # of columns in this row
+        username: "ieure",
+        email: "ieure@example.com",
+        phone: "(888) 555-1212"
+        age: "66",
+        gender: "undecided"
+    },
+}
+
+<i>Remember: for simplicity we're only showing the value of the <code>Column</code> but in reality the values in the
+map are the entire</i> <code>Column</code>.
+</pre>
+<p></code></div>
+<p>You can think of it as a <code>HashMap/dictionary</code> or <code>associative array</code>. If you start thinking that way then you&#8217;re are the right track.</p>
+<p>One thing I want to point out is that there&#8217;s no schema enforced at this level. The <code>Row</code>s do not have a predefined list of <code>Column</code>s that they contain. In our example above you see that the row with the key &#8220;ieure&#8221; has <code>Column</code>s with names &#8220;age&#8221; and &#8220;gender&#8221; whereas the row identified by the key &#8220;phatduckk&#8221; doesn&#8217;t. It&#8217;s 100% flexible: one <code>Row</code> may have 1,989 <code>Column</code>s whereas the other has 2.  One <code>Row</code> may have a <code>Column</code> called &#8220;foo&#8221; whereas none of the rest do. This is the schemaless aspect of Cassandra.</p>
+<h3>A ColumnFamily Can Be Super Too</h3>
+<p>Now, a <code>ColumnFamily</code> can be of type <code>Standard</code> or <code>Super</code>.</p>
+<p>What we just went over was an example of the <code>Standard</code> type. What makes it <code>Standard</code> is the fact that all the <code>Row</code>s contains a map of <em>normal</em> (aka not-Super) <code>Column</code>s&#8230; there&#8217;s no <code>SuperColumn</code>s scattered about.</p>
+<p>When a <code>ColumnFamily</code> is of type <code>Super</code> we have the opposite: each <code>Row</code> contains a map of <code>SuperColumn</code>s.  The map is keyed with the name of each <code>SuperColumn</code> and the value is the <code>SuperColumn</code> itself. And, just to be clear, since this <code>ColumnFamily</code> is of type <em>Super</em>, there are no <em>Standard</em> <code>ColumnFamily</code>&#8216;s in there. Here&#8217;s an example:</p>
+<div class="code"><code>
+<pre>
+AddressBook = { // this is a ColumnFamily of type Super
+    phatduckk: {    // this is the key to this row inside the Super CF
+        // the key here is the name of the owner of the address book
+
+        // now we have an infinite # of super columns in this row
+        // the keys inside the row are the names for the SuperColumns
+        // each of these SuperColumns is an address book entry
+        friend1: {street: "8th street", zip: "90210", city: "Beverley Hills", state: "CA"},
+
+        // this is the address book entry for John in phatduckk's address book
+        John: {street: "Howard street", zip: "94404", city: "FC", state: "CA"},
+        Kim: {street: "X street", zip: "87876", city: "Balls", state: "VA"},
+        Tod: {street: "Jerry street", zip: "54556", city: "Cartoon", state: "CO"},
+        Bob: {street: "Q Blvd", zip: "24252", city: "Nowhere", state: "MN"},
+        ...
+        // we can have an infinite # of ScuperColumns (aka address book entries)
+    }, // end row
+    ieure: {     // this is the key to another row in the Super CF
+        // all the address book entries for ieure
+        joey: {street: "A ave", zip: "55485", city: "Hell", state: "NV"},
+        William: {street: "Armpit Dr", zip: "93301", city: "Bakersfield", state: "CA"},
+    },
+}
+</pre>
+<p></code></div>
+<h3>Keyspace</h3>
+<p>A <code>Keyspace</code> is the outer most grouping of your data. All your <code>ColumnFamily</code>&#8216;s go inside a <code>Keyspace</code>. Your <code>Keyspace</code> will probably named after your application.</p>
+<p>Now, a <code>Keyspace</code> can have multiple <code>ColumnFamily</code>&#8216;s but that doesn&#8217;t mean there&#8217;s an imposed relationship between them. For example: they&#8217;re not like tables in MySQL&#8230; you can&#8217;t <code>join</code> them. Also, just because <em>ColumnFamily_1</em> has a <code>Row</code> with key &#8220;phatduckk&#8221; that doesn&#8217;t mean <em>ColumnFamily_2</em> has one too.</p>
+<h2>Sorting</h2>
+<p>OK &#8211; we&#8217;ve gone through what the various data containers are about but another key component of the data model is how the data is sorted. Cassandra is not queryable like SQL &#8211; you do not specify how you want the data sorted when you&#8217;re fetching it (among other differences). The data is sorted as soon as you put it into the cluster and it always remains sorted! This is a tremendous performance boost for reads but in exchange for that benefit you&#8217;re going to have to make sure to plan your data model in a such a way that you&#8217;re able satisfy your access patterns.</p>
+<p><code>Column</code>s are always sorted within their <code>Row</code> by the <code>Column</code>&#8216;s name. This is important so i&#8217;ll say it again: <code>Column</code>s are always sorted by their name! How the names are compared depends on the <code>ColumnFamily</code>s <em>CompareWith</em> option. Out of the box you have the following options: <em>BytesType, UTF8Type, LexicalUUIDType, TimeUUIDType, AsciiType</em>, and <em>LongType</em>. Each of these options treats the <code>Column</code>s&#8217; name as a different data type giving you quite a bit of felxibility. For example: Using <em>LongType</em> will treat your <code>Column</code>s&#8217; names as a 64bit <code>Long</code>s. Let&#8217;s try and clear this up by taking a look at some data before and after it&#8217;s sorted:</p>
+<div class="code">
+<pre><code>
+    // Here's a view of all the Columns from a particular Row in random order
+    // Cassandra would "never" store data in random order. This is just an example
+    // Also, ignore the values - they don't matter for sorting at all
+    {name: 123, value: "hello there"},
+    {name: 832416, value: "kjjkbcjkcbbd"},
+    {name: 3, value: "101010101010"},
+    {name: 976, value: "kjjkbcjkcbbd"}
+</code></pre>
+</div>
+<p>So, given the fact that we&#8217;re using the <em>LongType</em> option, these <code>Column</code>s will look like this when they&#8217;re sorted:</p>
+<div class="code">
+<pre><code>
+    &lt;!--
+    ColumnFamily definition from storage-conf.xml
+    -->
+    &lt;ColumnFamily CompareWith="LongType" Name="CF_NAME_HERE"/>
+
+    // See, each Column's name is treated as a 64bit long
+    // in effect, numerically ordering our Columns' by name
+    {name: 3, value: "101010101010"},
+    {name: 123, value: "hello there"},
+    {name: 976, value: "kjjkbcjkcbbd"},
+    {name: 832416, value: "kjjkbcjkcbbd"}
+</code></pre>
+</div>
+<p>As you can see the <code>Column</code>s&#8217; names were compared as if they were 64bit <code>Long</code>s (aka: numbers that can get pretty big). Now, if we&#8217;d used another <em>CompareWith</em> option we&#8217;d end up with a different result. If we&#8217;d set <em>CompareWith</em> to <em>UTF8Type</em> our sorted <code>Column</code>s&#8217; names would be treated as a UTF8 encoded strings yielding a sort order like this:</p>
+<div class="code">
+<pre><code>
+    &lt;!--
+    ColumnFamily definition from storage-conf.xml
+    -->
+    &lt;ColumnFamily CompareWith="UTF8Type" Name="CF_NAME_HERE"/>
+
+    // Each Column name is treated as a UTF8 string
+    {name: 123, value: "hello there"},
+    {name: 3, value: "101010101010"},
+    {name: 832416, value: "kjjkbcjkcbbd"},
+    {name: 976, value: "kjjkbcjkcbbd"}
+</code></pre>
+</div>
+<p>The result is completely different!</p>
+<p>This sorting principle applies to <code>SuperColumn</code>s as well but we get an extra dimension to deal with: not only do we determine how the <code>SuperColumn</code>s are sorted in a <code>Row</code> but we also determine how the <code>Column</code>s within each <code>SuperColumn</code> are sorted. The sort of the <code>Column</code>s within each <code>SuperColumn</code> is determined by the value of <em>CompareSubcolumnsWith</em>. Here&#8217;s an example:</p>
+<div class="code">
+<pre><code>
+    // Here's a view of a Row that has 2 SuperColumns in it.
+    // currently they're in some random order
+
+    { // first SuperColumn from a Row
+        name: "workAddress",
+        // and the columns within it
+        value: {
+            street: {name: "street", value: "1234 x street"},
+            city: {name: "city", value: "san francisco"},
+            zip: {name: "zip", value: "94107"}
+        }
+    },
+    { // another SuperColumn from same Row
+        name: "homeAddress",
+        // and the columns within it
+        value: {
+            street: {name: "street", value: "1234 x street"},
+            city: {name: "city", value: "san francisco"},
+            zip: {name: "zip", value: "94107"}
+        }
+    }
+</code></pre>
+</div>
+<p>Now if we decided to set both <em>CompareSubcolumnsWith</em> &#038; <em>CompareWith</em> to <em>UTF8Type</em> we&#8217;d have the following end result:</p>
+<div class="code">
+<pre><code>
+    // Now they're sorted
+
+    {
+        // this one's first b/c when treated as UTF8 strings
+        { // another SuperColumn from same Row
+
+            // This Row comes first b/c "homeAddress" is before "workAddress"
+            name: "homeAddress",
+
+            // the columns within this SC are also sorted by their names too
+            value: {
+                // see, these are sorted by Column name too
+                city: {name: "city", value: "san francisco"},
+                street: {name: "street", value: "1234 x street"},
+                zip: {name: "zip", value: "94107"}
+            }
+        },
+        name: "workAddress",
+        value: {
+            // the columns within this SC are also sorted by their names too
+            city: {name: "city", value: "san francisco"},
+            street: {name: "street", value: "1234 x street"},
+            zip: {name: "zip", value: "94107"}
+        }
+    }
+</code></pre>
+</div>
+<p>I want to note that in the last example <em>CompareSubcolumnsWith</em> &#038; <em>CompareWith</em> were set to <em>UTF8Type</em> but this doesn&#8217;t have to be the case. You can mix and match the values of <em>CompareSubcolumnsWith</em> &#038; <em>CompareWith</em> as necessary.</p>
+<p>The last bit about sorting I want to mention is that you can write a custom class to perform the sorting. The sorting mechanism is pluggable&#8230; you can set <em>CompareSubcolumnsWith</em> and/or <em>CompareWith</em> to any fully-qualified class name as long as that class implements org.apache.cassandra.db.marshal.IType (aka you can write custom comparators).</p>
+<h2>Example Schema</h2>
+<p>Alrighty &#8211; Now we&#8217;ve got all the pieces of the puzzle so let&#8217;s finally put &#8216;em all together and model a simple blog application. We&#8217;re going to model a simple app with the following specs:</p>
+<ul>
+<li>support a single blog</li>
+<li>we can have multiple authors</li>
+<li>entries contain title, body, slug &#038; publish date</li>
+<li>entries can be associated with any # of tags</li>
+<li>people can leave comments but cant register: they enter profile info each time (just keeping it simple)</li>
+<li>comments have text, time submitted, commenter&#8217;s name &#038; commenter&#8217;s name</li>
+<li>must be able to show all posts in reverse chronological order (newest first)</li>
+<li>must be able to show all posts within a given tag in reverse chronological order</li>
+</ul>
+<p>Each of the following sections will describe a <code>ColumnFamily</code> that we&#8217;re going to define in our app&#8217;s <em>Keyspace</em>, show the xml definition, talk about why we picked the particular sort option(s) as well as display the data in the <code>ColumnFamily</code> w/ our JSON-ish notation.</p>
+<h3>Authors ColumnFamily</h3>
+<p>Modeling the <em>Authors</em> <code>ColumnFamily</code> is going to be pretty basic; we&#8217;re not going to do anything fancy here. We&#8217;re going to give each <em>Author</em> their own <code>Row</code> &#038; key it by the <em>Author</em>&#8216;s full name. Inside the <code>Row</code>s each <code>Column</code> is going to represent a single &#8220;profile&#8221; attribute for the <em>Author</em>.</p>
+<p>This is an example of using each <code>Row</code> to represent an object&#8230; in this case an <em>Author</em> object. With this approach each <code>Column</code> will serve as an attribute. Super simple. I want to point out that since there&#8217;s no &#8220;definition&#8221; of what <code>Column</code>s must be present within a <code>Row</code> we kinda sorta have a schemaless design.</p>
+<p>We&#8217;ll be accessing the <code>Row</code>s in this <code>ColumnFamily</code> via key lookup &#038; will grab every <code>Column</code> with each get (ex: we won&#8217;t ever be fetching the first 3 columns from the <code>Row</code> with key &#8216;foo&#8217;). This means that we don&#8217;t care how the <code>Column</code>s are sorted so we&#8217;ll use <em>BytesType</eM> sort options because it doesn&#8217;t require any validation of the <code>Column</code>s&#8217; names.</p>
+<div class="code">
+<pre><code>
+&lt;!--
+    ColumnFamily: Authors
+    We'll store all the author data here.
+
+    Row Key => Author's name (implies names must be unique)
+    Column Name: an attribute for the entry (title, body, etc)
+    Column Value: value of the associated attribute
+
+    Access: get author by name (aka grab all columns from a specific Row)
+
+    Authors : { // CF
+        Arin Sarkissian : { // row key
+            // and the columns as "profile" attributes
+            numPosts: 11,
+            twitter: phatduckk,
+            email: arin@example.com,
+            bio: "bla bla bla"
+        },
+        // and the other authors
+        Author 2 {
+            ...
+        }
+    }
+-->
+&lt;ColumnFamily CompareWith="BytesType" Name="Authors"/>
+</code></pre>
+</div>
+<h3>BlogEntries ColumnFamily</h3>
+<p>Again, this <code>ColumnFamily</code> is going to act as a simple key/value lookup. We&#8217;ll be storing 1 entry per <code>Row</code>. Within that <code>Row</code> the <code>Column</code>s will just serve as attributes of the entry: title, body, etc (just like the previous example). As a small optimization we&#8217;ll denormalize the tags into a <code>Column</code> as a comma separated string. Upon display we&#8217;ll just split that <code>Column</code>&#8216;s value to get a list of tags.</p>
+<p>The key to each <code>Row</code> will be the entries slug. So whenever we want to grab a single entry we can simply look it up by its key (slug).</p>
+<div class="code">
+<pre><code>
+&lt;!--
+    ColumnFamily: BlogEntries
+    This is where all the blog entries will go:
+
+    Row Key +> post's slug (the seo friendly portion of the uri)
+    Column Name: an attribute for the entry (title, body, etc)
+    Column Value: value of the associated attribute
+
+    Access: grab an entry by slug (always fetch all Columns for Row)
+
+    fyi: tags is a denormalization... its a comma separated list of tags.
+    im not using json in order to not interfere with our
+    notation but obviously you could use anything as long as your app
+    knows how to deal w/ it
+
+    BlogEntries : { // CF
+        i-got-a-new-guitar : { // row key - the unique "slug" of the entry.
+            title: This is a blog entry about my new, awesome guitar,
+            body: this is a cool entry. etc etc yada yada
+            author: Arin Sarkissian  // a row key into the Authors CF
+            tags: life,guitar,music  // comma sep list of tags (basic denormalization)
+            pubDate: 1250558004      // unixtime for publish date
+            slug: i-got-a-new-guitar
+        },
+        // all other entries
+        another-cool-guitar : {
+            ...
+            tags: guitar,
+            slug: another-cool-guitar
+        },
+        scream-is-the-best-movie-ever : {
+            ...
+            tags: movie,horror,
+            slug: scream-is-the-best-movie-ever
+        }
+    }
+-->
+&lt;ColumnFamily CompareWith="BytesType" Name="BlogEntries"/>
+</code></pre>
+</div>
+<h3>TaggedPosts ColumnFamily</h3>
+<p>Alright &#8211; here&#8217;s where things get a bit interesting. This <code>ColumnFamily</code> is going to do some heavy lifting for us. It&#8217;s going to be responsible for keeping our tag/entry associations. Not only is it going to store the associations but it&#8217;s going to allow us to fetch all <em>BlogEntry</em>s for a certain tag in pre-sorted order (remember all that sorting jazz we went thru?).</p>
+<p>A design point I want to point out is that we&#8217;re going have our app logic tag every <em>BlogEntry</em> with the tag &#8220;__notag__&#8221; (a tag I just made up). Tagging every <em>BlogEntry</em> with &#8220;__notag__&#8221; will allow us to use this <code>ColumnFamily</code> to also store a list of all <em>BlogEntry</em>s in pre-sorted order. We&#8217;re kinda cheating but it allows us to use a single <code>ColumnFamily</code> to serve &#8220;show me all recent posts&#8221; and &#8220;show me all recent posts tagged &#8216;foo&#8217;&#8221;.</p>
+<p>Given this data model if an entry has 3 tags it will have a corresponding <code>Column</code> in 4 <code>Row</code>s&#8230; 1 for each tag and one for the &#8220;__notag__&#8221; tag.</p>
+<p>Since we&#8217;re going to want to display lists of entries in chronological order we&#8217;ll make sure each <code>Column</code>s name is a <a href="http://en.wikipedia.org/wiki/Universally_Unique_Identifier">time UUID</a> and set the <code>ColumnFamily</code>s <em>CompareWith</em> to <em>TimeUUIDType</em>.  This will sort the <code>Column</code>s by time satisfying our &#8220;chronological order&#8221; requirement <img src='icon_smile.gif' alt=':)' class='wp-smiley' />  So doing stuff like &#8220;get the latest 10 entries tagged &#8216;foo&#8217;&#8221; is going to be a super efficient operation.</p>
+<p>Now when we want display the 10 most recent entries (on the front page, for example) we would:</p>
+<ol>
+<li>grab the last 10 <code>Column</code>s in the <code>Row</code> w/ key &#8220;__notag__&#8221; (our &#8220;all posts&#8221; tag)</li>
+<li>loop thru that set of <code>Column</code>s</li>
+<li>while looping, we know the value of each <code>Column</code> is the key to a <code>Row</code> in the <em>BlogEntries</em> <code>ColumnFamily</code></li>
+<li>so we go ahead and use that to grab the <code>Row</code> for this entry from the <em>BlogEntries</em> <code>ColumNFamily</code>. this gives us all the data for this entry</li>
+<li>one of the <code>Column</code>s from the <em>BlogEntries</em> <code>Row</code> we just grabbed is named &#8220;author&#8221; and the value is the key into the <em>Authors</em> <code>ColumnFamily</code> we need to use to grab that author&#8217;s profile data.</li>
+<li>at this point we&#8217;ve got the entry data and the author data on hand</li>
+<li>next we&#8217;ll split the &#8220;tags&#8221; <code>Column</code>s value to get a list tags</li>
+<li>now we have everything we need to display this post (no comments yet &#8211; this aint the permalink page)</li>
+</ol>
+<p>We can go through the same procedure above using any tag&#8230; so it works for &#8220;all entries&#8221; and &#8220;entries tagged &#8216;foo&#8217;&#8221;. Kinda nice.</p>
+<div class="code">
+<pre><code>
+&lt;!--
+    ColumnFamily: TaggedPosts
+    A secondary index to determine which BlogEntries are associated with a tag
+
+    Row Key => tag
+    Column Names: a TimeUUIDType
+    Column Value: row key into BlogEntries CF
+
+    Access: get a slice of entries tagged 'foo'
+
+    We're gonna use this CF to determine which blog entries to show for a tag page.
+    We'll be a bit ghetto and use the string __notag__ to mean
+    "don't restrict by tag". Each entry will get a column in here...
+     this means we'll have to have #tags + 1 columns for each post.
+
+    TaggedPosts : { // CF
+        // blog entries tagged "guitar"
+        guitar : {  // Row key is the tag name
+            // column names are TimeUUIDType, value is the row key into BlogEntries
+            timeuuid_1 : i-got-a-new-guitar,
+            timeuuid_2 : another-cool-guitar,
+        },
+        // here's all blog entries
+        __notag__ : {
+            timeuuid_1b : i-got-a-new-guitar,
+
+            // notice this is in the guitar Row as well
+            timeuuid_2b : another-cool-guitar,
+
+            // and this is in the movie Row as well
+            timeuuid_2b : scream-is-the-best-movie-ever,
+        },
+        // blog entries tagged "movie"
+        movie: {
+            timeuuid_1c: scream-is-the-best-movie-ever
+        }
+    }
+-->
+&lt;ColumnFamily CompareWith="TimeUUIDType" Name="TaggedPosts"/>
+</code></pre>
+</div>
+<h3>Comments ColumnFamily</h3>
+<p>The last thing we need to do is figure out how to model the comments. Here we&#8217;ll get to bust out some <code>SuperColumn</code>s.</p>
+<p>We&#8217;ll have 1 <code>Row</code> per entry. The key to the <code>Row</code> will be the entries slug. Within each <code>Row</code> we&#8217;ll have a <code>SuperColumn</code> for each comment. The name of the <code>SuperColumn</code>s will be a UUID that we&#8217;ll be applying the <em>TimeUUIDType</em> to. This will ensure that all our comments for an entry are sorted in chronological order. The <code>Column</code>s within each <code>SuperColumn</code> will be the various attributes of the comment (commenter&#8217;s name, comment time etc).</p>
+<p>So, this is pretty simple as well&#8230; nothing fancy.</p>
+<div class="code">
+<pre><code>
+&lt;!--
+    ColumnFamily: Comments
+    We store all comments here
+
+    Row key => row key of the BlogEntry
+    SuperColumn name: TimeUUIDType
+
+    Access: get all comments for an entry
+
+    Comments : {
+        // comments for scream-is-the-best-movie-ever
+        scream-is-the-best-movie-ever : { // row key = row key of BlogEntry
+            // oldest comment first
+            timeuuid_1 : { // SC Name
+                // all Columns in the SC are attribute of the comment
+                commenter: Joe Blow,
+                email: joeb@example.com,
+                comment: you're a dumb douche, the godfather is the best movie ever
+                commentTime: 1250438004
+            },
+
+            ... more comments for scream-is-the-best-movie-ever
+
+            // newest comment last
+            timeuuid_2 : {
+                commenter: Some Dude,
+                email: sd@example.com,
+                comment: be nice Joe Blow this isnt youtube
+                commentTime: 1250557004
+            },
+        },
+
+        // comments for i-got-a-new-guitar
+        i-got-a-new-guitar : {
+            timeuuid_1 : { // SC Name
+                // all Columns in the SC are attribute of the comment
+                commenter: Johnny Guitar,
+                email: guitardude@example.com,
+                comment: nice axe dawg...
+                commentTime: 1250438004
+            },
+        }
+
+        ..
+        // then more Super CF's for the other entries
+    }
+-->
+&lt;ColumnFamily CompareWith="TimeUUIDType" ColumnType="Super"
+&nbsp;&nbsp;&nbsp;&nbsp;CompareSubcolumnsWith="BytesType" Name="Comments"/>
+</code></pre>
+</div>
+<h2>Woot!</h2>
+<p>That&#8217;s it. Out little blog app is all modeled and ready to go. It&#8217;s quite a bit to digest but in the end you end up with a pretty small chunk of XML you&#8217;ve gotta store in the <em>storage-conf.xml</em>:</p>
+<div class="code">
+<pre><code>
+    &lt;Keyspace Name="BloggyAppy">
+        &lt;!-- other keyspace config stuff -->
+
+        &lt;!-- CF definitions -->
+        &lt;ColumnFamily CompareWith="BytesType" Name="Authors"/>
+        &lt;ColumnFamily CompareWith="BytesType" Name="BlogEntries"/>
+        &lt;ColumnFamily CompareWith="TimeUUIDType" Name="TaggedPosts"/>
+        &lt;ColumnFamily CompareWith="TimeUUIDType" Name="Comments"
+            CompareSubcolumnsWith="BytesType" ColumnType="Super"/>
+    &lt;/Keyspace>
+</code></pre>
+</div>
+<p>Now all you need to do is figure out how to get the data in and out of Cassandra <img src='icon_wink.gif' alt=';)' class='wp-smiley' /> . That&#8217;s all accomplished via the <a href="http://wiki.apache.org/cassandra/ThriftInterface">Thrift Interface</a>. The <a href="http://wiki.apache.org/cassandra/API">API wiki page</a> does a decent job at explaining what the various endpoints do so I won&#8217;t go into all those details. But, in general, you just compile the <code>cassandra.thrift</code> file and use the generated code to access the various <a href="http://wiki.apache.org/cassandra/API">endpoints</a>. Alternatively you can take advantage of this <a href="http://blog.evanweaver.com/files/doc/fauna/cassandra_client/files/README.html">Ruby client</a> or this <a href="http://github.com/digg/lazyboy/tree/master">Python client</a>.</p>
+<p>Alrighty&#8230; hopefully all that made sense &#038; you finally understand WTF a <code>SuperColumn</code> is and can start building some awesome apps.</p>
+        </div>    
+        <div class="tags">
+            
+<div class="sociable">
+
+<ul>
+	<li class="sociablefirst"><a rel="nofollow"  href="http://digg.com/submit?phase=2&amp;url=http%3A%2F%2Farin.me%2Fblog%2Fwtf-is-a-supercolumn-cassandra-data-model&amp;title=WTF%20is%20a%20SuperColumn%3F%20An%20Intro%20to%20the%20Cassandra%20Data%20Model&amp;bodytext=For%20the%20last%20month%20or%20two%20the%20Digg%20engineering%20team%20has%20spent%20quite%20a%20bit%20of%20time%20looking%20into%2C%20playing%20with%20and%20finally%20deploying%20Cassandra%20in%20production.%20It%27s%20been%20a%20super%20fun%20project%20to%20take%20on%20-%20but%20even%20before%20the%20fun%20began%20we%20had%20to%20spend%20quite" title="Digg"><img src="services-sprite.gif" title="Digg" alt="Digg" style="width: 16px; height: 16px; background: transparent url(services-sprite.png) no-repeat; background-position:-235px -1px" /></a></li>
+	<li><a rel="nofollow"  href="http://delicious.com/post?url=http%3A%2F%2Farin.me%2Fblog%2Fwtf-is-a-supercolumn-cassandra-data-model&amp;title=WTF%20is%20a%20SuperColumn%3F%20An%20Intro%20to%20the%20Cassandra%20Data%20Model&amp;notes=For%20the%20last%20month%20or%20two%20the%20Digg%20engineering%20team%20has%20spent%20quite%20a%20bit%20of%20time%20looking%20into%2C%20playing%20with%20and%20finally%20deploying%20Cassandra%20in%20production.%20It%27s%20been%20a%20super%20fun%20project%20to%20take%20on%20-%20but%20even%20before%20the%20fun%20began%20we%20had%20to%20spend%20quite" title="del.icio.us"><img src="services-sprite.gif" title="del.icio.us" alt="del.icio.us" style="width: 16px; height: 16px; background: transparent url(services-sprite.png) no-repeat; background-position:-199px -1px" /></a></li>
+	<li><a rel="nofollow"  href="http://www.facebook.com/share.php?u=http%3A%2F%2Farin.me%2Fblog%2Fwtf-is-a-supercolumn-cassandra-data-model&amp;t=WTF%20is%20a%20SuperColumn%3F%20An%20Intro%20to%20the%20Cassandra%20Data%20Model" title="Facebook"><img src="services-sprite.gif" title="Facebook" alt="Facebook" style="width: 16px; height: 16px; background: transparent url(services-sprite.png) no-repeat; background-position:-343px -1px" /></a></li>
+	<li><a rel="nofollow"  href="http://reddit.com/submit?url=http%3A%2F%2Farin.me%2Fblog%2Fwtf-is-a-supercolumn-cassandra-data-model&amp;title=WTF%20is%20a%20SuperColumn%3F%20An%20Intro%20to%20the%20Cassandra%20Data%20Model" title="Reddit"><img src="services-sprite.gif" title="Reddit" alt="Reddit" style="width: 16px; height: 16px; background: transparent url(services-sprite.png) no-repeat; background-position:-55px -55px" /></a></li>
+	<li class="sociablelast"><a rel="nofollow"  href="http://twitter.com/home?status=WTF%20is%20a%20SuperColumn%3F%20An%20Intro%20to%20the%20Cassandra%20Data%20Model%20-%20http%3A%2F%2Farin.me%2Fblog%2Fwtf-is-a-supercolumn-cassandra-data-model" title="Twitter"><img src="services-sprite.gif" title="Twitter" alt="Twitter" style="width: 16px; height: 16px; background: transparent url(services-sprite.png) no-repeat; background-position:-343px -55px" /></a></li>
+</ul>
+</div>
+<b>Tagged:</b> <a href="http://arin.me/blog/tag/cassandra" rel="tag">Cassandra</a>, <a href="http://arin.me/blog/tag/code" rel="tag">Code</a>, <a href="http://arin.me/blog/tag/nosql" rel="tag">NoSQL</a>        </div>
+    </div>
+    <div class="bottom"><img src="entry-bottom.png" /></div>                    
+</div>
+                
+<!-- You can start editing here. -->
+
+
+<div id="comments">
+	<p><h2>100 comments</h2></p>
+    <div class="top"></div>
+    <div class="middle">
+	
+			<div class="single">
+    		<div id="comment-507">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-507" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.netcrema.com/?p=13215' rel='external nofollow' class='url'>WTF is a SuperColumn? An Intro to the Cassandra Data Model — Arin Sarkissian &laquo; Netcrema &#8211; creme de la social news via digg + delicious + stumpleupon + reddit</a></strong> <span class="commentDetails">on Sep 09, 2009 at 4:36 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] WTF is a SuperColumn? An Intro to the Cassandra Data Model — Arin Sarkissianarin.me [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-514">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-514" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://hotpads.com' rel='external nofollow' class='url'>Matt Corgan</a></strong> <span class="commentDetails">on Sep 09, 2009 at 8:46 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Thanks for taking the time to do that writeup.  I still have a few questions as I&#8217;m trying to differentiate Cassandra&#8217;s data mechanics from the new .20 release of HBase.</p>
+<p>What is the difference between a super-column like:</p>
+<p>homeAddress: {<br />
+    street: &#8220;1234 x street&#8221;,<br />
+    city: &#8220;san francisco&#8221;,<br />
+    zip: &#8220;94107&#8243;,<br />
+}</p>
+<p>and the BigTable or HBase style of concatenating nested keys together into something like:</p>
+<p>homeAddress/street:&#8221;1234 x street&#8221;,<br />
+homeAddress/city: &#8220;san francisco&#8221;,<br />
+homeAddress/zip: &#8220;94017&#8243;</p>
+<p>Wouldn&#8217;t they be sorted the same way on disk and be just as efficient for range queries?</p>
+<p>Is it that you avoid storing the string &#8220;homeAddress&#8221; redundantly?&#8230; is that the only savings?  Maybe that really adds up if you&#8217;re doing inbox search and storing billions of doc ids.</p>
+<p>Can supercolumns only add one level of nesting beyond normal columns?  That seems limiting considerng BigTable and HBase can append an arbitrary number of nested keys together.</p>
+<p>Does Cassandra somehow take care of creating the supercolumns for you like a database index is automatically updated when table rows are modified?</p>
+<p>Can you update the columns in the row of a supercolumn without overwriting the whole row?  For example, if a facebook user sends his 10,000th message with the word Steelers in it, does that mean 10,000 columns need to be overwritten (something like 100KB), or can a single column be sqeezed into the front of a supercolumn?</p>
+<p>I think my confusion about Cassandra stems from both the naming scheme and the difficulty I&#8217;ve had in finding documentation about the exact layout of the underlying data files.  Understanding the file layout of a datastore is crucial to designing an efficient application around it.</p>
+<p>Thanks again,<br />
+Matt</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-508">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-508" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://astrails.com/' rel='external nofollow' class='url'>Vitaly Kushner</a></strong> <span class="commentDetails">on Sep 10, 2009 at 4:05 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>As I understand another option for sorting is by-date. The timestamp that you eliminated from the data model in the sake of clarity can be used to sort the data on disk and retrieve it later.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-509">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-509" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.startinchina.com' rel='external nofollow' class='url'>Thijs (Shenzhen)</a></strong> <span class="commentDetails">on Sep 10, 2009 at 7:01 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Great introduction to Cassandra. I&#8217;ve read other articles about Cassandra, but yours is by far the easiest to understand. Thanks</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-515">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-515" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://ihumanable.blogspot.com' rel='external nofollow' class='url'>Matt Nowack</a></strong> <span class="commentDetails">on Sep 10, 2009 at 9:22 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>I think the examples would be easier to read if you removed the comments from them.  I understand why they are there, to elucidate the point of the previous paragraph, but it makes it harder to see the structure of the data model.</p>
+<p>Otherwise very nice read.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-501">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-501" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://codemonkeylabs.com/weekly-web-nuggets/weekly-web-nuggets-76/' rel='external nofollow' class='url'>Weekly Web Nuggets #76 : Code Monkey Labs</a></strong> <span class="commentDetails">on Sep 14, 2009 at 7:31 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] solution &#8211; Cassandra &#8211; into production. Want even more details? His co-worker Arin Sarkissian has a follow-up post with more in-depth details about [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-492">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-492" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://dstelow.wordpress.com/2009/09/18/links-for-2009-09-18/' rel='external nofollow' class='url'>links for 2009-09-18 &laquo; dstelow notes&#8230;</a></strong> <span class="commentDetails">on Sep 18, 2009 at 3:06 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] WTF is a SuperColumn? An Intro to the Cassandra Data Model — Arin Sarkissian For the last month or two the Digg engineering team has spent quite a bit of time looking into, playing with and finally deploying Cassandra in production. It’s been a super fun project to take on – but even before the fun began we had to spend quite a bit of time figuring out Cassandra’s data model… the phrase “WTF is a ’super column’” was uttered quite a few times. (tags: dev database toread top10 dataaccess architecture) [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-511">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-511" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://jetfar.com/cassandra-db/' rel='external nofollow' class='url'>Cassandra DB &laquo; Jetfar.com</a></strong> <span class="commentDetails">on Sep 21, 2009 at 4:47 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] 3. Column Querying: BigTable really popularised (and proved) the concept of the column database for large scale applications. Cassandra really is similar to BigTable from this perspective, but introduces the SuperColumn. [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-499">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-499" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">William Chan</strong> <span class="commentDetails">on Sep 21, 2009 at 5:55 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Great tutorial on Cassandra data modeling!!  It is really helpful.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-512">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-512" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://dev.af83.com/veille-technologique/veille-technologique-mobiles-editeurs-de-texte-navigateurs-html5-base-de-donnees-methodologies/2009/09/24/' rel='external nofollow' class='url'>Dev Blog AF83 &raquo; Blog Archive &raquo; Veille technologique : Mobiles, Éditeurs de texte, Navigateurs, HTML5, Base de données, Méthodologies</a></strong> <span class="commentDetails">on Sep 24, 2009 at 6:36 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] <a href="http://arin.me/code/wtf-is-a-supercolumn-cassandra-data-model" rel="nofollow">http://arin.me/code/wtf-is-a-supercolumn-cassandra-data-model</a> : une explication sur les super-colonnes de Cassandra [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-504">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-504" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://techba.se/' rel='external nofollow' class='url'>Dan Larsen</a></strong> <span class="commentDetails">on Sep 30, 2009 at 4:05 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Very nice explanation!</p>
+<p>It&#8217;s pretty simple stuff, but hard to understand when your brain is cluttered by RDBMS thoughts&#8230;</p>
+<p>What strikes me, is that this way of modelling data, actually fits pretty nicely into the thoughts I had to get out of my brain, way back when I was trying grasp those RDBMS models <img src='icon_razz.gif' alt=':-P' class='wp-smiley' /> </p>
+<p>It&#8217;s the way many data should&#8217;ve been structured and queried all along&#8230;</p>
+<p>Again&#8230; Thank you for this excellent explanation!</p>
+<p>Best regards<br />
+Dan Larsen</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-513">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-513" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://flexlists.com' rel='external nofollow' class='url'>Michiel van Vlaardingen</a></strong> <span class="commentDetails">on Oct 24, 2009 at 7:02 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Thanks for writing this. It really helps me understanding the basic approach and associated limitations/difficulties.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-500">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-500" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">Patricio Echague</strong> <span class="commentDetails">on Oct 29, 2009 at 10:51 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Awesome article. The comments on the code were really useful. It helped me a lot to understand Cassandra model.</p>
+<p>Best</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-502">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-502" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://blog.caelum.com.br/2009/10/30/nosql/' rel='external nofollow' class='url'>Bancos de dados não relacionais e o movimento NoSQL | blog.caelum.com.br</a></strong> <span class="commentDetails">on Oct 30, 2009 at 2:37 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] AppEngine, por exemplo, não aceita chaves compostas porque usa o BigTable por baixo. Existem pequenas diferenças entre implementações orientadas a [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-510">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-510" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://schabby.de/cassandra-getting-started/' rel='external nofollow' class='url'>Cassandra &#8211; Getting Started</a></strong> <span class="commentDetails">on Nov 05, 2009 at 5:58 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] data model has been described more than once. I will try to add a more javaish view to the set which I find easiest and most powerful to [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-497">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-497" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.rackspacecloud.com/blog/2009/11/09/nosql-ecosystem/' rel='external nofollow' class='url'>Rackspace Cloud Computing &amp; Hosting&nbsp;|&nbsp; NoSQL Ecosystem</a></strong> <span class="commentDetails">on Nov 08, 2009 at 9:38 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] by Google&#8217;s Bigtable paper, section 2.  (Cassandra drops historical versions, and adds supercolumns.) In both systems, you have rows and columns like you are used to seeing, but the rows are sparse: [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-493">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-493" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">optimus prime</strong> <span class="commentDetails">on Nov 17, 2009 at 3:11 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>How efficient is getting list of posts per tag in this example? first there is one query to get post ids, and then 10 separate queries to get each post, and then for each post a bunch of other queries to get author etc&#8230;</p>
+<p>In an RDBMS this can all be done with one complicated sql with complex joins. Doesn&#8217;t sound very efficient to me.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-503">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-503" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">Arin</strong> <span class="commentDetails">on Nov 17, 2009 at 4:27 pm</span>
+    			    			
+    		</div>
+    		<div class="entry author">
+    			<p>yo optimus prime &#8211; you&#8217;d actually do a multiget &#8211; not 10 single gets.</p>
+<p>i concentrated this entry on the data model not API usage &#8211; but ya, doing 10 gets instead of 1 multiget would be wasteful.</p>
+<p>ps: next time use a real email address</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-505">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-505" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">riffraff</strong> <span class="commentDetails">on Nov 19, 2009 at 11:51 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>nice article, I&#8217;m maybe finally getting the cassandra data model, thank you <img src='icon_smile.gif' alt=':)' class='wp-smiley' /> </p>
+<p>Although, I am still not clear on one thing, is it possible to query on different attributes or only on the key ?</p>
+<p>E.g. if I want to index something like the classical &#8220;spam/ham&#8221; example, meaning I want rows like   I&#8217;d like to be able to query on both user, item, or user+evaluation+time  (give me all her evaluations of kind of ham in last week) but it is my feeling this would require quite a bit of contortion.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-495">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-495" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.klunde.net/2009/11/20/installing-cassandra-and-thrift-on-osx/' rel='external nofollow' class='url'>Installing Cassandra and Thrift on OSX | Kristian Lunde</a></strong> <span class="commentDetails">on Nov 20, 2009 at 1:39 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] is not not as powerful as the thrift interface. You can for instance not execute get queries in Super Columns, those queries will create a java [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-494">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-494" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.klunde.net/2009/11/21/great-article-on-super-columns-and-cassandra/' rel='external nofollow' class='url'>Great article on Super Columns and Cassandra | Kristian Lunde</a></strong> <span class="commentDetails">on Nov 21, 2009 at 8:37 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] <a href="http://arin.me/code/wtf-is-a-supercolumn-cassandra-data-model" rel="nofollow">http://arin.me/code/wtf-is-a-supercolumn-cassandra-data-model</a>   Share and Enjoy: [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-516">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-516" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">zznate</strong> <span class="commentDetails">on Nov 27, 2009 at 3:02 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Thanks for a clear and realistic explanation! FYI &#8211; your storage-conf.xml does not work verbatim on Cassandra 0.4.2. The type attribute of your super column definition should be ColumnType.</p>
+<p>Otherwise, this was quite helpful for me in understanding how a real world example could work.</p>
+<p>Cheers,<br />
+Nate</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-533">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-533" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://miguel.leugim.com.mx' rel='external nofollow' class='url'>Miguel Cobá</a></strong> <span class="commentDetails">on Nov 29, 2009 at 8:50 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Great article. Finally I can see a real, complete example about the way to model a known problem in a schema-less, non-RDBMS domain.<br />
+A couple of questions.<br />
+The insert of a new post with 2 tags will implies 4 writes to the Cassandra db. One in the BlogEntries CF, and 3 on the TaggedPosts CF (one for __notag__ and two for each of the 2 tags for the post), right? This will not be atomic, AFAICT from the cassandra docs (the inserts are atomic only for single CF). Am I wrong?<br />
+Next, what about editing a post and changing the tags associated with it. Suppose a post has initially 1 tag: tag1 and after editing I delete the tag1 and add now a tag2.<br />
+In a RDBMS world I would search for the tags that contain my post id and delete the id from all of the tags it is part of. Then I will insert the id in the new tags.<br />
+In cassandra I suppose that before deleting the old tags (and this imply that my app must compare the &#8220;before&#8221; tags with the &#8220;after&#8221; tags in order to determine which tags were deleted) I must delete the column that contains in its value, the post slug (how can I do that?) for the row key matching the old, deleted tag. Then I will add a new column in the row for the new tag (or maybe add a brand new row if the tag isn&#8217;t present before). Kind of complex, but maybe also a consecuense of a RDBMS way of thinking about the problem.<br />
+Other questions, how can I tell if a row already contains a given column. For example, what if I put the tags: tag1,tag2,tag3,tag1 to a given post. Will this add two columns for the post in the tag1 row of the TaggedPosts CF?<br />
+Anyway, your explanation is very good and has vanished a lot of doubts I had with the cassandra data model.<br />
+I must recognize that even the cassandra&#8217;s terminology is very confusing at the moment (and the resistance to change it, as seen in the mailing lists discussions, isn&#8217;t very encouraging) a good example can be very helpful in explain the data model of cassandra and, at least for the moment, help ignore the confusing cassandra terminology.<br />
+Thanks,<br />
+Miguel</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-561">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-561" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">Ive Comu</strong> <span class="commentDetails">on Jan 06, 2010 at 9:27 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Arin, </p>
+<p>Nice explanation &#8211; thank you for your time.  </p>
+<p>If you could also include some code (in java / php &#8230;) to do gets/ multigets / puts , that would clarify the &#8220;group&#8217;em&#8221; part even more.  </p>
+<p>Thanks again</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-586">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-586" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">buckmin</strong> <span class="commentDetails">on Jan 27, 2010 at 6:01 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Nice post. </p>
+<p>I have experimented with some schemaless databases i think i am starting to learn how to think non-RDBMS. Still, there are some concepts that bug me. Like ones Miguel mentioned and more importantly just a little more complex queries like &#8216;posts with guitar and movie tag&#8217; or &#8216;posts with guitar tag but not with movie tag&#8217;. I read in somewhere that we need to intersect or union the &#8216;grab last posts with guitar tag&#8217; and &#8216;grab last posts with movie tag&#8217; results manually. Coming from a RDBMS realm this seems too odd for me. Is there a more elegant way of doing this, apart from creating another CF for posts with two tags? I don&#8217;t know, how far can we go denormalizing everything?</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-587">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-587" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://schulzone.org' rel='external nofollow' class='url'>josh</a></strong> <span class="commentDetails">on Feb 05, 2010 at 9:13 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>This is really helpful, thanks for spending the time.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-588">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-588" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://thomaskoeppen.com/2010/02/08/nosql-introduction/' rel='external nofollow' class='url'>NOSQL introduction | Thomas Koeppen Blog</a></strong> <span class="commentDetails">on Feb 08, 2010 at 2:09 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] WTF is a SuperColumn? An Intro to the Cassandra Data Model Sep. 2009      Author: [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-591">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-591" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">xxb</strong> <span class="commentDetails">on Feb 24, 2010 at 4:09 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>nice article, this helps me smooth out confusions of cassandra data model.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-592">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-592" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">Yonatan</strong> <span class="commentDetails">on Feb 25, 2010 at 7:06 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Any answer&#8217;s for Miguel Cobá&#8217;s question ?</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-593">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-593" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">Yonatan</strong> <span class="commentDetails">on Feb 25, 2010 at 7:08 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>and another one &#8211; I understand that I need to work hard cause the data is not normalized &#8211; so when data is changed I need manually to update all different CF and Columns.<br />
+but what about the joins  ? is still fast enough when I do the joins manually ?<br />
+manually I mean run a query &#8211; get list of data extract values considered as keys for other CF and run a query on another CF (and sometimes on a third CF) ?</p>
+<p>&#8211; Yonatan</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-594">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-594" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">Marcin</strong> <span class="commentDetails">on Mar 02, 2010 at 4:21 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>I&#8217;m just trying to get my head around Cassandra, and I _think_ I understand how the data model works. There is however one simple use case I can&#8217;t work out how you&#8217;d represnent: for the AddressBook example, say you had two friends with the same real full name &#8211; how would you key the super-columns then?  Obviously you&#8217;d need a unique identifier (say a UUID), but what if you wanted to then get back a list of your friends in alphabetical order of real name?</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-596">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-596" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.pablorosales.com' rel='external nofollow' class='url'>Pablo Rosales</a></strong> <span class="commentDetails">on Mar 04, 2010 at 11:40 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Hey, great post, its very useful! At first Cassandra is confusing but so far I love it.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-597">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-597" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">Brian Mansell</strong> <span class="commentDetails">on Mar 04, 2010 at 7:21 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>First of all, I must say that this is an excellent article! </p>
+<p>As this appears as one of the first Google results when searching for Cassandra, I&#8217;d recommend posting an update which reflects the storage configuration changes (e.g. type -&gt; ColumnType) made in recent versions of Cassandra.</p>
+<p>thanks for all your efforts with this tutorial!</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-599">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-599" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.socialtimes.com/2010/03/how-to-configure-cassandra-centos-media-temple-dv/' rel='external nofollow' class='url'>How To Configure Cassandra On A CentOS Media Temple DV Server</a></strong> <span class="commentDetails">on Mar 05, 2010 at 7:16 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] WTF Is A Super Column?!? Cassandra reading list Facebook&#8217;s overview of Cassandra [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-600">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-600" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://popboxsocialmedia.com/dashboards/?p=1283' rel='external nofollow' class='url'>How To Configure Cassandra On A CentOS Media Temple DV Server |</a></strong> <span class="commentDetails">on Mar 05, 2010 at 12:07 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] WTF Is A Super Column?!? Cassandra reading list Facebook&#8217;s overview of Cassandra [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-602">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-602" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.facebook.com/people/Muhammad-Nasrullah/543910569' rel="external  "  class='url'><fb:name linked="false" useyou="false" uid="543910569">Muhammad Nasrullah</fb:name></a></strong> <span class="commentDetails">on Mar 14, 2010 at 8:51 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Outstanding article, thank you for putting this up!</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-603">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-603" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://gregoire.org/' rel='external nofollow' class='url'>Mondain</a></strong> <span class="commentDetails">on Mar 14, 2010 at 10:50 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Nice post, I&#8217;ll be using this info for my first &#8220;experiment&#8221; with Cassandra. I would like to point out a possible typo on this line:<br />
+comments have text, time submitted, commenter’s name &amp; commenter’s name<br />
+Is the duplication of commenters name intended?</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-604">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-604" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">ElangovanS</strong> <span class="commentDetails">on Mar 14, 2010 at 10:38 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Hi&#8230; this is pretty neat article and so the client software. Are there any examples that explains how to setup the storage configuration in the code?</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-605">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-605" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://sentidoweb.com/2010/03/15/enlaces-rapidos-15-03-2010-2.php' rel='external nofollow' class='url'>Enlaces rápidos (15-03-2010) | Sentido Web</a></strong> <span class="commentDetails">on Mar 15, 2010 at 4:33 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] WTF is a SuperColumn? An Intro to the Cassandra Data Model [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-606">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-606" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://Google.com' rel='external nofollow' class='url'>Mark Brady</a></strong> <span class="commentDetails">on Mar 15, 2010 at 10:37 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>First,</p>
+<p>It seems like a super column is essentially what Oracle calls a Nested table. A column in which each &#8220;cell&#8221; can contain a table.</p>
+<p>A Column family is a table. If you want it stored sorted, it&#8217;s a Index-Organized Table.</p>
+<p>It seems the &#8220;Schema-less&#8221; databases are finding that schemas are actually pretty useful after all.</p>
+<p>The only difference is that there no predefined column/attribute list. That concept makes a fair bit of sense to me in the context of a doctors visit, where there are thousands of symptoms and important missing symptoms and thousands of mostly null columns make little sense. In a lot of other cases it seems that developers just don&#8217;t want to bother with requirements&#8230; why plan an object&#8217;s attributes, I&#8217;ll add a new one any time. What stops developers from adding multiple attributes which all mean the same thing?</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-607">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-607" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">Optimal Male</strong> <span class="commentDetails">on Mar 15, 2010 at 3:30 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Thanks Arin &#8211; very useful explanation&#8230;<br />
+But i also have the same questions as Miguel posted earlier. Specifically, the major one I can&#8217;t get my head around is that in your example, several column families and rows are updated when a new blog is posted &#8211; but there is no atomicity. Wouldn&#8217;t this lead to all sorts of inconsistencies in your data? I can&#8217;t understand how, even for something as simple as this blog example, your application could live with that? Do you have any thoughts on how that is meant to be handled?</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-608">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-608" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.kkovacs.hu/2010/03/elsewhere-on-march-19th/' rel='external nofollow' class='url'>Elsewhere, on March 19th - Once a nomad, always a nomad</a></strong> <span class="commentDetails">on Mar 19, 2010 at 12:51 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] Shared WTF is a SuperColumn? An Intro to the Cassandra Data Model — Arin Sarkissian. [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-612">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-612" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">Mike v. Dyke</strong> <span class="commentDetails">on Mar 22, 2010 at 4:04 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Let&#8217;s map Cassandras terminologie to common used terms:<br />
+1) a &#8220;Column&#8221; is a key-value pair plus timestamp (=attribute)<br />
+2) a &#8220;Super Column&#8221; is a map of attributes (=row)<br />
+3) a &#8220;Standard Column Family&#8221; is a map of rows (=table)<br />
+4) a &#8220;Super Column Family&#8221; is a map of tables (=table of nested tables)<br />
+5) a &#8220;Keyspace&#8221; is a  map of &#8220;Column Families&#8221; (=data base)<br />
+Why make things more difficult than they are? It&#8217;s quite simple though!</p>
+<p>PS: Please replace my previous comment by this one. Thanks!</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-627">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-627" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.webbare.com/soluzioni-nosql-apache-cassandra.html' rel='external nofollow' class='url'>Soluzioni NoSQL, Apache Cassandra | Webbare</a></strong> <span class="commentDetails">on Apr 05, 2010 at 9:00 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] Un esempio di schema in Cassandra: http://arin.me/blog/wtf-is-a-supercolumn-cassandra-data-model [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-629">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-629" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.coderjournal.com/2010/04/creating-a-time-uuid-guid-in-net/' rel='external nofollow' class='url'>Creating a Time UUID (GUID) in .NET - Nick Berardi&#39;s Coder Journal</a></strong> <span class="commentDetails">on Apr 05, 2010 at 2:05 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] will let Arin Sarkissian describe why you should care about TimeUUIDType: Since we’re going to want to display lists of entries in chronological order we’ll make sure [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-633">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-633" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.voidnothings.com/2010/04/things-out-there-in-the-wild-2/' rel='external nofollow' class='url'>Things out there in the wild &laquo; Voidnothings</a></strong> <span class="commentDetails">on Apr 06, 2010 at 2:04 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] Cassandra for Dummies Oh yeah, NoSQL is hot this days. [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-643">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-643" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">C.T.</strong> <span class="commentDetails">on Apr 07, 2010 at 9:21 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Great post, very clear, thank you very much.</p>
+<p>In RDBMS, most time I fetch data with ONE get and multi-join, in Cassandra, it seems to use multi-get and no-join, very interesting.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-645">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-645" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://big-boat.com' rel='external nofollow' class='url'>Kenneth Haugland</a></strong> <span class="commentDetails">on Apr 08, 2010 at 2:31 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Great article! Bookmarked this for later use!<br />
+Regards<br />
+Kenneth</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-650">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-650" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://andy.edmonds.be/2010/04/links-for-2010-04-10/' rel='external nofollow' class='url'>andy.edmonds.be &rsaquo; links for 2010-04-10</a></strong> <span class="commentDetails">on Apr 10, 2010 at 4:03 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] WTF is a SuperColumn? An Intro to the Cassandra Data Model — Arin Sarkissian (tags: cassandra nosql database tutorial programming)     This was written by andy. Posted on Sunday, April 11, 2010, at 1:03 am. Filed under Delicious. Bookmark the permalink. Follow comments here with the RSS feed. Post a comment or leave a trackback. [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-655">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-655" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://blog.keksrolle.de/2010/04/12/cassandra-distributed-database-a-link-list-for-beginners.html' rel='external nofollow' class='url'>Keksrolle.de &raquo; Blog Archive &raquo; Cassandra Distributed Database &#8211; a link list for beginners</a></strong> <span class="commentDetails">on Apr 12, 2010 at 6:35 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] WTF is a SuperColumn? An Intro to the Cassandra Data Model [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-660">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-660" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.facebook.com/people/Eric-Twilegar/1366891929' rel="external  "  class='url'><fb:name linked="false" useyou="false" uid="1366891929">Eric Twilegar</fb:name></a></strong> <span class="commentDetails">on Apr 14, 2010 at 5:38 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>At the end of the day this is a object oriented distributed db. You are storing something that has more than two dimensions in many cases. For instance their is a row per tag&#8230;but it has a list of blogs attached to it. I could see a normal DB table called Tags with one line for each tag and just a comma delimited list of blog_id&#8217;s for each entry attached. You&#8217;d have to a use a list because most RDBMS don&#8217;t have a column type of &#8220;table&#8221;&#8230;I wish they did&#8230;.some how XML types though.</p>
+<p>My big concern is documentation. How do I know that I used bday versus birthday in as the name in some super column.  Is the developer just supposed to grab a random record and dump it? Do you have to spend hours writing up HTML docs&#8230;did you write a tool that grabs random records and generate it?</p>
+<p>I think it&#8217;s cool the db has forgotten about the schema, but it seems like the API (or a layer up ) needs to be developed to maintain some basic schema. So your code would be insertUser(bday=&#8217;1/1/2000&#8242; ) and it&#8217;d take care of all the API calls. If you look at the API calls there is a ton of boilerplate code to just get something inserted.</p>
+<p>Also, can someone write this from the top down. I mean it would nice to see how you would replace this from start to finish</p>
+<p>select * from users where last_login &lt; sixteydaysago()</p>
+<p>That is how would you find out what users haven&#039;t logged in in a while so you could send them an email reminding them to. I think the real problem people can&#039;t get these concepts is because it&#039;s like starting with a &quot;CREATE TABLE&quot; statement. Lets start with an actual real world query and go backwards. How would you implement JOINs. I know you don&#039;t do JOINs, but at the end of the day you have to get at the related data somehow.</p>
+<p>I think Casandra will be great&#8230;but the docs leave a lot to be desired at this point.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-673">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-673" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.suoyintop.tk/wtf-is-a-supercolumn-an-intro-to-the-cassandra-data-model' rel='external nofollow' class='url'>WTF is a SuperColumn? An Intro to the Cassandra Data Model &laquo; Loses weight the hall according to Iraq</a></strong> <span class="commentDetails">on Apr 17, 2010 at 10:21 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] WTF is a SuperColumn? An Intro to the Cassandra Data Model: a very helpful look at the cassandra data model&#13;&#13;View full post on Jeremy Zawodny&#8217;s linkblog [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-678">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-678" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://blog.lroot.com/articles/new-to-cassandra-check-out-wtf-is-a-supercolumn/' rel='external nofollow' class='url'>New to Cassandra? Check out &#8220;WTF is a SuperColumn&#8221;</a></strong> <span class="commentDetails">on Apr 21, 2010 at 10:04 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] was very helpful in getting me up to speed on the data structure used in Cassandra. You can checkout his post, download the pdf or view the scribd doc [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-679">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-679" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.napolux.com' rel='external nofollow' class='url'>Napolux</a></strong> <span class="commentDetails">on Apr 22, 2010 at 5:28 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Cool article. I really like it, it&#8217;s a superb guide for &#8220;nosql beginners&#8221;</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-680">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-680" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.starschema.net' rel='external nofollow' class='url'>Földi Tamás</a></strong> <span class="commentDetails">on Apr 24, 2010 at 2:27 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Great stuff, I recommended to some of my colleagues</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-681">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-681" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://andrewwhitehouse.wordpress.com/2010/04/24/nosql-is-it-time-to-ditch-your-relational-database/' rel='external nofollow' class='url'>NoSQL: Is It Time to Ditch Your Relational Database? &laquo; Andrew Whitehouse&#39;s Weblog</a></strong> <span class="commentDetails">on Apr 24, 2010 at 12:35 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] Cassandra has been proven with large data sets, with indexing done by pre-defining &#8220;supercolumns&#8221; that provide the mapping between indexes and their corresponding data values. CouchDB [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-684">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-684" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.earth.org' rel='external nofollow' class='url'>Slobodan Utvic</a></strong> <span class="commentDetails">on Apr 26, 2010 at 4:23 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>One thing I find very hard to wrap my mind around is how to handle on delete garbage collection. If I were to delete BlogPost is there any way to delete reference from TaggedPosts without using brute force approach? In general question would be how to build efficient garbage collector for Cassanda <img src='icon_smile.gif' alt=':)' class='wp-smiley' /> </p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-685">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-685" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.javageneration.com/?p=70' rel='external nofollow' class='url'>Cassandra&#8217;s data model cheat sheet &laquo; Chaker Nakhli&#39;s Blog</a></strong> <span class="commentDetails">on May 02, 2010 at 11:28 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] Cassandra  is a structured store. It has a rich data model that goes beyond a simple key-value model. This is a good thing as some of the complexity can be pushed to Cassandra, leading to simpler and more efficient applications. There is problem though: the guys who designed Cassandra have given complex names to the (rather simple) data model elements. This post tries to explain  (again) WTF is a SuperColum! [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-686">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-686" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.azati.com' rel='external nofollow' class='url'>Andrew Babkin</a></strong> <span class="commentDetails">on May 05, 2010 at 12:39 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Can storage-conf.xml be changed after some data has been loaded to cassandra? I understand there may be troubles if you change existing elements, but can you add new element without affecting system stability?</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-688">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-688" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.prodevtips.com/2010/05/09/clojure-and-cassandra-with-clj-cassandra/' rel='external nofollow' class='url'>Clojure and Cassandra with clj-cassandra | ProDevTips - dev notes and tutorials</a></strong> <span class="commentDetails">on May 09, 2010 at 7:11 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] Github page is pretty spartan. Let&#8217;s flesh it out but first you might want to read WTF is a SuperColumn and Up and running with [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-689">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-689" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.alidw.com/?p=1035' rel='external nofollow' class='url'>Alibaba Data Warehouse &raquo; Blog Archive &raquo; 大话Cassandra数据模型</a></strong> <span class="commentDetails">on May 10, 2010 at 7:44 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] WTF is a SuperColumn? An Intro to the Cassandra Data Model [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-690">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-690" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.alidw.com/?p=1038' rel='external nofollow' class='url'>Alibaba Data Warehouse &raquo; Blog Archive &raquo; 基于Cassandra搭建简单Blog程序后台</a></strong> <span class="commentDetails">on May 10, 2010 at 8:00 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] WTF is a SuperColumn? An Intro to the Cassandra Data Model  ﻿ [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-691">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-691" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://blog.maescool.be/2010/05/12/what-i-have-learned-about-cassandra-nosql-db/' rel='external nofollow' class='url'>Gekke Pie maakt het net onveilig &raquo; What i have learned about Cassandra NoSQL DB</a></strong> <span class="commentDetails">on May 12, 2010 at 7:43 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] Since there is a lack of advanced beginner documentation, i have made an little example based on the &#8220;wtf is a supercolumn datamodel&#8221; [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-692">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-692" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.rackspacecloud.com/blog/2010/02/25/should-you-switch-to-nosql-too/' rel='external nofollow' class='url'>Should You Switch To NoSQL Too? | Rackspace Cloud Computing &amp; Hosting</a></strong> <span class="commentDetails">on May 14, 2010 at 11:09 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] price of scaling is that Cassandra provides poor support for ad-hoc queries, emphasizing denormalization instead.  For analytics, the upcoming 0.6 release (in beta now) offers Hadoop map/reduce integration, but [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-693">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-693" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">Sagar</strong> <span class="commentDetails">on May 14, 2010 at 9:37 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>I have just started with NoSQL for some work and your article has been extremely helpful! Thank you.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-695">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-695" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">jesus scissorhands</strong> <span class="commentDetails">on May 19, 2010 at 2:06 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>People, don&#8217;t bother asking questions. clearly nobody is listening. Sucks, man. there&#8217;s a lot of important questions here. would be awesome if Mike v. Dyke&#8217;s statement was validated/refuted: </p>
+<p>Let&#8217;s map Cassandras terminologie to common used terms:<br />
+1) a “Column” is a key-value pair plus timestamp (=attribute)<br />
+2) a “Super Column” is a map of attributes (=row)<br />
+3) a “Standard Column Family” is a map of rows (=table)<br />
+4) a “Super Column Family” is a map of tables (=table of nested tables)<br />
+5) a “Keyspace” is a map of “Column Families” (=data base)</p>
+<p>or Eric Twilegar&#8217;s simple question,</p>
+<p>SELECT * FROM users WHERE last_login &lt; sixteydaysago()</p>
+<p>would this use of KeyRange, KeySlice, SliceRange, TokenRange in Thrift? does a separate denormalized CF keyed on last_login need to be created to support this view? </p>
+<p>Follow-up article would be awesome!</p>
+<p>how would that view be achieved? a</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-699">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-699" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">joe</strong> <span class="commentDetails">on Jun 04, 2010 at 3:12 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>quick question about the blog example app:</p>
+<p>since cassandra is non relational and document based (?) why can you not store all the information for a blog entry in a single row?</p>
+<p>e.g. (pseudo-json):</p>
+<p>blog-post<br />
+-author<br />
+  -author name<br />
+  -# posts<br />
+  -etc&#8230;<br />
+-body</p>
+<p>surely then you only need to make a single query to get all the details of the post?</p>
+<p>i realise there would be data duplication since you would still want an authors table with the same data in it, and any modifications to an author would need to be replicated.</p>
+<p>but could you not store data in this way?</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-700">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-700" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.arunma.com' rel='external nofollow' class='url'>Arun Manivannan</a></strong> <span class="commentDetails">on Jun 05, 2010 at 5:58 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>This is by far the best source of explanation for Column and Super families.  thanks a ton.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-702">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-702" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://blog.octo.com/nosql-jouons-avec-cassandra-13/' rel='external nofollow' class='url'>OCTO talks ! &raquo; Jouons avec Cassandra&#8230; (1/3)</a></strong> <span class="commentDetails">on Jun 09, 2010 at 12:15 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] Voilà les principaux éléments définis par Cassandra (Cet article ainsi que la documentation Cassandra fournissent un point de vue plus complet sur les différents [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-703">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-703" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://blog.octo.com/en/nosql-lets-play-with-cassandra-part-13/' rel='external nofollow' class='url'>OCTO talks ! &raquo; Let&#8217;s play with Cassandra&#8230; (Part 1/3)</a></strong> <span class="commentDetails">on Jun 09, 2010 at 12:17 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] lost? Here are a the main elements Cassandra defined (this article or the Cassandra documentation provide a more in depth view of the different types of structures [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-709">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-709" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.facebook.com/people/Ahmad-Hashem/611221151' rel="external  "  class='url'><fb:name linked="false" useyou="false" uid="611221151">Ahmad Hashem</fb:name></a></strong> <span class="commentDetails">on Jun 18, 2010 at 8:05 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>you rocks <img src='icon_smile.gif' alt=':)' class='wp-smiley' />  This is the best article found so far describing what is &#8220;Cassandra&#8221;.<br />
+It took me couple of hours in vain surfing their Apache site. but your article gave it to me in 20 minutes.<br />
+Thanks</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-710">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-710" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.infanatica.com' rel='external nofollow' class='url'>Diogo</a></strong> <span class="commentDetails">on Jun 21, 2010 at 7:35 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>What´s a command to get all BlogEntries from Autors in &#8220;cassandra-cli&#8221;?</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-714">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-714" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.davegardner.me.uk/blog/2010/07/02/php-and-cassandra/' rel='external nofollow' class='url'>PHP and Cassandra &laquo; Dave Gardner &#8211; PHP Developer</a></strong> <span class="commentDetails">on Jul 02, 2010 at 12:25 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] WTF is a SuperColumn? An Intro to the Cassandra Data Model <a href="wtf-is-a-supercolumn-cassandra-data-model.html" rel="nofollow">http://arin.me/blog/wtf-is-a-supercolumn-cassandra-data-model</a> [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-715">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-715" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">squirrel</strong> <span class="commentDetails">on Jul 02, 2010 at 10:25 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>What is the difference between SuperColumn and Row? Is Row a SuperColumn? Is it stored in ColumnFamilly like SuperColumn? Without JSON notation, like this:</p>
+<p>CF = {<br />
+  &#8216;row_key&#8217; : {<br />
+    name: &#8216;row_key&#8217;<br />
+    value: {<br />
+        // columns<br />
+        // &#8230;<br />
+    }<br />
+  }<br />
+}</p>
+<p>or like this:</p>
+<p>CF = {<br />
+  &#8216;row_key&#8217; : {<br />
+      // columns<br />
+      // &#8230;<br />
+  }<br />
+}</p>
+<p>?</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-716">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-716" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.start-guitar.com' rel='external nofollow' class='url'>steve</a></strong> <span class="commentDetails">on Jul 03, 2010 at 2:45 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>took me a while to get my head around this but once i did it was very useful, great blog, thanks a million</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-717">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-717" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://maxgrinev.com/2010/07/09/a-quick-introduction-to-the-cassandra-data-model/' rel='external nofollow' class='url'>A Quick Introduction to the Cassandra Data Model &laquo; Max&#39;s Output</a></strong> <span class="commentDetails">on Jul 12, 2010 at 8:53 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] quite a bit of time learning it. There are great articles on the Web that explain the model. Read WTF is a SuperColumn? An Intro to the Cassandra Data Model and my favorite one &#8211; Installing and using Apache Cassandra With Java. This blog post is my [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-718">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-718" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.wjmboss.cn/?p=383' rel='external nofollow' class='url'>大话Cassandra数据模型 | Jim的blog</a></strong> <span class="commentDetails">on Jul 12, 2010 at 10:35 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] WTF is a SuperColumn? An Intro to the Cassandra Data Model [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-719">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-719" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://rcforte.wordpress.com/' rel='external nofollow' class='url'>Rafael Forte</a></strong> <span class="commentDetails">on Jul 14, 2010 at 6:24 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Arin, </p>
+<p>Thanks a lot for the article. It is a very good introduction to Cassandra&#8217;s data model.</p>
+<p>Regards,</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-720">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-720" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://ajlopez.wordpress.com/2010/07/19/nosql-resources/' rel='external nofollow' class='url'>NoSQL Resources &laquo; Angel &#8220;Java&#8221; Lopez on Blog</a></strong> <span class="commentDetails">on Jul 19, 2010 at 1:57 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] Cassandra by example (Twitter alike one) <a href="http://github.com/ericflo/twissandra" rel="nofollow">http://github.com/ericflo/twissandra</a> WTF is a supercolumn Cassandra model Cassandra NoSQL Database Apache Cassandra NoSQL Live Dynamo derivatives: Cassandra [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-721">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-721" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">Loreto Parisi</strong> <span class="commentDetails">on Jul 21, 2010 at 7:32 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>When using Keyspace</p>
+<p>and a SCF key name like string &#8216;scream-is-the-best-movie-ever&#8217; and a Time UUID (UUID v1) for sub-column key name, such as </p>
+<p> scream-is-the-best-movie-ever : { // row key = row key of BlogEntry<br />
+            // oldest comment first</p>
+<p>                ffffffff-94db-11df-a8a0-63617373636c : { // SC Name<br />
+                    // all Columns in the SC are attribute of the comment<br />
+                    commenter: Joe Blow,<br />
+                    email: <a href="mailto:joeb@example.com">joeb@example.com</a>,<br />
+                    comment: you&#8217;re a dumb douche, the godfather is the best movie ever<br />
+                    commentTime: 1250438004<br />
+               },</p>
+<p>I have got the error:</p>
+<p>&#8220;UUIDs must be exactly 16 bytes&#8221;</p>
+<p>This means that also the SCF column name (the SCF row key &#8216; scream-is-the-best-movie-ever&#8217;) should be a Time UUID v1. Or what?</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-722">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-722" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://tokarchuk.ru/2010/07/facebook-technologies-cassandra/' rel='external nofollow' class='url'>Технологии Facebook: Cassandra | Токарчук Андрей</a></strong> <span class="commentDetails">on Jul 26, 2010 at 1:05 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] статьи: WTF is a SuperColumn? An Intro to the Cassandra Data Model // Автор Арин Саркесян Related postsАрхитектура больших [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-724">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-724" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">huckleberry finn at borders</strong> <span class="commentDetails">on Jul 30, 2010 at 12:06 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>The post is written in very a good manner and it entails many useful information for me. I am happy to find your distinguished way of writing the post. Now you make it easy for me to understand and implement the concept. Thank you for the post.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-725">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-725" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://priyanshugoyal.wordpress.com/2010/08/02/first-stop-to-cassandra/' rel='external nofollow' class='url'>First Stop to Cassandra &laquo; Priyanshu Goyal&#8217;s Weblog : Life Beyond Coding</a></strong> <span class="commentDetails">on Aug 02, 2010 at 1:33 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] on the data model is here and [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-726">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-726" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">Sankar</strong> <span class="commentDetails">on Aug 05, 2010 at 2:52 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Good Article</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-728">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-728" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://malliktalksjava.wordpress.com' rel='external nofollow' class='url'>Mallikarjun</a></strong> <span class="commentDetails">on Aug 12, 2010 at 9:46 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>This is a Great Job&#8230;</p>
+<p>Nice explanation&#8230;&#8230;.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-729">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-729" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://malliktalksjava.wordpress.com' rel='external nofollow' class='url'>Mallikarjun</a></strong> <span class="commentDetails">on Aug 17, 2010 at 11:46 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Hi,</p>
+<p>I have a requirement of using Cassandra in my application. In my application there is one table with lot of data and most of my application uses that table. Due to lot of data,performance of the application is decreasing when i use that table is in Oracle.</p>
+<p>So, I have decided to use the Cassandra database for that one table and all other tables in oracle. Lot of business logic is dependent on that table.</p>
+<p>No my question is, Can I use the Cassandra for a table which has lot of business logic.</p>
+<p>I am unable to implement lot of where clauses for Cassandra database.</p>
+<p>Is there any supporting tool to use Cassandra in an efficient way?</p>
+<p>Please let me know&#8230;<br />
+i am in urgency..</p>
+<p>Thanks in advance</p>
+<p>By Mallik</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-730">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-730" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://blog.nowvu.com/2010/08/19/cassandra-and-php-become-friendly-with-phpcassa/' rel='external nofollow' class='url'>Cassandra and PHP become friendly with phpcassa | Nowvu Blog</a></strong> <span class="commentDetails">on Aug 18, 2010 at 5:42 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] if you haven&#8217;t already you must read: WTF is a SuperColumn? An Intro to the Cassandra Data Model from Arin Sarkissian over at [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-731">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-731" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://blog.redhawk.jp/archives/3138' rel='external nofollow' class='url'>Cassandra: Cassandra のデータモデル | Solitaire</a></strong> <span class="commentDetails">on Aug 23, 2010 at 4:31 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] WTF is a SuperColumn? An Intro to the Cassandra Data Model Cassandraデータモデル入門 &#8211; Arin [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-947">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-947" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://xebee.xebia.in/2010/09/14/groovy-client-for-apache-cassandra/' rel='external nofollow' class='url'>Swarm of XeBees &raquo; Groovy client for Apache Cassandra</a></strong> <span class="commentDetails">on Sep 13, 2010 at 10:45 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] data model is simple with only complication of a SuperColumn as explained in the blog (the title of the post should give you an [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-999">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-999" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">Dan</strong> <span class="commentDetails">on Sep 15, 2010 at 11:28 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>So, a lot of people posting here with questions are missing the point of BigTable-esque databases: a general query planner (like you&#8217;d find in Oracle, Postgres, etc.) won&#8217;t be able to use your domain knowledge of the data. So, Cassandra just provides the tables. If you want, you can store whatever indices you need as another table. Then, your client code plans a query and asks Cassandra to do whatever row scans it needs to. Yes, you&#8217;re fetching data you don&#8217;t need to, but when it comes down to it, network is much faster than disk, and even if that turns out to not be the case, you can run &#8220;smart frontends&#8221; on each of your database servers that do the querying.</p>
+<p>As an example, somebody above asked about how to do a join. The answer is, it depends. If you expect only a few result rows on one side, and a larger set of rows on the other (e.g, &#8220;Get me all of the comments on posts with the tag &#8220;foo&#8221;), you&#8217;d do a nested loop join, where you fetch the entire set of posts with that tag on your first query, and then send a second query to get comments for each one. In other situations, you may use different join techniques, like merge joins or hash joins, or even your own special join that&#8217;s really fast for your data.</p>
+<p>Notice that this means that Cassandra will be much more difficult to use than, say, Postgres. However, in return, you can scale much further. </p>
+<p>(Note: in my day job, I run one of the largest databases of this type in the world. I can&#8217;t say which implementation we use, but our smallest tables are on the order of 100G)</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-1050">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-1050" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">Rhein</strong> <span class="commentDetails">on Sep 17, 2010 at 7:20 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>I have a question,pls help me.<br />
+is there any concept of CFS(column family store)? I have met it before.<br />
+is there a map between RDBMS and Cassandra, like a keyspace to a database?<br />
+thank you so much for sharing such a good example.</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-1220">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-1220" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink">Dinesh Ilindra</strong> <span class="commentDetails">on Sep 23, 2010 at 8:49 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Thanks a ton for taking time for this article.</p>
+<p>The live example is greatly enough explaining the basic usage concepts of Cassandra.</p>
+<p>Way to go from here&#8230;</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-1325">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-1325" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://pkghosh.wordpress.com/2010/09/19/roll-out-your-own-bpm-with-some-help-from-cassandra-part-2/' rel='external nofollow' class='url'>Roll out your own BPM with some help from Cassandra (Part 2) | Mawazo</a></strong> <span class="commentDetails">on Sep 26, 2010 at 4:13 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] WTF is a SuperColumn? An introduction to Cassandra data model [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-1601">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-1601" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www.geekontheloose.com/programming/java/cassandra-0-7-and-hector-for-noobs/' rel='external nofollow' class='url'>Cassandra 0.7 and Hector for Noobs | Geek on the Loose</a></strong> <span class="commentDetails">on Oct 06, 2010 at 1:00 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] Cassandra data model: <a href="wtf-is-a-supercolumn-cassandra-data-model.html" rel="nofollow">http://arin.me/blog/wtf-is-a-supercolumn-cassandra-data-model</a> [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-1616">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-1616" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://wichon.me' rel='external nofollow' class='url'>Luis Alonzo</a></strong> <span class="commentDetails">on Oct 20, 2010 at 5:17 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>Nice article, thx, helped me a lot at understanding the Cassandra datamodel, sometimes its hard to understand coming from a relational db world, it would be nice if u could do a follow-up post explaining how to query a Cassandra datamodel, considerations, limitations etc.. </p>
+<p>Regards <img src='icon_biggrin.gif' alt=':D' class='wp-smiley' /> </p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-1617">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-1617" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://aio4s.com/blog/2010/10/22/technology/started-apache-cassandra-a-nosql-front-runner-windows.html' rel='external nofollow' class='url'>Getting Started with Apache Cassandra (a &#8220;NoSQL&#8221; front-runner) on Windows | All in one for social - Blog</a></strong> <span class="commentDetails">on Oct 21, 2010 at 7:04 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] find in the README.txt.Start reading up on the Thrift API, the basics of data storage, what a &#8220;super-column is&#8221;, and so on.I&#8217;ve been playing around with various NoSQL* solutions for some time, however [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-1618">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-1618" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://formulacariuang.com' rel='external nofollow' class='url'>Cari Uang</a></strong> <span class="commentDetails">on Oct 22, 2010 at 7:22 am</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>it&#8217;s a comprehensive resourches about casandra, thanks a lot</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-1621">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-1621" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://aio4s.com/blog/2010/10/27/technology/cassandra%e2%80%99s-data-model-cheat-sheet.html' rel='external nofollow' class='url'>Cassandra’s data model cheat sheet | All in one for social - Blog</a></strong> <span class="commentDetails">on Oct 28, 2010 at 6:21 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] complex names to the (rather simple) data model elements. This post tries to explain(again): “WTF is a SuperColumn“?Data model elementsYou can also download a PDF version.ColumnA name value pair (contains also [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-1632">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-1632" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://blog.austintodo.tw/2010/11/12/cassandra-data-model/' rel='external nofollow' class='url'>[todo Austin] 奧斯丁。土豆 &raquo; Blog Archive &raquo; [Cassandra] Data Model</a></strong> <span class="commentDetails">on Nov 11, 2010 at 5:03 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>[...] 主要是來自於http://arin.me/blog/wtf-is-a-supercolumn-cassandra-data-model一篇 [...]</p>
+ 
+    		</div>
+		</div>
+		
+			<div class="single">
+    		<div id="comment-1633">
+    			<span class="comment_num"><a href="wtf-is-a-supercolumn-cassandra-data-model.html#comment-1633" title="Permalink to this comment"></a></span>
+    			<strong class="commentAuthorLink"><a href='http://www-scf.usc.edu/~jhalaria' rel='external nofollow' class='url'>Ankit Jhalaria</a></strong> <span class="commentDetails">on Nov 20, 2010 at 10:21 pm</span>
+    			    			
+    		</div>
+    		<div class="entry">
+    			<p>This is the best explanation that I have come across on the Cassandra Data Model.<br />
+Thanks guys.<br />
+This article made my life pretty easy.</p>
+ 
+    		</div>
+		</div>
+		
+		
+		
+	
+	<!-- Comment Form -->
+		
+		
+			<!--<h3 id="respond">Leave a Comment</h3>-->
+			<form action="http://arin.me/blog/wp-comments-post.php" method="post" id="comment_form">
+			
+									    <Div class="option">
+			        <h4>Signup to Leave a Comment</h4>
+		      		<p><label for="author">Name</label><input class="text_input" type="text" size="45" name="author" id="author" value="" tabindex="1" /></p>
+	   		  	    <p><label for="email">Email</label><input class="text_input" type="text" size="45" name="email" id="email" value="" tabindex="2" /></p>
+    				<p><label for="url">Website</label><input class="text_input" type="text" size="45" name="url" id="url" value="" tabindex="3" /></p>
+				</div>
+				
+				<div class="fbc option">
+				    <h4>Or Login via Facebook</h4>
+    				<p><div class="fbc_hide_on_login fbc_connect_button_area"   id="fbc_login">
+<span><small>Connect with your Facebook Account</small></span> <br/> <div class="dark">
+  <fb:login-button size="large" background="white" length="short" >
+  </fb:login-button>
+</div>
+</div>
+</p>    				
+				</div>
+							<!--<p><small><strong>XHTML:</strong> You can use these tags: &lt;a href=&quot;&quot; title=&quot;&quot;&gt; &lt;abbr title=&quot;&quot;&gt; &lt;acronym title=&quot;&quot;&gt; &lt;b&gt; &lt;blockquote cite=&quot;&quot;&gt; &lt;cite&gt; &lt;code&gt; &lt;del datetime=&quot;&quot;&gt; &lt;em&gt; &lt;i&gt; &lt;q cite=&quot;&quot;&gt; &lt;strike&gt; &lt;strong&gt; </small></p>-->
+			     <a name="respond"></a>
+				<p><textarea class="text_input text_area" name="comment" id="comment" rows="10" tabindex="4"></textarea></p>
+			
+							
+				<div class="controls">
+					<button type="submit" tabindex="5" value="go"><span>post comment</span></button>
+					<input type="hidden" name="comment_post_ID" value="683" />
+				</div>				
+		
+					
+			</form>
+		
+    </div>
+  <div class="bottom"></div>
+</div> <!-- Close #comments container -->
+            </div>            
+        
+            <div id="sideCol">   
+                                  
+                          
+                <!-- 
+                                 -->
+                
+                <div class="side" id="tweet">
+                    <div class="top"></div>                    
+                    <div class="main">
+                        <img class="bird" src="icon-twitter.png" />
+                        <img class="pix" src="pix.gif" />
+                        <span>@<a href="http://twitter.com/kazabyte" class="aktt_username">kazabyte</a> stock up on churros and agua fresca <a href="http://twitter.com/phatduckk/statuses/25605587312058368" class="aktt_tweet_time">4 hrs ago</a></span>
+						<!--
+                        <div class="follow">
+                            <a rel="me" href="http://twitter.com/phatduckk" target="_twitter">@phatduckk</a>
+                        </div>                                 
+					-->
+                    </div>               
+                    <div class="bottom"></div>
+                </div>
+                
+                <div class="side" id="searchContainer">
+                    <h3>Search This Blog</h3>
+                    
+                    <form method="get" id="search_form" action="http://arin.me/blog/">
+                        <input type="text"  name="s" value="" />                                            
+                        <button type="submit" value="go"><span>go</span></button>
+                    </form>
+                </div>
+                
+                <div class="side" id="cat">
+                    <div class="top"></div>
+                    <div class="main">
+                        <h3>Categories</h3>                        
+                        <ul>
+                            	<li class="cat-item cat-item-293"><a href="http://arin.me/blog/category/banjo" title="View all posts filed under Banjo">Banjo</a>
+<span>&raquo;</span></li>
+	<li class="cat-item cat-item-272"><a href="http://arin.me/blog/category/geek" title="View all posts filed under Geek">Geek</a>
+<span>&raquo;</span></li>
+	<li class="cat-item cat-item-253"><a href="http://arin.me/blog/category/guitar-bass" title="View all posts filed under Guitar &amp; Bass">Guitar &amp; Bass</a>
+<span>&raquo;</span></li>
+	<li class="cat-item cat-item-10"><a href="http://arin.me/blog/category/life" title="View all posts filed under Life">Life</a>
+<span>&raquo;</span></li>
+	<li class="cat-item cat-item-1"><a href="http://arin.me/blog/category/miscellaneous" title="View all posts filed under Miscellaneous">Miscellaneous</a>
+<span>&raquo;</span></li>
+	<li class="cat-item cat-item-11"><a href="http://arin.me/blog/category/movies" title="View all posts filed under Movies">Movies</a>
+<span>&raquo;</span></li>
+	<li class="cat-item cat-item-12"><a href="http://arin.me/blog/category/music" title="View all posts filed under Music">Music</a>
+<span>&raquo;</span></li>
+	<li class="cat-item cat-item-287"><a href="http://arin.me/blog/category/video" title="View all posts filed under Video">Video</a>
+<span>&raquo;</span></li>
+	<li class="cat-item cat-item-235"><a href="http://arin.me/blog/category/video-games" title="View all posts filed under Video Games">Video Games</a>
+<span>&raquo;</span></li>
+	<li class="cat-item cat-item-17"><a href="http://arin.me/blog/category/work" title="View all posts filed under Work">Work</a>
+<span>&raquo;</span></li>
+                                                                                                                                                                                                
+                        </ul>
+                    </div>  
+                    <div class="bottom"></div>
+                </div>
+                
+                <a name="cats"></a>
+                <div class="side" id="blogroll">
+                    <div><img src="blogroll-top.png" /></div>
+                    <div class="middle">                    
+                        <h3>Arin on the Web</h3>
+	<ul class='xoxo blogroll'>
+<li><a href="http://blip.fm/phatduckk" rel="me">Blip.fm Playlist</a></li>
+<li><a href="http://delicious.com/phatduckk" rel="me">Bookmarks on Delicious</a></li>
+<li><a href="http://digg.com/phatduckk" rel="me">Digg Deez</a></li>
+<li><a href="http://facebook.com/phatduckk" rel="me">Facebook</a></li>
+<li><a href="http://flickr.com/phatduckk" rel="me">My Pictures on Flickr</a></li>
+<li><a href="http://twitter.com/phatduckk" rel="me">My Tweets</a></li>
+<li><a href="http://github.com/phatduckk" rel="me">Some Random Code</a></li>
+
+	</ul>
+
+   
+                    </div>  
+                    <div class="bottom"></div>
+                </div>                
+            </div>               
+
+            <div id="footer">&copy; Arin Sarkissian 2011</div> 
+        </div>                                        
+    <!--[if lt IE 7.]>
+    <script defer type="text/javascript" src="http://arin.me/blog/wp-content/themes/phatduckkNew/pngfix.js"></script>
+    <![endif]-->	        
+    
+        <script type="text/javascript">
+    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+    var pageTracker = _gat._getTracker("UA-3038848-4");
+    pageTracker._trackPageview();
+    </script>
+    
+        
+    <div style="position: absolute; top: -10000px; left: -10000px;  width: 0px; height: 0px;" id="FB_HiddenContainer"></div><link type="text/css" rel="stylesheet" href="fbconnect.css"></link>
+<script src="http://static.ak.connect.facebook.com/js/api_lib/v0.4/FeatureLoader.js.php" type="text/javascript"></script>
+<script src="fbconnect.js" type="text/javascript"></script><!-- no logged in Facebook user --><div class="fbc_loginstate_top"></div><script type="text/javascript">
+FBConnect.init('af55e102b67c2de27bf12024ac0e7798', 'http://arin.me/blog/wp-content/plugins/wp-facebookconnect/', 'http://arin.me/blog', 0, FBConnect.appconfig_reload);
+
+</script>    </body>
+</html>
