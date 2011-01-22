@@ -261,7 +261,7 @@ Niestety nie ma sposobu na zapewnienie replikacji klucza na określoną liczbę 
 
 \subsection*{Wersjonowanie}
 
-Riak wykorzystuje ten sam mechanizm wersjonowania, który został już opisany w rozdziale na temat Amazon Dynamo (patrz strona \pageref{sec:dynamo-vector-clocks}).
+Riak wykorzystuje zegary wektorowe - ten sam mechanizm wersjonowania, który został już opisany w rozdziale na temat Amazon Dynamo (patrz strona \pageref{sec:dynamo-vector-clocks}).
 Do dyspozycji użytkownika pozostają dwie opcje konfiguracyjne, obie ustawiane jako właściwości dla każdego kubełka z osobna: \verb+allow_mult+ oraz \verb+last_write_wins+.
 Pierwszy z nich kontroluje możliwość tworzenia wielu wersji rekordu (włączany jest jeżeli rekord może być modyfikowany przez wielu użytkowników systemu), drugi zaś upraszcza mechanizm rozwiązywania konfliktów - w przypadku wystąpienia kilku różnych wersji, użytkownikowi zaprezentowana zostanie najnowsza wersja.
 

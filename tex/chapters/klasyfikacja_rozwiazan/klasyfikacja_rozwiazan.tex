@@ -22,9 +22,8 @@ Na potrzeby tej pracy przyjęto najczęściej stosowany system, który dzieli ba
  Systemy te wzorują swój model danych na Google BigTable (patrz strona \pageref{google-bigtable-model-danych}).
  W bazie kolumnowej unikalnemu kluczowi odpowiada wiele kolumn.
  Kolumny są grupowane w rodziny - zazwyczaj wszystkie kolumny należące do tej samej rodziny są jednego typu.
- W przypadku Apache Cassandra kilka rodzin kolumn może być zebranych w super-rodzinę.
  Kolumny przynależące do jednej rodziny z reguły zawierają dane jednego typu, gdyż są one kompresowane razem.
- Bazy te zazwyczaj wymagają zdefiniowania struktury bazy z dokładnością do rodzin, czy super-rodzin kolumn.
+ Bazy te zazwyczaj wymagają zdefiniowania struktury bazy z dokładnością do rodzin kolumn.
  Jedynie kolumny, którym jest przypisana jakaś wartość dla danego klucza zajmują miejsce w pamięci, dzięki temu różnych kolumn może być bardzo wiele i często służą na przykład do tworzenia list wartości.
  Bazy kolumnowe pozwalają jedynie na wykonywanie zapytań o pojedynczy klucz lub ich zakres, ale za to oferują szeroki zakres możliwości limitowania zwracanych kolumn.
 
@@ -51,7 +50,7 @@ Na potrzeby tej pracy przyjęto najczęściej stosowany system, który dzieli ba
 
 Ponieważ dokładne przedstawienie dowolnego systemu bazodanowego na kilku stronach A4 jest zadaniem nie do wykonania, zamierzeniem autora tej pracy było wybranie najbardziej istotnych i cennych dla czytelnika informacji.
 Pominięte zostały przede wszystkim szczegóły dotyczące API poszczególnych systemów oraz łatwo dostępne informacje, takie jak instrukcja instalacji systemu.
-Opisane zostały natomiast istotne cechy systemów, które pozwalają czytelnikowi lepiej zrozumieć mechanizm działania aplikacji.
+Opisane zostały natomiast istotne cechy, które pozwalają czytelnikowi lepiej zrozumieć mechanizm działania aplikacji.
 Każda baza została opisana według następującego schematu:
 
 \begin{description}

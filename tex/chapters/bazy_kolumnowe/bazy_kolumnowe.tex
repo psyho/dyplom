@@ -2,6 +2,9 @@
 
 \section*{Streszczenie}
 W tym rozdziale opisane zostaną dwie bazy kolumnowe: HBase i Apache Cassandra.
+Mimo podobnego modelu danych, bazy te znacznie różnią się pod wieloma względami.
+HBase powstało jako implementacja open source systemu opisanego w artykule o Google BigTable i mimo ciągłego rozwoju i dodawania coraz nowszych funkcjonalności te dwa systemy są do siebie wciąż bardzo zbliżone.
+Z drugiej strony Apache Cassandra, który to system został zaprojektowany między innymi przez jednego z autorów Amazon Dynamo, mimo że czerpie swój model danych z Google BigTable, na poziomie architektury znacznie bardziej przypomina system firmy Amazon niż Google, a co za tym idzie podobnie jak Riak należy do grupy systemów oferujących bardzo duże gwarancje dostępności.
 
 \section{Apache Cassandra}
 \label{sec:cassandra}
@@ -223,7 +226,7 @@ Tak samo jak w BigTable, rzędy są sortowane, ale w odróżnieniu od Apache Cas
 Węzły systemu HBase dzielą się na węzeł master oraz serwery regionów (ang. \emph{Region Server}), które są odpowiednikami serwerów tabletów z BigTable.
 Każdy serwer regionów (tak jak w Apache Cassandra i BigTable) zapisuje wszystkie zmiany w dzienniku (\verb+HLog+), a następnie odwzorowuje je w pamięci (\verb+MemStore+).
 Struktura danych w pamięci jest regularnie zapisywana na dysk do plików (\verb+HFile+), które formatem przypominają pliki SSTable znane z BigTable, a te z kolei co pewien czas są łączone aby uniknąć wyszukiwania w dużej liczbie plików przy odczycie.
-Architektura ta jest dokładniej opisana w artykule na blogu jednego z programistów tworzących HBase Larsa George \cite{george-hbase-storage}, z którego zaczerpnięty został Rysunek \ref{fig:hbase-files}. 
+Architektura ta jest dokładniej opisana w artykule na blogu Larsa George - jednego z programistów tworzących HBase \cite{george-hbase-storage}, z którego zaczerpnięty został Rysunek \ref{fig:hbase-files}. 
 
 \myfigure{chapters/bazy_kolumnowe/hbase-files.png}{Architektura HBase}{fig:hbase-files}
 
