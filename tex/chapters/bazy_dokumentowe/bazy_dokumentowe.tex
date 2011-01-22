@@ -6,5 +6,68 @@ W tym rozdziale opisane zostaną dwie bazy dokumentowe: CouchDB i MongoDB.
 \section{CouchDB}
 \label{sec:couchdb}
 
+\subsection*{Wstęp}
+
+Apache CouchDB to dokumentowa baza danych oferująca szereg nie spotykanych w innych systemach funkcjonalności, takich jak framework MapReduce, który pozwala na tworzenie indeksów drugiego poziomu czy bardzo rozbudowaną funkcjonalność replikacji, która pozwala na tworzenie systemów, w których klient może przechowywać lokalnie jedynie ten fragment bazy, który go interesuje (umożliwiając tym samym pracę nawet w warunkach utraty połączenia z siecią) i pozostawić funkcjonalność synchronizacji danych CouchDB.
+
+System ten jest jednym z najdłużej dostępnych na rynku - baza ta została udostępniona już w 2005 roku.
+O dojrzałości i popularności tego projektu świadczy ogromna ilość dostępnej dokumentacji oraz aktywna społeczność.
+
+Apache CouchDB jest systemem napisanym w języku Erlang i dostępnym na licencji open source (Apache License 2.0).
+
+\subsection*{Protokół komunikacji}
+
+CouchDB dysponuje tylko jednym interfejsem komunikacji z bazą: REST po HTTP.
+Z jednej strony tego typu interfejs jest zaletą, gdyż HTTP jest prostym protokołem, obsługiwanym z łatwością w każdym praktycznie języku programowania, a także zastosowanie tego protokołu umożliwia uzupełnienie CouchDB poprzez zastosowanie serwerów proxy czy load balancerów, których dla tego protokołu jest bardzo wiele.
+Zastosowanie tego protokołu umożliwia wręcz tworzenie aplikacji internetowych, które nie wymagają serwera aplikacyjnego - wystarczy klient w języku JavaScript wykonywany w przeglądarce i baza.
+Wadą wykorzystania HTTP jako protokołu komunikacji jest to, że w porównaniu z binarnymi protokołami transmisji jest dość wolny, gdyż wymaga większej przepustowości i więcej czasu na serializację i deserializację danych.
+
+Dla CouchDB dostępne są biblioteki dla praktycznie wszystkich popularnych języków programowania, jak również biblioteki wysokiego poziomu.
+Istnieją także implementacje CouchDB w innych językach niż Erlang, dzięki czemu CouchDB może być instalowane na urządzeniach mobilnych a nawet, wykorzystując mechanizmy HTML5, w przeglądarce internetowej.
+
+\subsection*{Replikacja}
+
+\subsection*{Partycjonowanie}
+
+\subsection*{Persystencja}
+
+\subsection*{Wersjonowanie}
+
+\subsection*{Wyszukiwanie}
+
+\subsection*{Unikalne cechy}
+
+\subsection*{Typowe zastosowania}
+
+\subsection*{Przeciwwskazania}
+
+\subsection*{Dokumentacja i wsparcie}
+
+\subsection*{Pomocne odnośniki}
+
 \section{MongoDB}
 \label{sec:mongodb}
+
+\subsection*{Wstęp} 
+
+\subsection*{Protokół komunikacji}
+
+\subsection*{Replikacja}
+
+\subsection*{Partycjonowanie}
+
+\subsection*{Persystencja}
+
+\subsection*{Wersjonowanie}
+
+\subsection*{Wyszukiwanie}
+
+\subsection*{Unikalne cechy}
+
+\subsection*{Typowe zastosowania}
+
+\subsection*{Przeciwwskazania}
+
+\subsection*{Dokumentacja i wsparcie}
+
+\subsection*{Pomocne odnośniki}
