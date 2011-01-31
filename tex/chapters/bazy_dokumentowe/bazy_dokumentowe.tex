@@ -8,42 +8,225 @@ W tym rozdziale opisane zostaną dwie bazy dokumentowe: CouchDB i MongoDB.
 
 \subsection*{Wstęp}
 
-Apache CouchDB to dokumentowa baza danych oferująca szereg nie spotykanych w innych systemach funkcjonalności, takich jak framework MapReduce, który pozwala na tworzenie indeksów drugiego poziomu czy bardzo rozbudowaną funkcjonalność replikacji, która pozwala na tworzenie systemów, w których klient może przechowywać lokalnie jedynie ten fragment bazy, który go interesuje (umożliwiając tym samym pracę nawet w warunkach utraty połączenia z siecią) i pozostawić funkcjonalność synchronizacji danych CouchDB.
+Apache CouchDB to dokumentowa baza danych oferująca szereg nie spotykanych w innych systemach funkcjonalności, takich jak framework MapReduce, który pozwala na tworzenie indeksów drugiego poziomu, czy bardzo rozbudowaną funkcjonalność replikacji, która pozwala na tworzenie systemów, w których klient może przechowywać lokalnie jedynie ten fragment bazy, który go interesuje (umożliwiając tym samym pracę nawet w warunkach utraty połączenia z siecią) i pozostawić funkcjonalność synchronizacji danych CouchDB.
 
 System ten jest jednym z najdłużej dostępnych na rynku - baza ta została udostępniona już w 2005 roku.
 O dojrzałości i popularności tego projektu świadczy ogromna ilość dostępnej dokumentacji oraz aktywna społeczność.
 
-Apache CouchDB jest systemem napisanym w języku Erlang i dostępnym na licencji open source (Apache License 2.0).
+Apache CouchDB jest systemem napisanym w języku Erlang i dostępnym na licencji Open Source (Apache License 2.0).
 
 \subsection*{Protokół komunikacji}
 
-CouchDB dysponuje tylko jednym interfejsem komunikacji z bazą: REST po HTTP.
-Z jednej strony tego typu interfejs jest zaletą, gdyż HTTP jest prostym protokołem, obsługiwanym z łatwością w każdym praktycznie języku programowania, a także zastosowanie tego protokołu umożliwia uzupełnienie CouchDB poprzez zastosowanie serwerów proxy czy load balancerów, których dla tego protokołu jest bardzo wiele.
+Głównym interfejsem komunikacji z CouchDB jest REST po HTTP.
+Z jednej strony tego typu interfejs jest zaletą, gdyż jest to prosty protokół, obsługiwany z łatwością w każdym praktycznie języku programowania, a także zastosowanie HTTP umożliwia uzupełnienie CouchDB poprzez zastosowanie serwerów proxy czy load balancerów, których dla tego protokołu jest bardzo wiele.
 Zastosowanie tego protokołu umożliwia wręcz tworzenie aplikacji internetowych, które nie wymagają serwera aplikacyjnego - wystarczy klient w języku JavaScript wykonywany w przeglądarce i baza.
 Wadą wykorzystania HTTP jako protokołu komunikacji jest to, że w porównaniu z binarnymi protokołami transmisji jest dość wolny, gdyż wymaga większej przepustowości i więcej czasu na serializację i deserializację danych.
+
+Alternatywą dla HTTP jest biblioteka Hovercraft, która pozwala na komunikację z CouchDB przy użyciu mechanizmów dostępnych w języku Erlang.
+Biblioteka ta oferuje znacznie lepszą wydajność, ale implementuje tylko część API CouchDB (pozwala na dokonywanie operacji na pojedynczych dokumentach i bazach, ale nie na wyszukiwanie przy pomocy widoków\footnote{patrz dalej.}).
+Biblioteka ta ponadto nie jest częścią projektu CouchDB, a zatem istnieje duże ryzyko że jej rozwój nie nadąży za rozwojem bazy.
+
+Opisane dalej BigCouch posiada warstwę komunikacji poniżej protokołu HTTP, która daje dostęp do wszystkich funkcjonalności systemu.
+Biblioteka ta wprawdzie nie jest dostępna osobno, ani nie posiada dostępnej publicznie dokumentacji, ale ponieważ jest integralną częścią tego projektu, wydaje się że aplikacje korzystające z BigCouch i napisane w języku Erlang, powinny móc bezpiecznie z niej korzystać.
 
 Dla CouchDB dostępne są biblioteki dla praktycznie wszystkich popularnych języków programowania, jak również biblioteki wysokiego poziomu.
 Istnieją także implementacje CouchDB w innych językach niż Erlang, dzięki czemu CouchDB może być instalowane na urządzeniach mobilnych a nawet, wykorzystując mechanizmy HTML5, w przeglądarce internetowej.
 
 \subsection*{Replikacja}
 
+\missingfigure{Replikacja CouchDB}
+
+Jednym z najciekawszych możliwych zastosowań CouchDB jest tworzenie aplikacji rozproszonych, w których baza danych jest zainstalowana na tym samym komputerze co aplikacja kliencka i synchronizuje się z bazą na centralnym serwerze, dzięki czemu można zapewnić działanie takiego systemu nawet w przypadku braku połączenia z siecią, a także ograniczyć opóźnienia postrzegane przez użytkownika.
+Aby umożliwić tworzenie aplikacji według tego wzorca, konieczne jest aby baza umożliwiała dwukierunkową replikację jedynie części zbioru danych, najlepiej w połączeniu z systemem kontroli dostępu, tak aby użytkownicy nie mogli nawzajem pobierać swoich danych.
+Ponadto potrzebne jest aby system pozwalał na utrzymywanie wielu równoległych połączeń o małej aktywności równocześnie, ponieważ w takiej rozproszonej architekturze każdy klient nawiązuje połączenie z centralnym serwerem na cały czas trwania sesji.
+
+System replikacji w CouchDB posiada wszystkie wymienione powyżej cechy.
+Dane mogą być replikowane zarówno jedno-, jak i dwukierunkowo, w sposób ciągły albo jednorazowy.
+Dostęp do danych może być ograniczony albo przez ustawienie uprawnień dostępu do konkretnej bazy, albo przy pomocy specjalnych funkcji filtrujących, które pozwalają na wybranie, które dane mogą zostać przesłane.
+W przypadku gdy użytkownik powinien mieć uprawnienia do odczytu, ale nie do zapisu można użyć funkcji walidujących zapisywane dokumenty.
+
+Omawiając system uprawnień w CouchDB należy pamiętać jednak, że o ile regulowanie dostępu do konkretnych dokumentów - niezależnie czy chodzi o uprawnienia zapisu czy odczytu - jest nieskomplikowane, to widoki\footnote{Indeksy drugiego poziomu, generowane przy pomocy funkcji map i reduce, których wyniki są zapisywane w B-drzewie.} nie przechowują żadnych informacji o uprawnieniach, tak że jeżeli ograniczony zostanie dostęp do odczytu pewnych danych istnieje ryzyko, że część tych danych będzie dostępna w widokach.
+W kontekście replikacji oznacza to, że centralny serwer nie powinien umożliwiać niezaufanym klientom dostępu do widoków.
+
+Ponieważ CouchDB zostało zaimplementowane w Erlangu, pojedynczy węzeł jest w stanie obsłużyć nawet ponad 20 000 równoczesnych połączeń\footnote{http://blog.mattwoodward.com/massive-couchdb-brain-dump}.
+
+Przy okazji replikacji warto także wspomnieć, że poza ,,kanoniczną'' implementacją CouchDB w Erlangu, istnieją także inne implementacje, których zadaniem jest zastąpienie tego systemu w innych środowiskach.
+Do takich implementacji należy między innymi CouchOne for Android, czyli implementacja CouchDB dla telefonów z systemem operacyjnym Android, czy BrowserCouch, czyli implementacja CouchDB w języku JavaScript, która wykorzystuje mechanizm lokalnego przechowywania danych (ang. \emph{Local Storage}) wprowadzony przez HTML5 i obsługiwany przez niektóre nowe przeglądarki internetowe.
+
 \subsection*{Partycjonowanie}
+
+CouchDB nie posiada funkcjonalności automatycznego partycjonowania danych, ale architektura tego systemu, która sprawia że dodanie takiej funkcjonalności nie jest bardzo trudne, pozwoliła firmom zainteresowanym horyzontalnym skalowaniem CouchDB na zaimplementowanie takiej funkcjonalności.
+
+Dostępne są aktualnie dwa rozwiązania na licencji Open Source, które umożliwiają horyzontalne skalowanie CouchDB: Lounge, stworzone przez Meebo.com, oraz BigCouch stworzone przez firmę Cloudant.
+BBC, które na swoje potrzeby także zaimplementowało takie narzędzie, niestety nigdy go nie udostępniło publicznie.	
+
+\subsubsection*{BigCouch}
+
+Firma Cloudant oferuje usługi hostingowe CouchDB, między innymi ,,CouchDB w Chmurze'' (\emph{CouchDB Cloud}), która to usługa daje klientowi dostęp do bazy hostowanej i zarządzanej przez firmę Cloudant na ich serwerach.
+Na potrzeby tej usługi stworzono system o nazwie BigCouch, który pozwala na rozpraszanie CouchDB na wiele węzłów w klastrze. 
+BigCouch ułatwił swoim twórcom zarządzanie systemem, pozwalając na to by wszyscy użytkownicy współdzielili jedną jego instancję.
+W porównaniu do rozwiązania gdzie na każdych kilku użytkowników przypada osobna, replikowana instancja systemu, redukuje to znacznie koszty administracji, podnosząc równocześnie elastyczność i niezawodność tego rozwiązania.
+W sierpniu 2010 Cloudant udostępniło BigCouch na licencji Apache 2.0. 
+
+BigCouch jest rozszerzoną wersją Apache CouchDB, tak samo jak ta baza zaimplementowaną w języku Erlang i w stu procentach kompatybilną\footnote{Oznacza to, że każde zapytanie, które jest poprawnym zapytaniem do oryginalnego CouchDB, jest także poprawnym zapytaniem do BigCouch.} z oryginałem.
+BigCouch rozszerza CouchDB poprzez dodanie partycjonowania danych opartego o algorytm Consistent Hashing, znany już z pewnością czytelnikowi z Amazon Dynamo, Apache Cassandra i Riak.
+
+Podobnie jak we wszystkie systemy wzorowane na Amazon Dynamo, także BigCouch pozwala na konfigurowanie trzech parametrów R, W i N (odpowiednio: liczba węzłów które muszą zwrócić wartość przy odczycie, liczba węzłów które muszą potwierdzić zapis i na ile węzłów musi być zreplikowany dokument w bazie).
+Ponadto tworząc bazę można podać też parametr Q, który określa liczbę przedziałów, na jakie zostanie podzielony zbiór kluczy.
+
+BigCouch jest młodym projektem, dlatego brakuje mu części funkcjonalności, które zostały opisane w artykule o Amazon Dynamo.
+
+Najbardziej znaczącym brakiem jest niezaimplementowany mechanizm zmniejszania entropii (w Amazon Dynamo zapewniany przez Merkle Trees\footnote{patrz strona \pageref{merkle-trees}.}).
+Brak takiego mechanizmu sprawia, że w przypadku zmiany przyporządkowania przedziałów kluczy\footnote{W nomenklaturze BigCouch: \emph{shards}.} do węzłów, cały przedział może potencjalnie nigdy nie zostać przekazany do nowo dodanego węzła, ponieważ dokumenty są przekazywane między węzłami tylko dzięki mechanizmowi \emph{Read Repair} (czyli kiedy przy odczycie okazuje się, że nie wszystkie węzły odpowiedzialne za dany przedział posiadają tą samą wersję żądanego dokumentu).
+Dodatkowym efektem tego braku, jest to że BigCouch nie implementuje także mechanizmu Hinted Handoff\footnote{patrz strona \pageref{sec:dynamo-hinted-handoff}.}, co potencjalnie jeszcze bardziej zmniejsza dostępność systemu.
+
+BigCouch nie implementuje mechanizmu zegarów wektorowych, ale dzięki wbudowanemu w CouchDB mechanizmowi wersjonowania i rozwiązywania konfliktów (patrz dalej), nie jest to niezbędne.
+
+Przydział przedziałów kluczy do węzłów nie jest rozpowszechniany tak jak w innych systemach przy pomocy protokołu plotkowania (ang. \emph{gossip protocol}).
+Zarówno lista aktywnych węzłów w systemie, jak i przydziały kluczy do węzłów są przechowywane w specjalnej bazie jako dokumenty i replikowane przy zastosowaniu normalnych mechanizmów CouchDB. 
+
+BigCouch nie posiada żadnych wbudowanych mechanizmów pozwalających na zmianę przydziału przedziałów kluczy przy dodaniu albo usunięciu węzła z klastra.
+Ponieważ jednak każdy taki przedział wewnętrznie jest zapisywany w osobnej bazie, a same przydziały są normalnymi dokumentami, to stworzenie własnych skryptów, które dokonają replikacji odpowiednich przedziałów a potem przypiszą te przedziały do nowo dodanego węzła jest proste i nie wymaga dogłębnej znajomości BigCouch czy nawet języka Erlang.
+
+\subsubsection*{Lounge}
+
+CouchDB Lounge jest starszym rozwiązaniem pozwalającym na horyzontalne skalowanie CouchDB.
+Składa się z dwóch aplikacji: modułu serwera NGINX pozwalającego na obsługę zapytań dotyczących pojedynczych dokumentów i aplikacji napisanej w Pythonie/Twisted, która pozwala na agregację wyników działania widoków.
+
+Lounge pod wieloma względami przypomina BigCouch.
+Głównymi różnicami jest to, że w Lounge użytkownik nie ma kontroli nad parametrami R i W, oraz że konfiguracja listy węzłów i liczby przedziałów odbywa się przy pomocy plików konfiguracyjnych zamiast być trzymana w bazie.
 
 \subsection*{Persystencja}
 
+CouchDB przechowuje dane w strukturze $B^+-tree$ - rozłożystym drzewie, umożliwiającym szybkie pobieranie rekordów, nawet gdy baza zawiera ich miliony czy miliardy.
+$B^+-tree$ ma bardzo małą wysokość - poniżej 10 nawet dla milionów rekordów.
+Wyszukanie rekordu w takim drzewie wymaga przejścia ścieżki od korzenia do liścia (wewnętrzne węzły drzewa nie zawierają rekordów, jedynie klucze).
+Ponieważ w praktyce węzły pośrednie są buforowane w pamięci, bardzo często wystarczy jedno wyszukanie na dysku aby odczytać dokument w CouchDB.
+
+Struktury danych CouchDB są zapisywane na dysku jedynie przez dopisywanie na koniec pliku.
+Dzięki temu, w razie awarii, po ponownym uruchomieniu systemu, nie jest konieczne wykonywanie czasochłonnego sprawdzania plików z danymi - system jest gotów do działania praktycznie natychmiast.
+Warto także zwrócić uwagę, że plik ten nie jest dziennikiem transakcji (jak np. w Google BigTable) - jest to zapisane na dysku $B^+-tree$.
+
+Wadą dopisywania na koniec pliku jest to, że pliki z danymi CouchDB potrafią urosnąć do bardzo dużych rozmiarów w stosunku do liczby dokumentów w bazie.
+Aby temu zaradzić możliwe jest upakowanie tych plików (ang. \emph{compaction}), ale operacja ta w przypadku bardzo obciążonych serwerów, gdy dodawanie zmian do nowego pliku nie nadąża za dodawaniem ich do oryginalnego pliku, może się nigdy nie skończyć.
+
+Domyślnie CouchDB nie wykonuje operacji \verb+fsync()+ przy każdym zapisie, a jedynie co sekundę.
+Możliwe jest też dokonywanie tej operacji przy każdej zmianie, ale ponieważ CouchDB wykonuje wtedy dwie operacje \verb+fsync()+ przy każdym dopisaniu na koniec pliku, to pojedyncze operacje trwają wtedy bardzo długo (ale przepustowość systemu na tym nie cierpi, więc gdy operacje te są dokonywane asynchronicznie, lub jeżeli są dokonywane przez wielu klientów na raz, to ogólna liczba operacji na sekundę się nie zmienia).
+Dodatkowo, możliwe jest też wykonywanie operacji \verb+fsync()+ explicite, oraz wyłącznie lub włączanie jej wykonania na potrzeby pojedynczej operacji. 
+
 \subsection*{Wersjonowanie}
+
+W CouchDB każdy dokument posiada numer wersji (\verb+_rev+).
+Każdy numer wersji składa się z liczby, która zwiększa się o jeden za każdym razem gdy dokument zostanie zmieniony, oraz z ciągu znaków, który jest wartością funkcji mieszającej MD5 liczoną z treści dokumentu, jego załączników i flag).
+
+Aktualizując dokument w CouchDB należy podać jego aktualny numer wersji, jeżeli numer ten nie zostanie podany, albo jeżeli będzie inny niż najnowszy, to aktualizacja zostanie odrzucona.
+
+Jeżeli dokument zostanie zmieniony na dwa różne sposoby na dwóch różnych serwerach\footnote{Albo w dwóch różnych bazach na tym samym serwerze.} to wykrywane zostaje to w czasie replikacji.
+W przypadku wystąpienia kilku konkurujących ze sobą wersji dokumentu, w sposób deterministyczny jedna z nich zostaje oznaczona jako aktualna, a równocześnie wszystkie pozostałe wersje są zapisywane i dokument jest oznaczany jako pozostający w konflikcie.
+Do czasu rozwiązania konfliktu przez użytkownika, jedynie aktualna wersja jest brana pod uwagę przez widoki.
+Wszystkie skonfliktowane wersje są replikowane.
+
+Rozwiązanie konfliktu polega na usunięciu niepoprawnych wersji i zaktualizowaniu dokumentu podając jego poprawną postać.
+
+CouchDB nie przechowuje historycznych wersji dokumentów - nie są one przekazywane w czasie replikacji i są usuwane w czasie pakowania plików z danymi.
 
 \subsection*{Wyszukiwanie}
 
+CouchDB posiada unikalny mechanizm budowania indeksów drugiego poziomu przy wykorzystaniu MapReduce.
+Posiada także funkcje pozwalające na transformację zapisanych dokumentów do innych formatów niż JSON.
+
+\subsubsection*{Widoki}
+
+Większość systemów NoSQL oferuje albo integrację z zewnętrznymi implementacjami MapReduce (tak jak Cassandra czy HBase integrują się z Hadoop), albo posiada własną implementację tego wzorca (tak jak Riak czy MongoDB).
+Wspólną cechą wszystkich tych systemów jest jednak to, że wyniki operacji MapReduce są wyliczane ad hoc, a co za tym idzie, przy dużych zbiorach danych obliczenia te mogą trwać długo - zbyt długo aby możliwe było ich wyliczanie za każdym razem gdy są potrzebne do zaprezentowania użytkownikowi.
+Z tego względu w systemach tych zazwyczaj wyniki operacji MapReduce są zapisywane w bazie skąd mogą one być odczytywane na potrzeby użytkowników, a obliczenia są ponawiane co pewien czas.
+
+CouchDB różni się od tych systemów tym, że wyniki operacji Map i Reduce są zapisywane na dysku w strukturze $B^+-tree$.
+Parę funkcji map i reduce zapisanych w bazie nazywamy widokiem.
+Ponieważ wyszukiwanie po kluczu emitowanym przez funkcję map jest bardzo efektywne, a także możliwe jest wyszukiwanie używając zakresu tych kluczy, widoki są bardzo efektywnym mechanizmem wyszukiwania w CouchDB.
+
+Ponadto funkcje reduce mogą być wykorzystywane do szybkiego wykonywania operacji grupujących, takich jak suma czy średnia.
+
+Wyniki działania funkcji map i reduce są obliczane i zapisywane przy pierwszym odwołaniu do widoku.
+Jeżeli pomiędzy wywołaniami widoku zajdą zmiany w bazie, to funkcje te zostaną przeliczone tylko dla tych dokumentów, dla których jest to niezbędne.
+
+Widoki nie są replikowane (replikowany jest jedynie dokument zawierający definicje widoków), dlatego każdy serwer musi je wyliczać samodzielnie.
+
+W przypadku BigCouch, widoki są wyliczane odrębnie dla każdego przedziału kluczy, a następnie strumieniowane po jednym z każdego przedziału do węzła koordynującego, który wykonuje merge-sort na tych danych.
+
+\subsubsection*{Funkcje Show i Listy}
+
+Jedną z zalet Apache CouchDB jest to, że możliwe jest wykorzystanie tego systemu w aplikacjach internetowych napisanych w języku JavaScript bez potrzeby wykorzystywania warstwy pośredniej między bazą a klientem w postaci serwera aplikacyjnego (albo przynajmniej z bardzo uproszczonym serwerem aplikacyjnym, który pełni głównie rolę serwera proxy).
+
+Na potrzeby takich aplikacji w CouchDB dodane zostały funkcjonalności transformowania rekordów do innych formatów niż JSON.
+Dostępne są dwa warianty tych funkcji: wyświetlające pojedyncze dokumenty, czyli funkcje Show oraz wyświetlające widoki, czyli Listy.
+Podobnie jak widoki, Listy i funkcje Show są zapisane w bazie.
+
+Oba typy funkcji transformujących używają mechanizmu Etags, który pozwala na buforowanie ich wyników przez serwery proxy.
+
 \subsection*{Unikalne cechy}
+
+W poprzednich sekcjach zostało już opisane kilka mechanizmów, które wyróżniają CouchDB, takie jak inkrementalne MapReduce, zaawansowane mechanizmy replikacji czy ułatwienia, które pozwalają na pominięcie serwera aplikacyjnego w architekturze aplikacji.
+W tej sekcji przedstawiony zostanie mechanizm wewnętrznie używany przez replikację, ale przydatny także do wielu innych celów.
+
+\subsubsection*{Lista Zmian (\_changes Feed)}
+
+Opisana kilka sekcji wyżej funkcjonalność replikacji oferuje szereg ciekawych opcji, takich jak na przykład filtrowanie replikowanych dokumentów.
+O ile jednak replikacja działa pomiędzy instancjami CouchDB, to Lista Zmian pozwala każdej aplikacji na otrzymywanie powiadomień o zmianach w bazie.
+
+Lista Zmian znajduje się pod specjalnym adresem \verb+_changes+ (stąd nazwa).
+Jako argumenty można przekazać do niej numer sekwencyjny pierwszej zmiany, która nas interesuje.
+
+Istnieje także kilka trybów, w których lista ta może pracować.
+Domyślnie zwracana jest lista zmian i połączenie jest zamykane - niezależnie czy jakieś zmiany nastąpiły, czy nie.
+Możliwe jest także wyspecyfikowanie, że serwer ma czekać z odpowiedzią, aż zajdą jakieś zmiany, a wtedy je zwrócić i zamknąć połączenie.
+Dodatkowo dostępny jest także tryb ciągły, czyli tryb, w którym serwer nigdy nie zamyka połączenia, a jedynie wysyła klientowi zmiany w takim tempie w jakim one zachodzą.
+
+Zmiany zwracane przez listę zmian, mogą być filtrowane przy użyciu tych samych filtrów, co przy replikacji.
+
+Lista zmian ma wiele zastosowań.
+Jednym z najbardziej podstawowych jest umożliwienie zewnętrznym systemom na synchronizację danych z CouchDB.
+Przykładem tego zastosowanie jest na przykład couchdb-lucene, które w ten sposób pobiera dokumenty, które następnie są indeksowane przy pomocy Apache Lucene, co pozwala na wyszukiwanie pełnotekstowe.
+Innym zastosowaniem listy zmian, jest potraktowanie jej jako mechanizmu \emph{server-push} na potrzeby aplikacji internetowych (umożliwia to na przykład na napisanie aplikacji typu chat przy użyciu CouchDB).
 
 \subsection*{Typowe zastosowania}
 
+Najmocniejszą stroną CouchDB jest replikacja i możliwość tworzenia zdecentralizowanych aplikacji - głównie dlatego, że pod tym względem system ten nie posiada konkurencji.
+Przykładem takiej aplikacji jest Ubuntu One - projekt pozwalający użytkownikom na synchronizację różnorakich ustawień pomiędzy instalacjami systemu operacyjnego.
+
+Oparcie się o protokół HTTP i język JavaScript sprawia, że CouchDB jest także interesującym projektem z punktu widzenia twórców aplikacji internetowych, gdyż pozwala na zmniejszenie impedancji pomiędzy różnymi warstwami aplikacji (mniej różnych języków programowania, dokumentowy model danych bardziej przystaje do obiektowego niż model relacyjny).
+
 \subsection*{Przeciwwskazania}
+
+CouchDB, mimo niezłych wyników jeżeli chodzi o ogólną przepustowość systemu, nie należy do najszybszych jeżeli chodzi o opóźnienia pojedynczych zapytań.
+Dlatego, baza ta najbardziej się nadaje do zastosowania z aplikacjami, które odczytują i zapisują co najwyżej po kilka dokumentów na stronę, lub z aplikacjami typu ,,gruby klient'', które wymagają mniejszej liczby interakcji z systemem bazodanowym.
+
+Duże potrzeby dyskowe i brak wbudowanego mechanizmu partycjonowania danych sprawia, że CouchDB nie należy do systemów pozwalających na pracę z miliardami dokumentów równocześnie (chociaż wraz z dojrzewaniem rozwiązań partycjonujących bazę może się to zmienić).
+Nie należy się spodziewać także, że CouchDB kiedykolwiek będzie systemem, w którym dynamiczne dodawanie i usuwanie węzłów w celu skalowania systemu w górę i w dół będzie proste - ze względu konieczność budowania widoków od nowa na każdym dodanym węźle\footnote{Oczywiście można także skorzystać z tego, że pliki z widokami/bazą mogą być po prostu kopiowane, ale nawet wtedy trzeba pamiętać że pliki te mogą osiągać rozmiary dziesiątek czy setek gigabajtów.}. 
 
 \subsection*{Dokumentacja i wsparcie}
 
+CouchDB należy do jednych z najlepiej udokumentowanych systemów spośród opisywanych w tej pracy.
+Dostępnych jest bardzo wiele prezentacji wideo, artykułów i porównań z innymi systemami, a także kilka książek, z których jedna: ,,CouchDB: The Definitive Guide'' jest dostępna on-line i za darmo i stanowi doskonałe wprowadzenie w wiele z zagadnień dotyczących tego systemu.
+
+CouchDB jest bardzo popularnym projektem, co widać po liczbie różnych bibliotek i narzędzi wykorzystujących i przeznaczonych dla tej bazy.
+
+CouchDB jest komercyjnie wspierane przez firmę CouchOne.
+Dostępny jest także hosting oferowany przez CouchOne i Cloudant.
+
 \subsection*{Pomocne odnośniki}
+
+Poniżej zamieszczono kilka odnośników do stron WWW związanych z CouchDB.
+
+\begin{description}
+ \item [http://couchdb.apache.org/] - strona domowa projektu
+ \item [http://guide.couchdb.org/] - ,,CouchDB: The Definitive Guide'', świetne wprowadzenie do CouchDB
+ \item [http://wiki.apache.org/couchdb/] - wiki CouchDB, podobnie jak w innych wiki projektów Apache struktura nie jest zbyt przejrzysta, ale znajduje się tu wiele ciekawych informacji
+ \item [http://en.wikipedia.org/wiki/B-tree] - artykuł na Wikipedii na temat struktury danych $B-tree$, wykorzystywanej w CouchDB 
+ \item [https://github.com/cloudant/bigcouch] - strona domowa projektu BigCouch
+ \item [http://hg.toolness.com/browser-couch/raw-file/blog-post/index.html] - strona domowa projektu BrowserCouch
+ \item [http://oreillynet.com/pub/e/1760] - prezentacja wideo na temat BigCouch
+\end{description}
 
 \section{MongoDB}
 \label{sec:mongodb}
