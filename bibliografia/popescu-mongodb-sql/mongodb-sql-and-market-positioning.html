@@ -1,0 +1,446 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!-- 
+Author: Alex Popescu
+Version: 1.0-201007282137
+ -->
+<head>
+  <link href='http://fonts.googleapis.com/css?family=Arimo:regular,italic,bold,bolditalic' rel='stylesheet' type='text/css'>
+    
+      <title>MongoDB, SQL and ... Market Positioning? &laquo; myNoSQL</title>     
+      <meta name="description" content="MongoDB, SQL and ... Market Positioning?" />
+      <meta name="keywords" content="mongodb, nosql debate,  NoSQL, NoSQL databases, NoSQL community, NoSQL database"/>
+    
+    
+    
+
+    <link rel="icon" href="http://25.media.tumblr.com/avatar_57f58c2308d6_16.png"/>
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="http://nosql.mypopescu.com/rss"/>
+    
+    <meta name="google-site-verification" content="C_c1BxsO1S5cBTaH-Sm7SScPTdJMebn7TFb3qxkykGU" />
+    <link rel="stylesheet" href="http://friendfeedredux.appspot.com/css/grid960-12.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="http://friendfeedredux.appspot.com/css/mynosql2.v1.22.css" media="all" />
+    <style type="text/css">
+body {font-family: 'Arimo',"HelveticaNeue","Helvetica Neue",Helvetica,Arial,sans-serif;}
+a.attn {color:red;font-weight:bold}
+.blogtitle strong {display:none;visibility:hidden;}
+/* footnotes */
+sup a{font-weight:bold;}
+hr {border-color: #999999;
+    border-style: solid;
+    border-width: 1px 0 0;
+    margin-bottom: 1.5em;
+    margin-left: 0;
+    margin-top: 5em;
+    width: 8em;}
+.post a[rel~="external"]:after {content: " ☞";}
+.post blockquote {
+ border-left: 1px dotted #4499AA;
+}
+.post h1.post_title, .post h2.post_title { letter-spacing: -1.5px; }
+
+    </style>
+</head>
+  
+<body>
+<div class="container_12">
+<div id="header" class="grid_12">
+  
+  
+    <h2 class='blogtitle'><a href="http://nosql.mypopescu.com/">myNoSQL</a> <strong>The definitive guide to NoSQL databases</strong></h2>
+    <a href="http://nosql.mypopescu.com/"><img alt="myNoSQL" src="http://friendfeedredux.appspot.com/images/logo-mynosql-s.png"></a>
+    <h3 style="display:none;visibility:hidden;">The Definitive Guide to NoSQL. Featuring the best daily NoSQL articles, news, and links covering all major NoSQL databases and projects and following closely all things related to NoSQL ecosystem (events, books, etc.).</h3>
+    <h4 class='description'>A Curated Guide to NoSQL Databases and Polyglot Persistence by Alex Popescu</h4>
+  
+</div><div class="clear"></div>
+
+<div id="nav" class="grid_12">
+  <ul id="nav-menu">
+    <li><a href="http://nosql.mypopescu.com/">Home</a></li>
+    <li><a href="http://nosql.mypopescu.com/" class="ttnav">Top NoSQL Topics</a></li>  	
+    <li><a href="http://nosql.mypopescu.com/post/276069660/nosql-libraries">NoSQL Libraries</a></li>
+    <li><a href="http://nosql.mypopescu.com/nosql-conference">NoSQL conferences</a></li>
+    <li><a href="http://nosql.mypopescu.com/kb/nosql">NoSQL reference</a></li>
+    <li><a href="http://nosql.mypopescu.com/kb/powered-by-nosql">Powered by NoSQL</a></li>
+    <li><a href="http://nosql.mypopescu.com/rss">RSS <img width="12px" height="12px" border="0" src="http://30.media.tumblr.com/tumblr_kxt08fZxB01qavt6co1_100.png"></a></li>
+  	<li><a href="mongodb-sql-and-market-positioning.html#about-mynosql">About</a></li>
+    <li style='display:none;'><a href="http://nosql.mypopescu.com/nosql-events">NoSQL events</a></li>
+  </ul>
+</div>
+<div id="tnav" class="grid_12">
+  <ul id="nav-menu">
+    <li><a href="http://nosql.mypopescu.com/tagged/hadoop">Hadoop</a></li>  
+    <li><a href="http://nosql.mypopescu.com/tagged/mongodb">MongoDB</a></li>
+    <li><a href="http://nosql.mypopescu.com/tagged/cassandra">Cassandra</a></li>
+    <li><a href="http://nosql.mypopescu.com/tagged/couchdb">CouchDB</a></li>
+    <li><a href="http://nosql.mypopescu.com/tagged/redis">Redis</a></li>
+    <li><a href="http://nosql.mypopescu.com/tagged/hbase">HBase</a></li>
+    <li><a href="http://nosql.mypopescu.com/tagged/riak">Riak</a></li>
+    <li><a href="http://nosql.mypopescu.com/tagged/neo4j">Neo4j</a></li>
+    <li><a href="http://nosql.mypopescu.com/tagged/mapreduce">MapReduce</a></li>
+    <li><a href="http://nosql.mypopescu.com/tagged/bigdata">BigData</a></li>
+    <li><a href="mongodb-sql-and-market-positioning.html#topiclist">See all topics</a></li>
+    <li><a href="http://nosql.mypopescu.com/tagged/nosql_weekly_review">NoSQL Week In Review</a></li>    
+  </ul>
+</div>
+
+<div class="clear" style="margin-bottom:5em;">&nbsp;</div>
+
+<div id="main" class="grid_7">  
+    
+    
+    
+
+    
+    <!--<div id="main_header" style="margin-bottom:3em;padding:0 2em;"><p style="text-align:center;font-style:italic;color:#666;"></p></div>-->
+    
+
+    
+      
+
+    <div id="post_481914679" class="post linkpost">
+      <!-- title -->
+      
+      
+      
+        
+        <h1 class="post_title"><a href="mongodb-sql-and-market-positioning.html" title="Permalink MongoDB, SQL and ... Market Positioning?" rel='permalink'>MongoDB, SQL and ... Market Positioning?</a> <a href="mongodb-sql-and-market-positioning.html#extlink_481914679" class='extlink'>&#9758;</a></h1>
+        
+        
+        
+        
+        
+      
+      <!-- end title -->  		        
+      <div class="post_pmeta">
+        <div class="grid_5 alpha">
+          <div class="post_details">by <span class="author">Alex Popescu</span></div>
+          
+            <ul class="post_tags">
+              <li>Tags:&nbsp;</li>
+            <li><a href="http://nosql.mypopescu.com/tagged/mongodb" rel="tag" title="Read more posts tagged mongodb">mongodb</a>,</li><li><a href="http://nosql.mypopescu.com/tagged/nosql_debate" rel="tag" title="Read more posts tagged nosql debate">nosql debate</a>,</li>
+            </ul>
+            <h5 class="post_keywords">Keywords: <strong>mongodb</strong>,<strong>nosql debate</strong>,<strong>NoSQL</strong>, <strong>NoSQL databases</strong>, <strong>NoSQL community</strong>, <strong>the definitive guide to NoSQL</strong></h5>
+            <br class="clear"/>
+          
+        </div>
+
+        <div class="grid_2 omega">
+          <div class="addthis_toolbox" addthis:title="myNoSQL" addthis:url="http://nosql.mypopescu.com/post/481914679/mongodb-sql-and-market-positioning" 
+               addthis:description="MongoDB, SQL and ... Market Positioning?">
+            <a class="addthis_button_twitter"><img src="http://24.media.tumblr.com/tumblr_l36ibs9qee1qb163ho1_100.png" width="20" height="20" alt="Twitter" /></a>
+            <a class="addthis_button_reddit"><img src="http://27.media.tumblr.com/tumblr_l36i9cpXyp1qb163ho1_100.png" width="20" height="20" alt="Reddit" /></a>
+            <a class="addthis_button_hackernews"><img src="http://24.media.tumblr.com/tumblr_kx4yg5yP5E1qb163ho1_100.png" width="20" height="20"/></a>
+            <a href="http://www.addthis.com/bookmark.php?v=250&amp;username=alexpopescu" class="addthis_button_expanded"><img src="http://26.media.tumblr.com/tumblr_kx4ybodLy21qb163ho1_100.png" width="20" height="20" /></a>
+          </div>
+          <div style="color:red;font-size:0.9em;font-weight:bold;text-align:right;">
+            
+          </div>
+          
+          
+          <div id="post_date" class="post_date"><a href="mongodb-sql-and-market-positioning.html" class="permalink"><span class="date">Mar 29th, 2010</span></a> <span class="time">19:08</span></div>
+          
+        </div>
+        <div class="clear"></div>          
+      </div>
+
+      <!-- body -->
+      
+      
+      
+        
+        
+          <div class="entrybody linkentry">
+              <div><p>Trying to answer why MongoDB is not using SQL as its query language: </p>
+
+<blockquote>
+  <p>The main reason we went the way we did with the query language - representing queries as JSON - was to normalize the data we are storing with the query mechanism.  If we are storing JSON in the database, can we not represent the queries that way too?  We thought that made sense.</p>
+</blockquote>
+
+<p>Is that a strong enough argument? I don’t think so. </p>
+
+<p>What I’ll say next will sound strange, but I think this was more of a <strong>branding</strong> or <strong>market positioning</strong> kind of decision. </p>
+
+<p>If MongoDB would have used SQL, what would have been its major differentiator from existing RDBMS? The BSON based storage? I don’t think people would really care about it. Support for MapReduce? Probably. Performance? Probably. Lacking the advanced SQL statements and tools? Quite possible. </p>
+
+<p>MongoDB going with SQL would have made it look like the “ugly duck” of the RDBMS world. And that’s definitely not a good positioning for a new product.</p>
+
+<p>Anyway this is just a crazy personal hypothesis.</p></div>
+              <div class="extlinkbox" id="extlink_481914679">via <a href="http://blog.mongodb.org/post/447761175/should-mongodb-use-sql-as-a-query-language " class='extlink' rel='external nofollow' target='_blank' title='Source http://blog.mongodb.org/post/447761175/should-mongodb-use-sql-as-a-query-language '>source</a></div>
+          </div>
+        
+    		
+        
+              
+        
+      
+<!--      
+
+
+
+
+-->
+ 				
+      <!-- end body -->
+              
+      <div id="ext-twimblrec">&nbsp;</div>
+
+      <p style='margin:2em auto;text-align:center;font-style:italic;border:1px dotted #999;padding:1em;color:red'>If you enjoyed this post, make sure you subscribe to my <a href="http://nosql.mypopescu.com/rss">RSS feed!</a></p>
+
+
+      
+      <div id="ext-outbrain">
+          <script language='JavaScript'>
+var OB_langJS='http://widgets.outbrain.com/lang_en.js';var OBITm='1279891127405';var OB_raterMode='none';var OB_recMode='strip'; 
+var OutbrainPermaLink='http://nosql.mypopescu.com/post/481914679/mongodb-sql-and-market-positioning'; 
+if ( typeof(OB_Script)!='undefined' )OutbrainStart(); else { var OB_Script=true;var str=unescape("%3Cscript src=\'http://widgets.outbrain.com/OutbrainRater.js\' type=\'text/javascript\'%3E%3C/script%3E"); document.write(str); }
+           </script>
+      </div>      
+      
+    </div>
+    
+    
+
+    
+    
+    <div id="main_footer">
+		  
+    	
+    	
+    		<div class="navleft"><a href="http://nosql.mypopescu.com/post/428387590">&larr;&nbsp; Previous post</a></div>
+    		<div class="navright"><a href="http://nosql.mypopescu.com/post/482074286">Next post &nbsp;&rarr;</a></div>
+	  		<br class="clear"/>
+      
+    </div>
+    
+    
+    <div id="ext-disqus">
+      <div id="disqus_thread"></div>
+      <script type="text/javascript">var disqus_url="http://nosql.mypopescu.com/post/481914679/mongodb-sql-and-market-positioning", disqus_title="MongoDB, SQL and ... Market Positioning?", disqus_shortname='mynosql',disqus_identifier='481914679';</script>
+      <script type='text/javascript' src='http://disqus.com/forums/mynosql/embed.js'></script>
+      <noscript><a href="http://disqus.com/forums/mynosql/?url=ref" rel="nofollow external">View the discussion thread.</a></noscript>
+    </div>
+    
+</div>
+
+<div class="grid_1">&nbsp;</div>
+      
+<div id="sidebar" class="grid_4">
+  <form action="http://nosql.mypopescu.com/search" method="get">
+  	<input type="text" name="q" value="Search..." class="searchbox" onfocus="this.value=''">&nbsp;&nbsp; <input type="submit" value="GO" class="searchbutton">
+  </form>
+
+<!--
+	<div id="_sda_gam">
+<script type='text/javascript' src='http://partner.googleadservices.com/gampad/google_service.js'></script>
+<script type='text/javascript'>
+GS_googleAddAdSenseService("ca-pub-2389112647071615");
+GS_googleEnableAllServices();
+</script>
+<script type='text/javascript'>
+GA_googleAddSlot("ca-pub-2389112647071615", "SQBTN-125-ad1");
+GA_googleAddSlot("ca-pub-2389112647071615", "SQBTN-125-ad2");
+GA_googleAddSlot("ca-pub-2389112647071615", "Exclusive300x250");
+</script>
+<script type='text/javascript'>
+GA_googleFetchAds();
+</script>	
+	</div>
+
+  <div id="_sda_125x125" class="sidebarbox sponsors">
+    <div class="sponsor_ad_block multi_ad_block_125">
+      <div class="ad_block_125">
+        <script type='text/javascript'>GA_googleFillSlot("SQBTN-125-ad1");</script>
+      </div>
+      <div class="ad_block_125">
+      	<script type='text/javascript'>GA_googleFillSlot("SQBTN-125-ad2");</script>
+      </div>
+      <br style="clear:both"/>
+    </div>  
+    <div class="grey">Sponsors</div>
+  </div>
+-->
+
+  <div id='_ba_hotwidget_wrapper' class='_ba_widget_container sidebarbox'>
+    <noscript>
+      <h3 class="_ba_title">Most read articles</h3>
+      <ul id="_ba_recentposts" class="_ba_linklist">
+<li><a href="http://nosql.mypopescu.com/post/407159447" onclick="trkEvt('widget-hotposts', window.location.href, $(this).attr('href')+':'+$(this).text());">Cassandra @ Twitter: An Interview with Ryan King</a></li>
+<li><a href="http://nosql.mypopescu.com/post/298557551" onclick="trkEvt('widget-hotposts', window.location.href, $(this).attr('href')+':'+$(this).text());">CouchDB vs MongoDB: An attempt for a More Informed Comparison</a></li>
+<li><a href="http://nosql.mypopescu.com/post/392868405" onclick="trkEvt('widget-hotposts', window.location.href, $(this).attr('href')+':'+$(this).text());">MongoDB Durability: A Tradeoff to Be Aware Of</a></li>
+<li><a href="http://nosql.mypopescu.com/post/619925133" onclick="trkEvt('widget-hotposts', window.location.href, $(this).attr('href')+':'+$(this).text());">Learning NoSQL from Twitter’s Experience</a></li>
+<li><a href="http://nosql.mypopescu.com/post/573604395" onclick="trkEvt('widget-hotposts', window.location.href, $(this).attr('href')+':'+$(this).text());">Tutorial: Getting Started With Cassandra</a></li>
+<li><a href="http://nosql.mypopescu.com/post/394779847" onclick="trkEvt('widget-hotposts', window.location.href, $(this).attr('href')+':'+$(this).text());">MongoDB Tutorial: MapReduce</a></li>
+<li><a href="http://nosql.mypopescu.com/post/405045629" onclick="trkEvt('widget-hotposts', window.location.href, $(this).attr('href')+':'+$(this).text());">Get a Taste of Graph Databases</a></li>
+<li><a href="http://nosql.mypopescu.com/post/683838234" onclick="trkEvt('widget-hotposts', window.location.href, $(this).attr('href')+':'+$(this).text());">Scaling CouchDB</a></li>
+<li><a href="http://nosql.mypopescu.com/post/451094148" onclick="trkEvt('widget-hotposts', window.location.href, $(this).attr('href')+':'+$(this).text());">NoSQL Data Modeling</a></li>
+<li><a href="http://nosql.mypopescu.com/post/507962068" onclick="trkEvt('widget-hotposts', window.location.href, $(this).attr('href')+':'+$(this).text());">The Role of Data Modeling with Key-Value Stores</a></li>
+<li><a href="http://nosql.mypopescu.com/post/498705278" onclick="trkEvt('widget-hotposts', window.location.href, $(this).attr('href')+':'+$(this).text());">Quick Review of Existing Graph Databases</a></li>
+<li><a href="http://nosql.mypopescu.com/post/518121097" onclick="trkEvt('widget-hotposts', window.location.href, $(this).attr('href')+':'+$(this).text());">HBase @ Adobe: An Interview with Adobe SaaS Infrastructure Team</a></li>
+<li><a href="http://nosql.mypopescu.com/post/505511044" onclick="trkEvt('widget-hotposts', window.location.href, $(this).attr('href')+':'+$(this).text());">In-Memory Elastic Databases</a></li>
+<li><a href="http://nosql.mypopescu.com/tagged/nosql_weekly_review">Read more...</a></li></ul>
+    </noscript>
+  </div>
+
+<!-- div id="_sda_300x250" class="sidebarbox sponsors">
+  <div class="sponsor_ad_block">
+    <div class="ad_block_300_250">
+      <script type='text/javascript'>GA_googleFillSlot("Exclusive300x250");</script>
+    </div>
+    <br style="clear:both"/>
+  </div>  
+  <div class="grey">Gold Sponsor</div>
+</div -->
+
+  <div  id='_ba_recwidget_wrapper' class='_ba_widget_container sidebarbox'></div>
+  
+  <div class="sidebarbox" id="ext-disqus-comments-widget">
+    <script type="text/javascript" src="http://disqus.com/forums/mynosql/combination_widget.js?num_items=5&hide_mods=1&color=grey&default_tab=recent&excerpt_length=150"></script>
+  </div>
+
+  
+  <div class="credits" id="about-mynosql">
+    <div style="margin:-20px 0pt -20px -20px;">
+     <img src="http://friendfeedredux.appspot.com/images/logo-mynosql.png" alt="myNoSQL"/>
+    </div>
+    <p>my<strong>NoSQL</strong> is the personal blog of <a href="http://www.linkedin.com/in/alexandrup">Alex Popescu</a>, 
+    a code hacker, geek co-founder and CTO of InfoQ.com, web and NoSQL aficionado. All opinions expressed in here are mine alone and they do not reflect the opinions of any of the past or current employers.</p>
+    <br/>
+    <p>On my<strong>NoSQL</strong> blog I'm (opinionatedly) posting the best daily NoSQL articles, news, and links covering all major NoSQL databases and projects and following closely all things related to the NoSQL ecosystem (events, books, etc.).</p>
+    <br/>
+    <br/>
+    <p><b>Contribute</b> by sending hints on Twitter <a href="http://twitter.com/al3xandru">@al3xandru</a> or <a href="mailto:nosql[at]mypopescu.com">email</a>.</p>
+    <br/>
+    <p style="text-align:center;"><a href="mailto:nosql[at]mypopescu.com">Feedback</a> is always welcome!</p>
+  </div>
+
+  <div class="sidebarbox">
+    <p style="text-align:center;font-size:0.8em;">Copyright &copy; 2009-2010.All rights reserved.</p>
+  </div>
+</div>
+<div class="clear"></div>
+
+
+<div id="pagefooter" class="grid_12">
+<div id="topiclist">
+  <h4>Topics</h4>
+  
+  <p>Generic: <a href="http://nosql.mypopescu.com/tagged/benchmark">NoSQL Benchmarks</a>
+    <a href="http://nosql.mypopescu.com/tagged/usecase">NoSQL use cases</a>, 
+    <a href="http://nosql.mypopescu.com/tagged/NoSQL_hybrid">NoSQL Hybrid Solutions</a>, 
+    <a href="http://nosql.mypopescu.com/tagged/presentation">Presentations</a>,
+    <a href="http://nosql.mypopescu.com/tagged/video">Videos</a>
+  </p>
+  
+  <p>BigData: <a href="http://nosql.mypopescu.com/tagged/hadoop">Hadoop</a> <a href="http://nosql.mypopescu.com/tagged/mapreduce">MapReduce</a>, <a href="http://nosql.mypopescu.com/tagged/pig">Pig</a>, <a href="http://nosql.mypopescu.com/tagged/hive">Hive</a></p>
+  
+  <p>Case Studies: <a href="http://nosql.mypopescu.com/tagged/twitter">NoSQL at Twitter</a>, <a href="mongodb-sql-and-market-positioning.html">CouchDB Case Studies</a>, <a href="mongodb-sql-and-market-positioning.html">MongoDB Case Studies</a>, <a href="http://nosql.mypopescu.com/tagged/adobe">NoSQL at Adobe</a></p>
+  
+  <p><a href="http://nosql.mypopescu.com/tagged/column_store" style="color:#FFF;">Column stores</a>: 
+    <a href="http://nosql.mypopescu.com/tagged/bigtable">BigTable</a>, 
+    <a href="http://nosql.mypopescu.com/tagged/cassandra">Cassandra</a>, 
+    <a href="http://nosql.mypopescu.com/tagged/hbase">HBase</a>, 
+    <a href="http://nosql.mypopescu.com/tagged/hypertable">Hypertable</a>
+  </p>
+  
+  <p><a href="http://nosql.mypopescu.com/tagged/document_store" style="color:#FFF;">Document stores</a> or <a href="http://nosql.mypopescu.com/tagged/document_store" style="color:#FFF;">Document databases</a>: 
+    <a href="http://nosql.mypopescu.com/tagged/couchdb">CouchDB</a>, 
+    <a href="http://nosql.mypopescu.com/tagged/mongodb">MongoDB</a>, 
+    <a href="http://nosql.mypopescu.com/tagged/orient">OrientDB</a>,    
+    <a href="http://nosql.mypopescu.com/tagged/ravendb">RavenDB</a>, 
+    <a href="http://nosql.mypopescu.com/tagged/jackrabbit">Jackrabbit</a>, 
+    <a href="http://nosql.mypopescu.com/tagged/terrastore">Terrastore</a>
+  </p>
+  
+  <p><a href="http://nosql.mypopescu.com/tagged/key-value_store" style="color:#FFF;">Key-Value stores</a>: 
+    <a href="http://nosql.mypopescu.com/tagged/redis">Redis</a>, 
+    <a href="http://nosql.mypopescu.com/tagged/riak">Riak</a>, 
+    <a href="http://nosql.mypopescu.com/tagged/voldemort">Project Voldemort</a>,
+    <a href="http://nosql.mypopescu.com/tagged/tokyo_cabinet">Tokyo Cabinet</a>,
+    <a href="http://nosql.mypopescu.com/tagged/memcached">memcached</a>,
+    <a href="http://nosql.mypopescu.com/tagged/membase">Membase</a>,
+    <a href="http://nosql.mypopescu.com/tagged/simpledb">Amazon SimpleDB</a>,
+    <a href="http://nosql.mypopescu.com/tagged/memcachedb">MemcacheDB</a>,
+    <a href="http://nosql.mypopescu.com/tagged/mdb">M/DB</a>/<a href="http://nosql.mypopescu.com/tagged/gtm">GT.M</a>,
+    <a href="http://nosql.mypopescu.com/tagged/dynamo">Amazon Dynamo</a>,
+    <a href="http://nosql.mypopescu.com/tagged/dynomite">Dynomite</a>,
+    <a href="http://nosql.mypopescu.com/tagged/mnesia">Mnesia</a>,
+    <a href="http://nosql.mypopescu.com/tagged/pnuts">Yahoo! PNUTS/Sherpa</a>
+  </p>
+  
+  <p><a href="http://nosql.mypopescu.com/tagged/graph_database"  style="color:#FFF;">Graph databases</a>:
+    <a href="http://nosql.mypopescu.com/tagged/neo4j">Neo4j</a>,
+    <a href="http://nosql.mypopescu.com/tagged/infogrid">InfoGrid</a>,
+    <a href="http://nosql.mypopescu.com/tagged/sones">Sones</a>,
+    <a href="http://nosql.mypopescu.com/tagged/infinitegraph">InfiniteGraph</a>,
+    <a href="http://nosql.mypopescu.com/tagged/allegrograph">AllegroGraph</a>
+  </p>
+</div>
+
+<div id="ffooter">
+  <p style="text-align:center;">Copyright &copy; 2009-2010. All rights reserved.</p> 
+  <p class="credits">
+my<strong>NoSQL</strong> is the most important source of daily NoSQL news, articles and links covering all major NoSQL projects and following closely all things related to the NoSQL ecosystem. On my<strong>NoSQL</strong> you'll get everything you need and want to know about NoSQL.
+  </p>
+  <p class="credits">
+    Tumblr theme by Alex Popescu. 
+  </p>
+</div>
+</div>
+<div class="clear"></div>
+
+</div>
+<!-- scripting -->
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="http://friendfeedredux.appspot.com/js/mynosql.v3.11.js"></script>
+<script type="text/javascript">$(document).ready(function(){});</script>
+<div id="_gascript">
+  <script type="text/javascript">
+  var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+  document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+  </script>
+  <script type="text/javascript">//<![CDATA[
+  try {
+    var pageTracker = _gat._getTracker("UA-462613-13");
+    pageTracker._trackPageview();
+  } catch(err) {};
+  //]]>
+  </script>
+</div>
+<div id="_jsinit">
+  <script type="text/javascript">//<![CDATA[
+  var _ba_recent_attach_to='#_ba_recwidget_wrapper';
+  var _ba_hot_attach_to='#_ba_hotwidget_wrapper';
+  
+  var _ba_related_attach_to='#ext-twimblrec';
+  
+  loadWidgets();
+  $(document).ready(function() {
+    regTagViewTracker();
+    regLinkQuoting();
+    regTagClickTracker();
+    regHotTopicTracker();
+    regNosqlecosysTracker();
+  });
+  //]]>
+  </script>
+</div>
+<script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#username=alexpopescu"></script>
+
+<!-- outbrain -->
+
+<div id="ext-outbrain-hid">
+<input type="hidden" name="OBKey" value="3J3SAbazHBNmQA078UdihQ=="/>
+<script type="text/javascript" src="http://widgets.outbrain.com/claim.js"></script>
+</div>
+
+<!--[if lt IE 8]>
+<script src="http://ie7-js.googlecode.com/svn/version/2.1(beta4)/IE8.js"></script>
+<![endif]-->
+<!-- BEGIN TUMBLR CODE --><iframe src="http://assets.tumblr.com/iframe.html?8&src=http%3A%2F%2Fnosql.mypopescu.com%2Fpost%2F481914679%2Fmongodb-sql-and-market-positioning&amp;pid=481914679&amp;rk=opSCSrqZ&amp;lang=en_US&amp;name=nosql" scrolling="no" width="330" height="25" frameborder="0" style="position:absolute; z-index:1337; top:0px; right:0px; border:0px; background-color:transparent; overflow:hidden;" id="tumblr_controls"></iframe><!--[if IE]><script type="text/javascript">document.getElementById('tumblr_controls').allowTransparency=true;</script><![endif]--><script type="text/javascript">_qoptions={qacct:"p-19UtqE8ngoZbM"};</script><script type="text/javascript" src="http://edge.quantserve.com/quant.js"></script><noscript><img src="http://pixel.quantserve.com/pixel/p-19UtqE8ngoZbM.gif" style="display:none; border-width:0px; height:1px; width:1px;" alt=""/></noscript><!-- END TUMBLR CODE --></body>
+</html>
+<!--
+
+
+
+-->
