@@ -95,6 +95,7 @@ W ACID system zawsze musi być w spójnym stanie, a dokonanie zmiany może wymag
 Operacje te ponadto zostają objęte transakcją i zostają aplikowane albo wszystkie, albo żadna.
 W BASE system może być w stanie niespójnym z punktu widzenia aplikacji, a operacje które mają przywrócić tą spójność są wykonywane asynchronicznie.
 
+\label{sec:2-phase-commit}
 Producenci relacyjnych baz danych od dawna już byli świadomi potrzeby partycjonowania danych na wiele węzłów.
 Aby zapewnić semantykę ACID w kontekście rozproszonych transakcji stosuje się technikę 2PC (ang. \emph{2 Phase Commit}).
 Protokół 2PC działa dwustopniowo:

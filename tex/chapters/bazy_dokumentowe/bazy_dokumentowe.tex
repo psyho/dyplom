@@ -119,7 +119,7 @@ Dodatkowo, możliwe jest też wykonywanie operacji \verb+fsync()+ explicite, ora
 W CouchDB każdy dokument posiada numer wersji (\verb+_rev+).
 Każdy numer wersji składa się z liczby, która zwiększa się o jeden za każdym razem gdy dokument zostanie zmieniony, oraz z ciągu znaków, który jest wartością funkcji mieszającej MD5 liczoną z treści dokumentu, jego załączników i flag).
 
-Aktualizując dokument w CouchDB należy podać jego aktualny numer wersji, jeżeli numer ten nie zostanie podany, albo jeżeli będzie inny niż najnowszy, to aktualizacja zostanie odrzucona.
+Aktualizując dokument w CouchDB należy podać jego aktualny numer wersji, jeżeli numer ten nie zostanie podany, albo jeżeli będzie inny niż najnowszy, to aktualizacja zostanie odrzucona (mechanizm ten jest nazywany MVCC - \emph{Multiversion Concurrency Control}).
 
 Jeżeli dokument zostanie zmieniony na dwa różne sposoby na dwóch różnych serwerach\footnote{Albo w dwóch różnych bazach na tym samym serwerze.} to wykrywane zostaje to w czasie replikacji.
 W przypadku wystąpienia kilku konkurujących ze sobą wersji dokumentu, w sposób deterministyczny jedna z nich zostaje oznaczona jako aktualna, a równocześnie wszystkie pozostałe wersje są zapisywane i dokument jest oznaczany jako pozostający w konflikcie.
@@ -207,7 +207,7 @@ Nie należy się spodziewać także, że CouchDB kiedykolwiek będzie systemem, 
 \subsection*{Dokumentacja i wsparcie}
 
 CouchDB należy do jednych z najlepiej udokumentowanych systemów spośród opisywanych w tej pracy.
-Dostępnych jest bardzo wiele prezentacji wideo, artykułów i porównań z innymi systemami, a także kilka książek, z których jedna: ,,CouchDB: The Definitive Guide'' jest dostępna on-line i za darmo i stanowi doskonałe wprowadzenie w wiele z zagadnień dotyczących tego systemu.
+Dostępnych jest bardzo wiele prezentacji wideo, artykułów i porównań z innymi systemami, a także kilka książek, z których jedna: \cite{couchdb-guide} jest dostępna on-line i za darmo i stanowi doskonałe wprowadzenie w wiele z zagadnień dotyczących tego systemu.
 
 CouchDB jest bardzo popularnym projektem, co widać po liczbie różnych bibliotek i narzędzi wykorzystujących i przeznaczonych dla tej bazy.
 
@@ -233,24 +233,221 @@ Poniżej zamieszczono kilka odnośników do stron WWW związanych z CouchDB.
 
 \subsection*{Wstęp} 
 
+MongoDB jest jednym z najszybciej zyskujących na popularności systemów NoSQL.
+Zawdzięcza to niewątpliwie bogatemu zestawowi funkcjonalności oraz prostemu modelowi programowania, który sprawia, że programiści zaznajomieni z relacyjnym bazami danych, a szczególnie z bibliotekami ORM dla tych baz, mogą bez większego wysiłku zacząć używać MongoDB w swoich aplikacjach.
+
+MongoDB, podobnie jak CouchDB, jest dokumentową bazą danych.
+Baza ta powstała z myślą o aplikacjach internetowych średniej skali, ale ponieważ w odróżnieniu od wielu innych systemów NoSQL, użycie MongoDB nie wymaga wielu poświęceń i trudności, system ten jest popularny także wśród twórców mniejszych aplikacji.
+
+System ten jest udostępniony na licencji Open Source (Affero General Public License dla bazy i Apache License 2.0 dla sterowników).
+Został on upubliczniony w lutym 2009 roku i jest napisany w języku C++.
+
+Baza ta zachęca użytkowników bogatym językiem zapytań i prostotą tworzenia indeksów drugiego poziomu - funkcjonalnościami, których użytkownikom najbardziej brakuje, gdy porzucają relacyjną bazę danych dla systemów NoSQL.
+Dodatkowo, MongoDB posiada funkcjonalności ułatwiające konfigurację replikacji, takie jak Zbiory Replik\footnote{Zbiór kilku węzłów pracujących w konfiguracji master-slave. W razie awarii węzła master, nowy master jest wybierany spośród pozostałych replik automatycznie. Patrz dalej.}, a także możliwość automatycznej konfiguracji horyzontalnego partycjonowania danych.
+
+Twórcy tej bazy bardzo duży nacisk położyli na wydajność, uzyskując imponujące efekty.
+Jednak wiele domyślnych ustawień tej bazy sprawia, że jest ona krytykowana za zbyt frywolne podejście do trwałości danych.
+
 \subsection*{Protokół komunikacji}
+
+MongoDB posługuje się własnym, binarnym protokołem komunikacji, używającym formatu BSON (\emph{Binary JSON}).
+Format ten pod bardzo wieloma względami przypomina JSON.
+Formaty te różnią się między sobą głównie tym, że JSON jest formatem tekstowym, podczas gdy BSON jest formatem binarnym (dzięki czemu ten sam dokument czy struktura obiektów przeważnie zajmuje mniej bajtów w formacie BSON), oraz to że BSON posiada wsparcie dla kilku typów danych, których JSON nie wspiera, takich jak daty, symbole\footnote{Na potrzeby języków, które rozróżniają symbole i ciągi znaków, np. Ruby.}, wyrażenia regularne i wartości binarne.
+
+MongoDB posiada wspierane przez twórców tego systemu sterowniki (biblioteki do komunikacji z bazą) dla 11 popularnych języków programowania, oraz ponad drugie tyle sterowników stworzonych przez użytkowników.
+Do tej drugiej grupy zaliczany jest serwer HTTP, który udostępnia interfejs REST dla MongoDB, tym samym umożliwiając komunikację z tą bazą nie wspieranym językom programowania.
+
+Swojej popularności MongoDB zawdzięcza mnogość różnego rodzaju bibliotek wyższego poziomu, bardzo podobnych do bibliotek ORM dostępnych dla relacyjnych baz danych.
 
 \subsection*{Replikacja}
 
+MongoDB wspiera kilka opcji konfiguracji replikacji, w tym master-slave i master-master\footnote{Dokumentacja MongoDB odradza używania tego trybu w środowisku produkcyjnym.}.
+Najważniejszą i zalecaną opcją konfiguracji są Zbiory Replik.
+
+\subsubsection*{Zbiory Replik}
+
+Zbiorem Replik (ang. \emph{Replica Set}) nazywamy zbiór kilku węzłów, z których każdy posiada replikę tych samych danych.
+Z pośród tych węzłów jeden jest wybierany jako węzeł master, podczas gdy pozostałe pełnią rolę serwerów slave.
+Master jest jedynym spośród węzłów w zbiorze, który może wykonywać operacje modyfikujące stan bazy.
+Wszystkie węzły slave mogą dokonywać odczytów.
+Wielu członków zbioru może rezydować na jednym fizycznym węźle systemu i najczęściej tak właśnie zbiory replik są skonfigurowane w rzeczywistości.
+W dalszej części tej sekcji zarówno ,,członek zbioru'', jak i ,,węzeł'' odnoszą się właśnie do tych procesów, których może istnieć wiele na jednym węźle fizycznym.
+
+Replikacja w MongoDB odbywa się domyślnie w sposób asynchroniczny, ale przy operacjach modyfikujących możliwe jest przekazanie parametru określającego na ilu węzłach ma być ta operacja wykonana zanim zwróci wynik (odpowiednik parametru W znanego z innych systemów takich jak Riak czy Cassandra).
+Niestety nie ma możliwości ani określenia parametru R przy odczytach, ani zagwarantowania, że zmiany zostaną odwzorowane na dysku zanim operacja zwróci swój wynik.
+
+Węzły utrzymują dziennik replikacji, który pozwala na określenie węzła posiadającego najbardziej aktualne dane.
+Dziennik ten ma ograniczoną długość, dlatego jeżeli któryś z członków zbioru zostanie wyłączony na dłuższy czas, to po powrocie musi on dokonać pełnej synchronizacji, zamiast odtworzenia tylko tych operacji, o których informacji nie otrzymał.
+
+Wybór węzła master jest dokonywany poprzez głosowanie wszystkich osiągalnych węzłów należących do zbioru i może być podjęty tylko przez osiągnięcie absolutnej większości.
+Konfiguracja zbioru replik jest przechowywana jako dokument w bazie (automatycznie replikowany) i poza listą węzłów w zbiorze zawiera także kilka opcji konfiguracyjnych dla każdego członka zbioru.
+
+Jednym z tych parametrów jest ustawienie, które powoduje że dany węzeł nie będzie brał udziału w replikacji, a jedynie w głosowaniu przy wyborze węzła master.
+Nazywamy takie węzły arbitrami.
+Jak łatwo zauważyć, ponieważ do osiągnięcia kworum jest potrzebna więcej niż połowa członków zbioru, to niemożliwe jest stworzenie zbioru replik do którego należałyby tylko dwa węzły i który byłby w stanie przyjmować zapisy nawet w razie podziału sieci, czy awarii jednego z tych węzłów.
+Z tego względu wprowadza się takich ,,wirtualnych'' członków zbioru - arbitrów.
+Dzięki temu w razie wystąpienia podziału sieci, ten węzeł po którego stronie pozostał arbiter, wybierze się jako węzeł master.
+W wypadku gdy arbiter znajduje się na tym samym fizycznym węźle co jeden z dwóch członków zbioru i węzeł ten ulegnie awarii, drugi z węzłów nie zostanie węzłem master bez interwencji operatora.
+
+Innymi dostępnymi parametrami jest na przykład liczba głosów, którymi dysponuje określony węzeł, oraz priorytet węzła.
+Priorytet węzła (aktualnie dostępne wartości to 0 i 1) modyfikuje szanse węzła zostania wybranym węzłem master.
+Jeżeli priorytet węzła jest ustawiony na 0, to nie zostanie on nigdy wybrany, nawet jeżeli nie ma ani jednego innego węzła z wyższym priorytetem.
+
+Inną ciekawą opcją jest opóźnienie replikacji, które pozwala na utrzymywanie replik opóźnionych o pewien czas w stosunku do reszty systemu, co pozwala na traktowanie ich jako kopii zapasowych.
+
 \subsection*{Partycjonowanie}
+
+\missingfigure{MongoDB Auto-Sharding}
+
+W wersji 1.6.0 do MongoDB została dodana funkcjonalność automatycznego partycjonowania danych (ang. \emph{auto-sharding}).
+Dzięki temu, dla wybranych kolekcji dokumentów możliwe jest określenie, że mają one być dzielone na przedziały o określonej wielkości w megabajtach.
+Dokumenty są przydzielane do przedziałów (ang. \emph{chunk}) na podstawie, tzw. ,,klucza partycjonowania'' (ang. \emph{Shard Key}), który może być dowolnym polem dokumentu, albo listą pól.
+Podobnie jak w Google BigTable dokumenty są przechowywane posortowane po kluczu partycjonowania.
+
+W systemie, w którym włączone jest partycjonowanie, występują trzy główne typy węzłów:
+
+\begin{description}
+ \item[Shard] - jest logiczny węzeł, który odpowiada za przechowywanie dokumentów należących do przypisanych mu przedziałów.
+ Najczęściej jest to Zbiór Replik, a nie pojedynczy węzeł.
+ \item[Router] (mongos) - jest to węzeł, który służy jako pośrednik w komunikacji między klientami systemu a poszczególnymi jego węzłami.
+ Router posiada informacje o przydziałach przedziałów do poszczególnych węzłów i w wypadku zapytań dotyczących pojedynczych dokumentów przekazuje je do właściwego węzła, natomiast w wypadku zapytań dotyczących całej kolekcji kontaktuje się on ze wszystkimi węzłami, z którymi trzeba, a następnie odpowiada za zagregowanie wyniku przed przekazaniem go do klienta.
+ Router jest procesem, który zazwyczaj jest uruchomiony na każdym serwerze aplikacyjnym.
+ \item[Serwer konfiguracji] - są to węzły przechowujące całość metadanych związanych z partycjonowaniem.
+ Wykorzystują one własny mechanizm replikacji (stosujący mechanizm \emph{2 Phase Commit}\footnote{patrz strona \pageref{sec:2-phase-commit}.}), który powoduje, że wszystkie serwery konfiguracji posiadają zawsze aktualną wersję metadanych, ale w przypadku awarii jednego z nich, nie możliwa jest ich zmiana, a co za tym idzie nie możliwe jest dzielenie przedziałów, czy przekazywanie ich między węzłami.
+\end{description}
+
+W porównaniu do większości systemów oferujących funkcjonalność automatycznego partycjonowania i replikacji (Riak, Cassandra, HBase a nawet BigCouch), konfiguracja tych funkcjonalności w MongoDB jest dość skomplikowana i podatna na błędy (takie jak wybór złego klucza replikacji czy umieszczenie razem na tym samym fizycznym węźle nie tych procesów co trzeba).
+Z tego względu twórcy MongoDB odradzają wykorzystanie partycjonowania w sytuacjach gdy pojedynczy serwer jest w stanie poradzić sobie z całością danych.
 
 \subsection*{Persystencja}
 
+Trwałość danych najczęściej krytykowaną właściwością MongoDB (na przykład jeden z programistów tworzących CouchDB, Mikeal Rogers wypowiadał się o tym na swoim blogu \cite{mongodb-durability}).
+Domyślnie, wszystkie operacje modyfikujące bazę są całkowicie pozbawione odpowiedzi i wykonywane asynchronicznie.
+Powoduje to, że w warunkach dużego obciążenia istnieje duże ryzyko, że zapytania od jednego klienta zostaną wykonane w niewłaściwej kolejności.
+Niektóre oficjalne sterowniki (np. dla języka Python) udostępniają opcję \verb+safe+, która jeżeli zostanie włączona dla operacji, to operacja tak czeka aż serwer zwróci potwierdzenie (oczywiście nie oznacza to, że dane zostały zapisane na dysku, jedynie że zostały odwzorowane w pamięci serwera).
+
+Pliki bazy są w MongoDB mapowane do pamięci (ang. \emph{memory-mapped}) i co minutę jest wykonywana operacja \verb+fsync()+ zapisująca je trwale na dysku.
+Możliwe jest także wywołanie operacji \verb+fsync()+ przez klienta.
+Od wersji 1.7.5 dostępna jest opcja pozwalająca MongoDB na korzystanie z dziennika transakcji (ang. \emph{write-ahead-log}), pozwalającego na szybkie odtworzenie stanu bazy w wypadku awarii.
+Domyślnie operacje są grupowane i dopisywane do niego co 100ms (ale bez \verb+fsync()+).
+
+Ponieważ pliki MongoDB nie są tworzone przez dopisywanie, możliwe jest aby taki plik został uszkodzony w wypadku np. awarii zasilania.
+MongoDB jest dostarczane z narzędziami, które pozwalają na sprawdzenie i naprawę tych plików.
+
+W związku z wymienionymi powyżej cechami MongoDB, zaleca się aby używać tej bazy przynajmniej w połączeniu z replikacją na inny serwer (zamiast zabezpieczania się przed awariami poprzez zastosowanie macierzy RAID), a jeszcze lepiej - dwa serwery.
+
 \subsection*{Wersjonowanie}
+
+MongoDB nie posiada mechanizmu wersjonowania dokumentów.
+Ponieważ w dokumentowym modelu danych w jednym dokumencie mieści się więcej rekordów, niż w wierszu relacyjnej bazy danych\footnote{Na przykład w relacyjnej bazie danych artykuły na blogu i komentarze byłyby zapisywane w różnych tabelach. Natomiast w MongoDB komentarze byłyby częścią artykułu, który jest dokumentem.}, to w MongoDB dostępnych jest kilka atomowych operacji pozwalających na zmianę dokumentu bez jego całkowitego nadpisywania.
+Pozwalają one między innymi na atomowe dodanie lub usunięcie wartości z tablicy będącej częścią dokumentu (np. dodanie komentarza do artykułu).
+Możliwe jest też ustawianie pojedynczych pół i inkrementowanie wartości liczbowych.
+Ponadto można wykonywać aktualizacje dokumentu, które powodzą się tylko jeżeli określone pola mają pewną wartość.
 
 \subsection*{Wyszukiwanie}
 
+MongoDB w porównaniu do innych systemów NoSQL posiada najbardziej rozbudowany i najbardziej przypominający SQL język zapytań.
+W rzeczy samej, niektórzy\footnote{Jak na przykład Alex Popescu, autor jednego z najpopularniejszych blogów dotyczących tematyki NoSQL \cite{popescu-mongodb-sql}} uważają, że nie wykorzystanie SQL jako języka zapytań w tej bazie jest decyzją marketingową, a nie podyktowaną względami implementacyjnymi.
+
+\subsubsection*{Model danych}
+
+Każda instancja MongoDB może mieć wiele baz danych, a w ramach każdej z tych baz wiele kolekcji, natomiast elementami kolekcji są dokumenty.
+Dokumenty tak jak w CouchDB mogą mieć dowolną strukturę - nawet w obrębie tej samej kolekcji.
+Dokumenty mogą mieć dowolną postać - ograniczeniem jest tylko przypominający JSON format danych BSON, a zatem dokument (który w gruncie rzeczy jest po prostu tablicą asocjacyjną), może mieć pola każdego obsługiwanego przez BSON typu - a zatem także będące tablicami asocjacyjnym, zwykłymi tablicami itd.
+Wielkość dokumentu jest ograniczona do 4MB.
+Zarówno bazy, jak i kolekcje mogą być dynamicznie tworzone przez klientów systemu.
+
+\subsubsection*{Indeksy drugiego poziomu i język zapytań}
+
+Język zapytań w MongoDB jest oparty na formacie JSON - zapytania mają format dokumentów. Przykładowo zapytanie SQL:
+
+\begin{verbatim}
+SELECT * FROM collection WHERE field > value1 AND field < value2;
+\end{verbatim}
+
+W MongoDB ma postać\footnote{Część zapytania będąca argumentem funkcji find() jest niezmienna niezależnie od języka programowania.}:
+
+\begin{verbatim}
+db.collection.find({ "field" : { $gt: value1, $lt: value2 } } );
+\end{verbatim}
+
+Dostępnych jest bardzo wiele różnych operatorów, dzięki czemu można budować bardzo skomplikowane zapytania.
+W zapytaniach mogą występować wszystkie pola, także te, na których nie ma indeksów.
+
+Indeksy drugiego poziomu można w MongoDB tworzyć zarówno na polach dokumentu, jak i na polach zawartych w nim rekordów (na przykład jeżeli dokument/artykuł na blogu zawiera komentarze w tablicy zapisanej w polu comments, a komentarze mają autora, to możliwe jest indeksowanie dokumentów po autorach ich komentarzy).
+Indeksy mogą też być tworzone na wielu różnych polach równocześnie, a także istnieje specjalny typ indeksu geograficznego (ang. \emph{geospatial}), który pozwala na wyszukiwanie rekordów według ich współrzędnych geograficznych.
+
+Biorąc pod uwagę bogaty język zapytań i możliwość występowania wielu indeksów, oczywiste jest, że MongoDB potrzebuje optymalizatora zapytań.
+W systemie tym działa on jednak inaczej niż optymalizatory znane z relacyjnych baz danych.
+Ze względu na brak możliwości łączenia tabel (kolekcji) w zapytaniach, liczba różnych planów wykonania zapytania jest zazwyczaj ograniczona.
+Korzystając z tej obserwacji, autorzy MongoDB napisali optymalizator, który wykonuje zapytanie we wszystkich możliwych wariantach planu egzekucji i wybiera najszybszy, zapamiętując go na przyszłość.
+Jeżeli system stwierdzi, że czasy wykonania zapytań zaczęły odbiegać od przewidywanych, proces optymalizacji jest ponawiany.
+
+\subsubsection*{MapReduce}
+
+Do wykonywania zapytań podsumowujących w MongoDb dostępny jest mechanizm MapReduce.
+Każda operacja MapReduce przyjmuje jako argumenty funkcje map, reduce i finalize oraz zestaw parametrów, które pozwalają na zawężenie zbioru dokumentów, które zostaną przetworzone.
+Funkcja finalize jest wykonywana po funkcji reduce i służy do przekształcenia wyniku tamtej funkcji (na przykład wyliczenia średniej).
+
 \subsection*{Unikalne cechy}
+
+\subsubsection*{GridFS}
+
+MongoDB pozwala na przechowywanie dużych plików w bazie.
+Są one w sposób przeźroczysty dla użytkownika dzielone na fragmenty (domyślnie o wielkości 256kb), które następnie są zapisywane w bazie.
+Dzięki tej funkcjonalności, pliki zapisane w bazie są replikowane i partycjonowane tak jak wszystkie dokumenty, oraz mogą być strumieniowane przez serwer bez konieczności wczytywania do pamięci więcej niż 4MB\footnote{4MB jest to aktualny limit wielkości dokumentu. Pliki nie mogą być zatem dzielone na większe fragmenty.} naraz.
+
+\subsubsection*{Ograniczone Kolekcje}
+
+Ograniczone kolekcje dokumentów (ang. \emph{Capped Collections}) pozwalają na tworzenie kolekcji, których rozmiar w bajtach jest z góry określony.
+Można także ograniczyć liczbę obiektów w kolekcji, ale niezależnie od tego zawsze konieczne jest określenie maksymalnego rozmiaru w bajtach.
+Kolekcje utworzone w ten sposób są w stanie przechowywać tylko ograniczoną liczbę dokumentów.
+Jeżeli limit wielkości lub liczby dokumentów zostanie przekroczony, to dokumenty dodane najdawniej zostaną usunięte aby zrobić miejsce dla nowych.
+
+Ograniczone kolekcje nie pozwalają na usuwanie dokumentów (można usunąć tylko i wyłącznie wszystkie dokumenty).
+Nie jest też dozwolone modyfikowanie pojedynczych dokumentów w taki sposób aby ich rozmiar się zwiększył.
+
+Ten rodzaj kolekcji nadaje się bardzo dobrze do przechowywania logów czy cache aplikacji.
 
 \subsection*{Typowe zastosowania}
 
+MongoDB należy do jednych z najszybszych systemów NoSQL pod względem opóźnienia dla pojedynczego zapytania.
+Sprawia to, że system ten bardzo dobrze nadaje się do wszelkiego rodzaju zastosowań, gdzie dane nie są zbyt cenne, ale są dodawane w bardzo szybkim tempie - na przykład jako baza danych dla serwera logów, albo aplikacji typu Google Analytics.
+
+Twórcy MongoDB promują ten system jako substytut relacyjnych baz danych na potrzeby aplikacji internetowych - nie tylko tych dużych ale także średnich i małych.
+Kładą oni nacisk na takie zalety tego systemu jak szybkość działania, brak sztywnego schematu danych, bogaty język zapytań, łatwa replikacja i wsparcie dla automatycznego partycjonowania danych.
+Warto jednak pamiętać, że system ten zapewnia równocześnie trwałość danych i dostępność dopiero przy zastosowaniu trzech węzłów, a nawet wtedy nie oferuje on konsystencji\footnote{Dane w MongoDB można uznać za przechowywane trwale tylko jeżeli są replikowane, a zatem każdy zapis musi być dokonywany z przynajmniej parametrem W=2 (posługując się oznaczeniami znanymi z Eventual Consistency), ale przy R zawsze równym 1 i N=3 nie jest możliwe zachowanie silnej konsystencji.}.
+Wydaje się, że skoro na potrzeby małych aplikacji bez problemu wystarczają bazy relacyjne, które są stabilne i sprawdzone ,,od pokoleń'', nierozsądne jest podążanie za modą na systemy NoSQL i adaptowanie MongoDB do aplikacji, które nie zyskują na specyficznych właściwościach tego systemu.
+
+Dla większych aplikacji, które wykorzystują relacyjne bazy danych w połączeniu z replikacją i partycjonowaniem, MongoDB potencjalnie może być dobrym wyborem, oczywiście pod warunkiem że poziom trwałości i konsystencji danych oferowany przez ten system jest wystarczający.
+
 \subsection*{Przeciwwskazania}
+
+MongoDB nie nadaje się do zastosowania w systemach gdzie konsystencja danych i ich trwałość ma duże znaczenie.
+Nie należy on też do systemów oferujących najwyższe gwarancje dostępności.
 
 \subsection*{Dokumentacja i wsparcie}
 
+MongoDB jest niezwykle popularnym systemem, a co za tym idzie jest dostępnych wiele książek, artykułów i prezentacji wideo na temat tej bazy.
+System ten posiada doskonałą dokumentację on-line, a ponadto kilkanaście razy do roku organizowane są jednodniowe konferencje poświęcone tej bazie na wielu kontynentach (Azja, Ameryka Płn., Europa), które pozwalają na lepsze zapoznanie się z różnymi aspektami tej bazy i na porozmawianie bezpośrednio z jej twórcami.
+
+Rozwój MongoDB jest sponsorowany przez firmę 10gen.
+Oferuje ona usługi szkoleń, wsparcia i konsultacji związanych z tym systemem.
+Dostępny jest też hosting MongoDB oferowany przez kilka firm, między innymi MongoHQ i Mongo Machine.
+
+Dostępnych jest wiele bibliotek ułatwiających wykorzystanie MongoDb w aplikacjach.
+
 \subsection*{Pomocne odnośniki}
+
+\subsection*{Pomocne odnośniki}
+
+Poniżej zamieszczono kilka odnośników do stron WWW związanych z MongoDB.
+
+\begin{description}
+ \item [http://www.mongodb.org/] - Strona domowa projektu
+ \item [http://www.10gen.com/] - Strona domowa firmy tworzącej MongoDB
+ \item [http://www.mongodb.org/display/DOCS/Home] - Dokumentacja projektu 
+ \item [http://bsonspec.org/] - Specyfikacja formatu BSON
+ \item [https://github.com/jnunemaker/mongomapper] - MongoMapper, jedna z bibliotek typu ORM dla MongoDB
+ \item [http://oreillynet.com/pub/e/1722] - Prezentacja wideo omawiająca replikację i automatyczne partycjonowanie w MongoDB
+\end{description}
