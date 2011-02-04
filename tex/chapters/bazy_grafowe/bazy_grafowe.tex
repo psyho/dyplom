@@ -1,58 +1,149 @@
 \chapter{Bazy Grafowe}
 
 \section*{Streszczenie}
-W tym rozdziale opisane zostaną dwie bazy grafowe: Neo4J i Infinite Graph.
+W tym rozdziale opisane zostaną dwie bazy grafowe: Neo4J.
 
 \section{Neo4J}
 \label{sec:neo4j}
 
-\subsection*{Wstęp} 
+\subsection*{Wstęp}
+
+Neo4J jest najbardziej znaną i popularną grafową bazą danych.
+Jest to także jeden z najstarszych systemów NoSQL - system ten jest stosowany w środowiskach produkcyjnych od 2003 roku.
+W 2007 roku baza ta została udostępniona publicznie na licencji Open Source (Affero General Public License).
+
+Ponieważ w odróżnieniu od wielu innych systemów Neo4J jest bazą wbudowaną, licencja AGPL sprawia, że oprogramowanie z niej korzystające także musi być udostępnione na tej licencji (chyba że jest to aplikacja do użytku wewnętrznego).
+Dla firm, które chciałyby wykorzystać Neo4J do budowy swoich aplikacji, ale nie chcą udostępniać ich kodu źródłowego, istnieje możliwość wykupienia licencji komercyjnej\footnote{Dostępne są trzy płatne wersje, wszystkie płatne według modelu subskrypcyjnego za każdy serwer. Pierwsza, najtańsza wersja jest za darmo.}.
 
 \subsection*{Protokół komunikacji}
 
-\subsection*{Replikacja}
+Neo4J jest wbudowaną bazą danych, czyli nie wymaga komunikacji sieciowej pomiędzy klientem i serwerem, ponieważ baza jest częścią tego samego procesu, co aplikacja z niej korzystająca.
+Takie rozwiązanie jest bardzo korzystne dla grafowych baz danych, ponieważ dzięki temu możliwe jest implementowanie różnego rodzaju algorytmów trawersujących, które wczytują z bazy wierzchołek po wierzchołku, co nie byłoby praktyczne, gdyby każda taka operacja wiązała się z opóźnieniem związanym z przesyłaniem danych przez sieć.
 
-\subsection*{Partycjonowanie}
+Mankamentem tego rozwiązania jest to, że aplikacje korzystające z Neo4J muszą być uruchamiane w Wirtualnej Maszynie Java (JVM).
+Ponieważ na JVM możliwe jest programowanie w wielu innych językach niż Java (m.in. Groovy, Ruby, Python, JavaScript), to przywiązanie do tej platformy nie jest bardzo poważnym problemem, ale tym niemniej jest to pewne ograniczenie.
 
-\subsection*{Persystencja}
-
-\subsection*{Wersjonowanie}
-
-\subsection*{Wyszukiwanie}
-
-\subsection*{Unikalne cechy}
-
-\subsection*{Typowe zastosowania}
-
-\subsection*{Przeciwwskazania}
-
-\subsection*{Dokumentacja i wsparcie}
-
-\subsection*{Pomocne odnośniki}
-
-\section{Infinite Graph}
-\label{sec:infinite_graph}
-
-\subsection*{Wstęp} 
-
-\subsection*{Protokół komunikacji}
+Poza trybem wbudowanym, dostępne jest też REST API po HTTP.
+Pozwala ono wprawdzie korzystać z Neo4J aplikacjom napisanym na inne platformy niż JVM, ale jest to niewątpliwie mniej efektywne rozwiązanie.
 
 \subsection*{Replikacja}
 
+\missingfigure{Replikacja Neo4J}
+
+Od wersji 1.2 Neo4J posiada możliwość replikacji typu master-slave\footnote{Funkcjonalność ta jest dostępna tylko w wersji Open Source i najdroższej wersji komercyjnej.}.
+Funkcjonalność ta przypomina bardzo Zbiory Replik w MongoDB\footnote{patrz strona \pageref{sec:mongodb-replication}.}, z tą różnicą że Neo4J wykorzystuje Apache Zookeeper\footnote{Jest to system Open Source bardzo przypominający Google Chubby, który został opisany na stronie \pageref{sec:google-chubby}.} do wyboru serwera master, podczas gdy MongoDB wykorzystuje mechanizm głosowania pomiędzy wszystkimi dostępnymi węzłami.
+
+Neo4J jest wbudowaną bazą danych, w związku z tym każdy serwer aplikacyjny jest także repliką bazy danych.
+Fakt że baza jest replikowana pozostaje niewidoczny z punktu widzenia aplikacji.
+W przypadku zapisu, węzeł slave kontaktuje się z serwerem master i czeka aż potwierdzi on zapis danych, a następnie wprowadza modyfikacje lokalnie.
+Przy każdym zapisie zanim operacja zwróci przetwarzanie do klienta, dane są zapisane na przynajmniej dwóch węzłach.
+W ten sposób z punktu widzenia serwera aplikacyjnego zapewniona jest konsystencja na poziomie odczytu własnych zapisów (ang. \emph{ready-your-writes consistency}).
+
+Taka architektura pozwala na skalowanie w zastosowaniach o znacznej przewadze odczytów do liczby zapisów.
+Warto jednak pamiętać, że konfiguracja ta wymaga nieparzystej liczby instancji Zookeeper, czyli zalecane jest wykorzystywanie jej w konfiguracjach od trzech węzłów wzwyż.
+
 \subsection*{Partycjonowanie}
+
+Bardzo trudno jest partycjonować grafowe bazy danych ze względu na ich wysoki stopień powiązania.
+Nawet znalezienie klastrów wysokopowiązanych między sobą wierzchołków, które nadają się do rozproszenia na różne maszyny nie gwarantuje, że nowo utworzone połączenia i wierzchołki nie zaburzą tego stanu, wymuszając tym samym migrację danych między serwerami.
+
+W chwili obecnej Neo4J nie posiada wbudowanego mechanizmu partycjonowania danych.
+Według zapowiedzi twórców tego systemu funkcjonalność taka ma się pojawić w wersji 2.0, której data wydania nie jest jeszcze znana.
 
 \subsection*{Persystencja}
 
+Dokumentacja Neo4J nie zagłębia się w szczegóły persystencji w tym systemie.
+Na podstawie faktu, że baza ta jest transakcyjna i że przerwane przez awarię transakcje są odtwarzane na podstawie dziennika transakcji, można wnioskować że najprawdopodobniej zmiany w bazie są trwale zapisywane na dysku po zakończeniu transakcji.
+
 \subsection*{Wersjonowanie}
+
+W Neo4J wszystkie zmiany w grafie muszą być objęte transakcją.
+Domyślnie, poziom izolacji transakcji zapewnia, że zmiany dokonane w jej obrębie nie będą widoczne dla innych równoległych transakcji aż zostanie ona poprawnie zakończona.
+Oznacza to, że długotrwała operacja trawersowania grafu może obserwować zmiany w grafie, które zostały dokonane po jej rozpoczęciu.
+Istnieje możliwość ustawienia także wyższego poziomu izolacji, ale jest to kosztowne.
+
+Neo4J nie obsługuje wersjonowania węzłów ani krawędzi.
 
 \subsection*{Wyszukiwanie}
 
+Neo4J jako baza grafowa koncentruje się przede wszystkim na ułatwieniu operacji trawersowania grafu i realizacji algorytmów grafowych, ale aby ułatwić korzystanie z tej bazy jej twórcy dodali także pewne udogodnienia pozwalające na wyszukiwanie wierzchołków i krawędzi na podstawie ich właściwości.
+
+\subsubsection*{Model Danych}
+
+Neo4J służy do przechowywania skierowanych grafów, gdzie każdy wierzchołek i każda krawędź mogą być opisane zestawem właściwości.
+Zarówno węzły, jak i krawędzie mają unikalne identyfikatory, które mogą być użyte do ich wczytania z bazy.
+Modelowanie symetrycznych relacji odbywa się poprzez dodanie dwóch przeciwnie skierowanych krawędzi między wierzchołkami.
+
+\subsubsection*{Traversal API}
+
+Podstawowym mechanizmem wyszukiwania w grafie jest API Trawersowania (ang. \emph{Traversal API}).
+Umożliwia ono deklaratywne określanie parametrów wyszukiwania w grafie, takich jak w jaki sposób wybierać krawędzie i węzły do przejścia, które węzły zwrócić, do jakiej głębokości przeszukiwać graf i czy przechodzić po nim używając algorytmu DFS czy BFS\footnote{\emph{Depth First Search} czy \emph{Breadth First Search}.}.
+
+Takie trawersowanie grafu jest bardzo szybkie, bo wczytuje właściwości węzłów tylko wtedy, gdy jest to konieczne.
+Ponadto, użytkownikowi zwracany jest iterator, a nie kompletna lista wyników, co zmniejsza wymagania pamięciowe takiego przeszukiwania.
+
+\subsubsection*{Indexer}
+
+Dla ułatwienia wyszukiwania węzłów i krawędzi, których właściwości spełniają pewne kryteria, Neo4J zostało zintegrowane z Apache Lucene.
+Dzięki temu, możliwe jest nie tylko wyszukiwanie pełnotekstowe, ale także wyszukiwanie po wartościach właściwości z wykorzystaniem operatorów logicznych (NOT, AND, OR) oraz podając zakresy wartości.
+
+\subsubsection*{Neo4J Spatial}
+
+Struktura danych składająca się z wierzchołków, skierowanych krawędzi i właściwości nadaje się do reprezentowania bardzo wielu różnych struktur danych.
+Przykładem tego jest dodatek do Neo4J pozwalający na przechowywanie w grafie indeksu geograficznego, pozwalającego między innymi na wyszukiwanie wierzchołków i krawędzi w określonej odległości od punktu o podanych współrzędnych oraz na wyszukiwanie najbliższych sąsiadów.
+
+\subsubsection*{Standardowe języki zapytań}
+
+Poza API specyficznym dla Neo4J, istnieją jeszcze inne możliwe sposoby pracy z tą bazą.
+Jednym z nich jest zestaw narzędzi przeznaczonych dla grafowych baz danych TinkerPop.
+Do tego zestawu należy między innymi Blueprints API, czyli uniwersalny interfejs pozwalający na tworzenie struktury grafu obsługujący kilka różnych baz grafowych.
+Innym projektem należącym do tej grupy jest Gremlin, określany czasem jako ,,PERL dla grafowych baz danych''.
+Jest to język programowania, oparty na języku Groovy, który pozwala na wykorzystywanie specjalnych wyrażeń (przypominających nieco XPath) do trawersowania grafu.
+
+\subsubsection*{Inne ciekawe dodatki}
+
+Dla wygody użytkownika, istnieje kilka algorytmów i struktur danych zaimplementowanych w oparciu o Neo4J.
+Do algorytmów należą algorytmy wyszukiwania najkrótszej ścieżki w grafie ($A*$ i $Dijkstra$), a do struktur danych należy między innymi drzewo $B-tree$.
+
 \subsection*{Unikalne cechy}
+
+W odróżnieniu od innych systemów opisanych w tej pracy Neo4J implementuje interfejs pozwalający na masową zmianę struktury danych (migracje).
+Jest to alternatywna dla stosowanego w innych systemach podejścia polegającego na obsłudze wielu wersji danych w kodzie aplikacji.
 
 \subsection*{Typowe zastosowania}
 
+Neo4J to najbardziej dojrzała i popularna grafowa baza danych.
+Bardzo dużą jej zaletą jest łatwość modelowania nawet bardzo skomplikowanych relacji domenowych, szczególnie w porównaniu z relacyjnymi bazami danych, a także łatwość odwzorowania wielu struktur danych.
+Dodatkową zaletą tej bazy jest prostota wyszukiwania danych przy pomocy dynamicznie tworzonych zapytań zapewniana przez integrację z Lucene.
+
+Neo4J nadaje się bardzo dobrze do zastosowań wymagających rozwiązywania problemów grafowych, takich jak silniki rekomendacji, narzędzia do wykrywania oszustw i wzorców w sieciach, czy też na potrzeby sieci społecznościowych.
+Baza ta może stanowić dobrą alternatywę dla relacyjnych baz danych w zastosowaniach gdzie domena problemu jest skomplikowana, często się zmienia, a zapytania do bazy często łączą więcej niż dwie tabele na raz.
+
 \subsection*{Przeciwwskazania}
+
+Brak partycjonowania w Neo4J sprawia, że choć baza ta skaluje się do miliardów węzłów i krawędzi, to jednak może to nie być wystarczająco dużo dla rozbudowanych grafów.
+Podobnie też nie jest to najlepsze rozwiązanie w przypadku domen, gdzie występują luźne i nieliczne powiązania.
+W przypadku już istniejących systemów, które nie są uruchamiane na platformie Java jedynym rozwiązaniem jest zastosowanie interfejsu REST udostępnianego przez Neo4J, co wiąże się ze zmniejszoną wydajnością i mniejszą przeźroczystością warstwy persystencji.
 
 \subsection*{Dokumentacja i wsparcie}
 
+Neo4J jest wprawdzie dojrzałą bazą danych i prawdopodobnie najpopularniejszym systemem wśród grafowych baz danych, ale tym niemniej nie należy do najlepiej udokumentowanych systemów NoSQL.
+Głównym źródłem wiedzy o Neo4J jest oficjalne wiki projektu, które opisuje głównie aspekty użytkowe bazy, czyli API i możliwości konfiguracji, ale nie poświęca wiele miejsca architekturze tej baz i jej szczegółom implementacyjnym.
+W internecie można znaleźć kilka prezentacji wideo na temat Neo4J, ale ich treść jest praktycznie identyczna.
+Projekt ten też wydaje się rozwijać wolniej niż inne opisywane w tej pracy.
+Prawdopodobnie jest to związane z jego komercyjną naturą.
+
+Neo4J jest rozwijane i wspierane przez szwedzką firmę Neo Technology, podobnie jak inne formy tego typu oferuje ona szkolenia, wsparcie i pomoc w migracji z innych systemów bazodanowych.
+
 \subsection*{Pomocne odnośniki}
+
+Poniżej zamieszczono kilka odnośników do stron WWW związanych z Neo4J:
+
+\begin{description}
+ \item [http://neo4j.org/] - Strona domowa projektu
+ \item [http://components.neo4j.org/] - Dodatkowe komponenty
+ \item [http://www.tinkerpop.com/] - Zestaw narzędzi TinkerPop
+ \item [http://neotechnology.com/] - Strona domowa Neo Technology 
+ \item [http://vimeo.com/9852755 oraz http://vimeo.com/9859000] - Prezentacja wideo na temat Neo4J (najdłuższa, najbardziej rozbudowana z dostępnych wersji)
+ \item [https://github.com/andreasronge/neo4j] - Biblioteka obudowująca Neo4J w JRuby
+\end{description}
