@@ -34,7 +34,7 @@ Istnieją także implementacje CouchDB w innych językach niż Erlang, dzięki c
 
 \subsection*{Replikacja}
 
-\missingfigure{Replikacja CouchDB}
+\myfigure{chapters/bazy_dokumentowe/couchdb-replikacja.png}{Replikacja CouchDB}{fig:couchdb-replikacja}
 
 Jednym z najciekawszych możliwych zastosowań CouchDB jest tworzenie aplikacji rozproszonych, w których baza danych jest zainstalowana na tym samym komputerze co aplikacja kliencka i synchronizuje się z bazą na centralnym serwerze, dzięki czemu można zapewnić działanie takiego systemu nawet w przypadku braku połączenia z siecią, a także ograniczyć opóźnienia postrzegane przez użytkownika.
 Aby umożliwić tworzenie aplikacji według tego wzorca, konieczne jest aby baza umożliwiała dwukierunkową replikację jedynie części zbioru danych, najlepiej w połączeniu z systemem kontroli dostępu, tak aby użytkownicy nie mogli nawzajem pobierać swoich danych.
@@ -298,7 +298,7 @@ Inną ciekawą opcją jest opóźnienie replikacji, które pozwala na utrzymywan
 
 \subsection*{Partycjonowanie}
 
-\missingfigure{MongoDB Auto-Sharding}
+\myfigure{chapters/bazy_dokumentowe/mongodb-sharding.png}{MongoDB Automatyczne Partycjonowanie i Replikacja}{fig:mongodb-sharding}
 
 W wersji 1.6.0 do MongoDB została dodana funkcjonalność automatycznego partycjonowania danych (ang. \emph{auto-sharding}).
 Dzięki temu, dla wybranych kolekcji dokumentów możliwe jest określenie, że mają one być dzielone na przedziały o określonej wielkości w megabajtach.
