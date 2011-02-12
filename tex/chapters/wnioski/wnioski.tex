@@ -2,27 +2,221 @@
 
 \section*{Streszczenie}
 
-Tutaj będzie jakieś streszczenie
+W poprzednich rozdziałach opisane zostały różnego rodzaju nierelacyjne bazy danych, a także niektóre wzorce i systemy, które wpłynęły na architekturę tych baz.
+W tej części podsumowane zostaną podobieństwa między tymi systemami oraz techniki, które w nich zostały wykorzystane. 
 
-\section{Techniki wykorzystywane przez systemy NoSQL}
+\section{Replikacja}
 
-\subsection*{Replikacja}
-\subsubsection*{Replikacja Master-Slave}
-\subsubsection*{Replikacja Master-Slave z automatycznym wyborem serwera Master}
-\subsubsection*{Replikacja Master-Master}
+W dzisiejszych czasach system bazodanowy nie ma prawa posługiwać się tą nazwą jeżeli nie wspiera replikacji, a zatem każdy z systemów opisanych w tej pracy wspiera tą funkcjonalność w jednej lub więcej z jej odmian.
 
-\subsection*{Partycjonowanie}
-\subsubsection*{Consistent Hashing}
-\subsubsection*{Podział na Fragmenty}
+Współczesne systemy rozproszone coraz częściej wykorzystują replikację aby zapewnić trwałość danych przy zachowaniu akceptowalnej wydajności.
+Alternatywą dla takiego podejścia jest stosowanie macierzy RAID z pamięcią cache, która jest podtrzymywana przy pomocy baterii.
+To drugie podejście wprawdzie pozwala na redundantne przechowywanie danych, ale w wypadku awarii serwera, w którym ta macierz jest umieszczona, system bazujący na tym rozwiązaniu utraci dostęp do tej części danych, a jej przywrócenie wymaga interwencji człowieka.
 
-\subsection*{Wersjonowanie}
-\subsubsection*{Zegary Wektorowe}
-\subsubsection*{Znaczniki czasowe}
-\subsubsection*{Transakcje}
-\subsubsection*{Atomowe operacje}
+Wykorzystanie replikacji w celu zapewnienia trwałości danych pozwala na zachowanie dostępności systemu w razie awarii jednego z węzłów.
+Oczywiście stopień trwałości danych w przypadku awarii dużej skali zależy od mechanizmu i konfiguracji persystencji - systemy, które zapisują dane na dysk co minutę, nigdy nie będą w stanie zapewnić pełnej trwałości danych\footnote{Zapewnienie pełnej trwałości danych jest problemem dużo bardziej skomplikowanym i zależy od wielu innych czynników poza tym, jak często dane są zapisywane na dysk}, ale system, który jest w stanie dokonywać replikacji pomiędzy centrami danych, na pewno będzie bardziej odporny na utratę danych niż system, który bazuje tylko na macierzach RAID.
 
-\subsection*{Wyszukiwanie rekordów}
+Pomijając jednak to zastosowanie replikacji, jest ona stosowana przede wszystkim aby umożliwić rozłożenie obciążenia systemu między wiele węzłów.
+Konfiguracje opierające się na architekturze Master-Slave są w stanie w ten sposób podzielić odczyty między wszystkie zaangażowane węzły, podczas gdy zapisy są obsługiwane tylko przez jeden z serwerów.
+Konfiguracja Master-Master pozwala na rozłożenie zarówno odczytów, jak i zapisów na wiele serwerów, ale odbywa się to kosztem albo dostępności, albo konsystencji systemu.
 
-\section{Możliwe zastosowania systemów NoSQL}
+\subsection*{Replikacja Master-Slave}
 
-\subsection*{Argumenty przeciw systemom NoSQL}
+Najbardziej prymitywnym wariantem replikacji spośród napotkanych w opisanych w tej pracy systemach jest prosta replikacja Master-Slave.
+Przez pojęcie ,,prosta'' rozumiana jest tu funkcjonalność replikacji, która nie umożliwia konfiguracji tego, czy odbywa się ona synchronicznie czy asynchronicznie (a w szczególności na ilu węzłach zapis musi się powieść aby został uznany za udany), a w wypadku awarii węzła Master, system nie jest w stanie samodzielnie podjąć decyzji o wyborze nowego węzła master.
+
+Systemem, który implementuje replikację w tym wariancie jest Redis, który w obecnej wersji jest wciąż jeszcze systemem praktycznie pozbawionym możliwości skalowania horyzontalnego.
+
+MongoDB posiada wprawdzie od niedawna funkcjonalność Zbiorów Replik, ale ponieważ aktualnie nie można tej funkcjonalności wykorzystywać w połączeniu z autentykacją, to większość użytkowników wykorzystuje starszą funkcjonalność, która nie umożliwia automatycznego wyboru serwera master.
+System ten oferuje jednak szerokie możliwości konfiguracji replikacji, w tym określanie liczby węzłów na których musi zostać wykonany zapis oraz opóźnienie replikacji, które pozwala na tworzenie kopii zapasowych.
+
+\subsection{Replikacja Master-Slave z automatycznym wyborem serwera Master}
+
+Administracja systemem rozproszonym na wiele węzłów może być kosztowna.
+Z tego względu większość systemów, które reklamują się jako horyzontalnie skalowalne, implementuje funkcjonalności, które mają za zadanie ułatwienia życia ich administratorom.
+Przykładem takiej funkcjonalności jest wybór nowego węzła Master w przypadku awarii jego poprzednika.
+
+Systemy opisane w tej pracy realizują tą funkcjonalność na różne sposoby.
+Podstawową różnicą w tym przypadku jest to, czy system dokonuje wyboru nowego wyróżnionego węzła samodzielnie, czy opiera się w tym celu na rozproszonym systemie blokad.
+
+Systemem, w którym wybór węzła master polega na głosowaniu przeprowadzanym pośród wszystkich dostępnych węzłów, jest MongoDB.
+W systemie tym, węzeł master jest wybierany z pośród wszystkich węzłów należących do zbioru replik.
+Jeżeli decyzja nie może być podjęta, gdyż dostępna jest tylko połowa lub mniej węzłów, to dokonywanie zapisów staje się niemożliwe, ale system pozostaje dalej dostępny dla operacji odczytu.
+W przypadku gdy w MongoDB jest wykorzystywana funkcjonalność automatycznego partycjonowania danych, za metadane o systemie odpowiadają tak zwane węzły (a właściwie procesy) konfiguracyjne.
+Aby jakakolwiek zmiana w metadanych została wykonana, wszystkie te węzły muszą być aktywne.
+
+Do systemów wybierających węzeł master automatycznie przy pomocy systemu blokad Apache Zookeeper należą HBase i Neo4J.
+W tym drugim systemie, każdy zapis jest inicjowany przez węzeł lokalny dla aplikacji (ze względu na to, że baza ta jest bazą wbudowaną), a koordynacją wszystkich zapisów zajmuje się węzeł master, który musi potwierdzić każdy zapis aby się on powiódł.
+Neo4J nie obsługuje partycjonowania danych, a zatem jedynym rodzajem wyróżnionego węzła w tym systemie jest węzeł master w replikacji.
+
+W przypadku HBase, sytuacja wygląda odmiennie, ponieważ system ten rozdziela odpowiedzialność za serwowanie danych od odpowiedzialności za ich przechowywanie, a także posiada dodatkowy wyróżniony węzeł odpowiadający za metadane całości systemu.
+Zarówno wyróżnione serwery odpowiadające za serwowanie przedziałów rekordów, jak i węzeł master odpowiadający za ogół metadanych systemu są wybierane przy pomocy Apache Zookeeper.
+Na poziomie replikacji, która w HBase jest realizowana przez Hadoop File System, za wybór wyróżnionych węzłów odpowiadających za określony plik odpowiada węzeł NameNode.
+W przypadku awarii tego węzła, cały system ulega awarii.
+
+\subsection*{Replikacja Master-Master}
+
+Wykrycie awarii węzła master i wybór nowego, jest operacją, która może potrwać nawet kilkadziesiąt sekund.
+W wypadku replikacji, oznacza to że system (a przynajmniej ta część danych, za którą odpowiadał ten węzeł) staje się niedostępny do zapisu przez ten czas.
+W niektórych zastosowaniach nawet minutowy przestój systemu może się wiązać ze znacznymi konsekwencjami finansowymi.
+
+W takich przypadkach alternatywą są systemy, gdzie wiele węzłów równocześnie może obsłużyć tą samą operację zapisu, a równocześnie operacje zapisu nie są obsługiwane za każdym razem przez wszystkie węzły\footnote{Jeżeli wszystkie węzły muszą potwierdzić zapis aby się on powiódł, mamy do czynienia z opisywanym już mechanizmem 2PC (ang. \emph{2 Phase Commit}) i niedostępność jednego węzła powoduje niedostępność systemu.}.
+Dzięki takiej redundancji, możliwe jest, aby awaria jednego z węzłów nie miała wpływu na dostępność systemu.
+
+Niestety konsekwencją takiej architektury jest to, że konfliktujące zapisy (np. usunięcie rekordu i jego zmiana) mogą zostać obsłużone równocześnie przez dwa różne węzły,  a dopiero późniejsza synchronizacja doprowadza do wykrycia takiego konfliktu.
+Ponieważ w ogólnym przypadku rozwiązanie takiego konfliktu jest niemożliwe, to zadanie to jest zazwyczaj w takim przypadku przekazywane klientowi bazy.
+
+Wszystkie systemy opisane w tej pracy, które implementują replikację tego typu, nie rozróżniają węzłów na master i slave - wszystkie węzły są w stanie przyjąć operacje zapisu.
+Ten wariant architektury jest czasem nazywany ,,pozbawionym węzła master'' (ang. \emph{masterless design}).
+Oznacza to po prostu, że w systemie nie ma węzłów wyróżnionych.
+Taka architektura systemu stanowi znaczne ułatwienie dla jego administracji - dodając węzeł do systemu wystarczy uruchomić pojedynczy proces i wskazać mu adres jednego z już działających węzłów, a system zajmie się resztą.
+Dla porównania MongoDB posiada pięć rodzajów procesów, które muszą być wystartowane z odpowiednimi parametrami i na właściwych maszynach aby poprawnie skonfigurować system z replikacją i partycjonowaniem.
+
+Systemy opisane w tej pracy, które implementują ten wariant replikacji to Riak, Cassandra i CouchDB.
+Pierwsze dwa z nich są inspirowane Amazon Dynamo, podobnie jak implementujący partycjonowanie wariant CouchDB - BigCouch.
+Z tej grupy jedynie Apache Cassandra nie pozwala na rozwiązywanie konfliktów przez klientów systemu, a jedynie opiera się na znacznikach czasowych.
+
+\section{Partycjonowanie}
+
+Część opisywanych w tej pracy systemów została stworzona z myślą o przechowywaniu ogromnych ilości danych, większych niż można pomieścić na pojedynczym węźle.
+W innych przypadkach ilość danych nie musi być wcale taka duża, ale po prostu ze względów wydajnościowych korzystne jest, aby dane w całości mieściły się w pamięci RAM, więc aby system był w stanie poradzić sobie z typowymi zbiorami danych, konieczne jest aby był on w stanie dzielić te zbiory pomiędzy węzły.
+
+Najprostszym mechanizmem podziału jest określenie liczby partycji z góry, wraz z adresami serwerów za nie odpowiedzialnych.
+Przy zapisie bądź odczycie rekordu, na podstawie jego klucza przy pomocy funkcji mieszającej lub operacji modulo ustalany jest serwer który odpowiada za ten klucz.
+
+Ten prymitywny mechanizm nie tylko nie uwzględnia replikacji, ale także utrudnia dodawanie bądź usuwanie węzłów z systemu.
+Jedynym systemem spośród opisanych w tej pracy, który wykorzystuje tego typu mechanizm jest Redis, ale nie jest to funkcja tego systemu, tylko coś co jest zaimplementowane w ramach biblioteki do komunikacji z tą bazą.
+W przyszłości Redis ma wspierać partycjonowanie danych w ramach Redis Cluster\footnote{patrz strona \pageref{sec:redis-cluster}.}.
+
+Poza Redisem, jedynym systemem który nie obsługuje partycjonowania danych jest Neo4J, choć i on ma obsługiwać tą funkcjonalność w przyszłości.
+
+Pozostałe systemy można podzielić na inspirowane algorytmem Consistent Hashing znanym z Amazon Dynamo i inspirowanie podziałem na fragmenty (tablety) znanym z Google BigTable.
+
+\subsection*{Consistent Hashing}
+
+Opisany wcześniej\footnote{patrz strona \pageref{sec:dynamo-consistent-hashing}.} algorytm Consistent Hashing występuje w kilku wariantach.
+Jego prostą wersję implementuje Apache Cassandra, z tą tylko różnicą, że system ten przechowuje klucze w postaci posortowanej, a zatem dodanie czy usunięcie węzła nie jest tak problematyczne.
+
+W wersji rozbudowanej, gdzie cała przestrzeń kluczy jest podzielona na określoną liczbę równej wielkości przedziałów, algorytm ten jest zaimplementowany przez Riak i BigCouch.
+
+Zaletą tego algorytmu jest to, że rekordy są rozdzielane w miarę równomiernie między węzłami systemu.
+Wadą jest to, że dane powiązane ze sobą mogą być rozrzucone po całym systemie, a zatem np. obliczenia MapReduce mogą być zmuszone do przesłania większej ilości danych niż potrzeba byłoby, gdyby przechowywane byłyby one na jednym węźle.
+
+\subsection*{Podział na Fragmenty}
+
+Inną odmianą partycjonowania danych, jest zaczerpnięty z Google BigTable podział na fragmenty (zwane w terminologii BigTable tabletami).
+W tej wersji całość zbioru danych dzielona jest na przedziały (fragmenty).
+Przedziały te są zdefiniowane przy pomocy najmniejszego i największego klucza, który się w nich znajduje i zawierają rekordy posortowane po kluczu partycjonowania.
+Kiedy przedział urośnie na tyle aby przekroczyć pewną skonfigurowaną wartość w megabajtach, to dzielony jest on na połowy.
+Podobnie jeżeli przedział wystarczająco zmaleje, to jest on łączony ze swoim sąsiadem.
+
+Z opisanych w tej pracy systemów podejście takie stosują HBase i MongoDB.
+
+Zaletą tego podejścia jest możliwość lokowania danych nawzajem powiązanych w tych samych przedziałach, co przyspiesza przetwarzanie przedziałów powiązanych danych (odczyt jednej załaduje do pamięci RAM także kilka innych sąsiadujących).
+W porównaniu do Consistent Hashing, ten algorytm podziału danych ma wiele zalet.
+Po pierwsze przedziały są w przybliżeniu tej samej wielkości, więc ich równomierna dystrybucja rzeczywiście oznacza, że wszystkie węzły odpowiadają za taką samą ilość danych (przynajmniej liczoną w megabajtach).
+Ponadto liczba fragmentów łatwo się dostosowuje do ilości danych przechowywanych przez system - potencjalnie system, który zaczyna działanie od kilku węzłów, może być rozbudowywany o kolejne aż osiągnie rozmiar rzędu tysięcy węzłów.
+W przypadku algorytmu inspirowanego przez Amazon Dynamo górną granicą jest skonfigurowana liczba przedziałów, która z kolei w systemach takich jak BigCouch, gdy ustawiona jest na zbyt wysoką może ograniczyć wydajność systemu.
+
+Wadą natomiast jest to, że poprzez wybranie niewłaściwego klucza partycjonowania (np. czasu utworzenia rekordu), możemy sprawić, że większość zapisów będzie trafiać do tego samego przedziału obciążając tym samym nadmiernie jeden węzeł, co z łatwością może doprowadzić do awarii tego węzła i niedostępności systemu.
+
+\section{Wersjonowanie}
+
+Jedną ze wspólnych cech systemów NoSQL jest brak wsparcia dla transakcji obejmujących wiele rekordów.
+Od tej reguły są jednak wyjątki - największym z nich jest Neo4J, które nie tylko obsługuje transakcje ale wymaga używania ich.
+Drugim z wyjątków jest Redis, który wprawdzie nie implementuje prawdziwych transakcji, ale posiada mechanizm grupowania wielu poleceń po stronie klienta, które zostają później wykonane atomowo po stronie serwera.
+Pozwala to wprawdzie na grupowe wykonanie kilku operacji zapisu, ale wykonanie operacji odczytu jest niemożliwe w ramach takiej ,,transakcji'', co do pewnego stopnia ogranicza jej przydatność.
+
+Jednym ze sposobów na ominięcie problemu braku transakcji jest zapewnienie istnienia operacji pozwalających na atomową zmianę klucza.
+Redis implementuje struktury danych, które mogą być w taki sposób modyfikowane a także pozwala na zgrupowanie kilku dowolnych modyfikujących operacji w jedną.
+MongoDB także posiada szereg funkcji pozwalających na dokonywanie prostych modyfikacji dokumentów, takich jak dodanie pola czy dodanie elementu do tablicy.
+W przypadku kolumnowych baz danych (Cassandra, HBase), możliwe jest wykonywanie operacji na pojedynczych kolumnach, które na poziomie pojedynczego rekordu są aplikowane atomowo.
+
+Systemy, które oferują wysoką dostępność, czyli Riak, Cassandra i CouchDB, muszą także radzić sobie z konfliktami spowodowanymi zmianami wykonanymi na różnych węzłach systemu.
+Riak w tym celu posługuje się mechanizmem zegarów wektorowych, które pozwalają na śledzenie historii zmian rekordu, z dużym prawdopodobieństwem pozwalając na określenie, które różnice są konfliktami, a które oznaczają, że jeden z węzłów ma nieaktualne informacje.
+Nieco inny mechanizm wykorzystuje CouchDB, które dla każdego rekordu przechowuje listę poprzednich numerów wersji, a w wypadku konfliktu w sposób deterministyczny i bez potrzeby udziału więcej niż jednego węzła wyznacza jedną z konfliktujących wersji jako aktualną, umożliwiając też klientowi systemu rozwiązanie konfliktu.
+Najbardziej prymitywny system jest stosowany przez Apache Cassandra, który to system używa znaczników czasowych w celu porównania konfliktujących wersji i zawsze wybiera nowszą pozbawiając klienta możliwości rozwiązania konfliktu.
+Należy jednak zwrócić uwagę, że Cassandra wersjonuje każdą kolumnę rekordu z osobna, więc stosowane w tym systemie rozwiązanie jest w wielu wypadkach zadowalające.
+
+\section{Wyszukiwanie rekordów}
+
+Wyszukiwanie rekordów na podstawie ich właściwości w zbiorze danych, który składa się z wielu milionów a nawet miliardów rekordów nie jest prostym zadaniem.
+Większość systemów opisanych w tej pracy pozwala użytkownikowi na wyszukiwanie rekordów jedynie po ich kluczu głównym, pozostawiając programiście stworzenie indeksów drugiego poziomu i zarządzanie nimi, ale praktycznie każdy z nich posiada pewne ułatwienia związane z wyszukiwaniem.
+
+Redis posiada dużą liczbę struktur danych, które pozwalają na grupowanie rekordów w kolekcje, a operacje na zbiorach pozwalają także na tworzenie prostych indeksów.
+
+Riak bazuje na frameworku MapReduce w celu wyszukiwania węzłów, ale dla dużych zbiorów danych tego typu wyszukiwanie może być zbyt wolne, aby można było wykorzystywać je do wykonywania zapytań on-line.
+Zbudowany na podstawie tego systemu Riak Search pozwala na wyszukiwanie rekordów używając składni zapytań biblioteki Lucene.
+
+Kolumnowe bazy danych nie pozwalają na wyszukiwanie rekordów po dowolnej kolumnie, ale posiadają bogate API do wyszukiwania kolumn wewnątrz jednego wiersza.
+W połączeni z faktem, że kolumny są przechowywane posortowane, pozwala to na tworzenie prostych indeksów drugiego poziomu.
+W najnowszej wersji Apache Cassandra nie jest już nawet konieczne ręczne tworzenie i utrzymywanie tych struktur, gdyż można to zlecić systemowi.
+
+Do budowy bardziej złożonych indeksów w kolumnowych bazach danych możliwe jest wykorzystanie Apache Hadoop, z którym oba opisane w tej pracy systemy są dobrze zintegrowane.
+
+Dokumentowe bazy danych posiadają najbardziej rozbudowane możliwości wyszukiwania rekordów.
+CouchDB posługuje się w tym celu tak zwanymi Widokami, czyli implementacją MapReduce, która zapisuje wyniki działania tych funkcji w drzewie $B-tree$, co pozwala na wyszukiwanie przy pomocy tak zbudowanych indeksów w czasie logarytmicznym względem liczby dokumentów w bazie, a także na szybkie wykonywanie operacji podsumowujących, takich jak zliczanie dokumentów spełniających pewne kryteria.
+Wadą tego podejścia jest to, że wymaga ono stworzenia widoków dla każdego potrzebnego aplikacji rodzaju zapytań, a dodanie takiej funkcji, czy nawet jej zaktualizowanie wymaga dużej ilości czasu na przeliczenie indeksu.
+
+MongoDB posiada zarówno możliwość tworzenia indeksów drugiego poziomu, wyszukiwanie po atrybutach na których nie ma założonego indeksu, a także tworzenie złożonych zapytań.
+Dzięki temu system ten oferuje najwygodniejsze API wyszukiwania spośród wszystkich omawianych.
+Do wad tego rozwiązania należy to, że wszystkie indeksy muszą mieścić się w pamięci operacyjnej, co ogranicza liczbę indeksów jakie można stworzyć.
+Takie ograniczenie, w połączeniu z faktem, że zapytania mogą odwoływać się do atrybutów, które nie posiadają indeksu sprawia, że dla dużych zbiorów danych wyszukiwanie może być wolne.
+
+Neo4J - jedyna opisana w tej pracy baza grafowa, posiada bardzo duże możliwości jeżeli chodzi o odwzorowywanie struktur danych używanych do tworzenia indeksów.
+Dzięki temu, możliwe jest użycie implementacji $B-tree$ czy indeksu geograficznego do wyszukiwania węzłów i krawędzi na podstawie ich właściwości, a do tego wykorzystywanie takich algorytmów jak BFS, DFS czy A*, do wyszukiwania w grafie na podstawie jego struktury.
+Dla wygody użytkownika system ten pozwala także na wykorzystanie Apache Lucene do indeksowania węzłów i krawędzi na podstawie ich właściwości.
+
+\section{Wybór między konsystencją a dostępnością}
+
+Teoria CAP mówi, że system rozproszony może równocześnie zapewniać tylko dwie z trzech gwarancji: konsystencji (ang. \emph{Consistency}), dostępności (ang. \emph{Availability}) i odporności na podział sieci (ang. \emph{Partition tolerance}), ale jak praktyka pokazuje czasem nie są spełnione nawet dwie z nich.
+
+Odporność na podziały sieci jest cechą niezbędną dla dużych systemów rozproszonych.
+W przypadku małych systemów, jej brak oznacza, że system uznaje każdy podział (brak możliwości komunikacji z jednym lub więcej węzłami) za awarię tych węzłów.
+Biorąc pod uwagę, że w systemach rozproszonych na kilku zlokalizowanych w tej samej szafie węzłach ryzyko wystąpienia podziału sieci jest nikłe, to brak odporności na podziały może być akceptowalnym poświęceniem.
+Oczywiście jeżeli podział sieci nastąpi i obie części systemu będą kontynuować działanie przyjmując zapytania odczytu i zapisu, nie tylko zostanie utracona gwarancja konsystencji, ale także po połączeniu rozdzielonych fragmentów sieci system ulegnie awarii i będzie wymagał interwencji administratora aby zaczął działać ponownie.
+
+Spośród opisanych w tej pracy systemów nie ma ani jednego, który nie cechowałby się odpornością na podział sieci.
+
+W przypadku systemu Redis brak funkcjonalności automatycznego wyboru serwera master sprawia, że w wypadku awarii tego węzła system staje się niedostępny dla zapisów.
+W wypadku podziału sieci, węzeł master kontynuuje pracę, zaś węzły slave, które są od niego oddzielone serwują nieaktualne dane.
+Po zlikwidowaniu podziału replikacja jest wznawiana.
+Nawet w sytuacji gdy nie ma jakichkolwiek awarii dane są replikowane asynchronicznie, a zatem system nie zapewnia konsystencji.
+Jak widać, Redis jest systemem odpornym na podziały sieci, ale nie zapewnia ani konsystencji ani dostępności.
+
+Kolejny z opisywanych w tej pracy systemów - Riak, czerpie wiele technik z Amazon Dynamo.
+Wykorzystanie mechanizmów takich jak Hinted Handoff sprawia, że system ten zachowuje dostępność do zapisu nawet w przypadku podziałów sieci i awarii wielu węzłów naraz.
+W przypadku podziału sieci, każdy z fragmentów jest w stanie kontynuować pracę niezależnie, a po ponownym połączeniu mechanizmy zegarów wektorowych, Read Repair i zapobieganie entropii przy pomocy Merkle Tree pozwala na wykrycie konfliktów.
+W sytuacji gdy sieć nie jest podzielona, system ten można skonfigurować tak aby zapewniał gwarancje konsystencji i dostępności równocześnie, także w przypadku awarii pojedynczych węzłów.
+Riak należy do grupy systemów dostępnych i odpornych na podziały sieci (AP).
+
+Apache Cassandra, tak samo jak Riak jest systemem wzorowanym na Amazon Dynamo i wykorzystuje te same techniki (z wyjątkiem zegarów wektorowych), a co za tym idzie także należy do grupy AP.
+
+HBase pod bardzo wieloma względami przypomina Google BigTable.
+W przypadku podziału sieci, jedynie ta partycja która zawiera większość węzłów Apache Zookeeper jest w stanie kontynuować działanie.
+Węzły należące do wszystkich pozostałych części pozostają niedostępne zarówno dla zapisów, jak i dla odczytów aż do zlikwidowania podziału.
+Każdy zapis czeka, aż dane zostaną zreplikowane na wszystkie węzły na których dane te mają się znaleźć.
+W wypadku awarii pojedynczych węzłów ich odpowiedzialność jest automatycznie przekazywana, jedynie awaria węzła NameNode, odpowiedzialnego m.in. za metadane systemu plików HDFS powoduje awarię systemu.
+Powyższe cechy klasyfikują HBase jako system CP: odporny na podziały i konsystentny.
+
+CouchDB jest systemem stworzonym do działania w środowisku gdzie połączenia między węzłami mogą być tracone regularnie.
+W wypadku podziału sieci każdy węzeł zachowuje dostępność do odczytu i zapisu, a po zlikwidowaniu podziału replikacja jest wznawiana i konflikty w danych są wykrywane.
+W CouchDB nie ma możliwości zapewnienia konsystencji danych między węzłami, gdyż replikacja przebiega zawsze w sposób asynchroniczny.
+CouchDB jest zatem systemem z grupy AP.
+
+Implementacja CouchDB wspierająca partycjonowanie danych - BigCouch, podobnie jak CouchDB radzi sobie dobrze z podziałami sieci (chociaż gorzej niż systemy bardziej zbliżone do Amazon Dynamo, ponieważ one implementują takie techniki jaki Hinted Handoff i redukcja entropii, a BigCouch nie).
+W tym systemie w przypadku braku podziałów sieci możliwe jest zapewnienie konsystencji i dostępności w obliczu awarii pojedynczych węzłów.
+Jest to możliwe ponieważ BigCouch pozwala na wykorzystanie parametrów R, W i N do konfiguracji zachowania systemu.
+BigCouch także należy do grupy AP.
+
+MongoDB posiada wiele możliwości konfiguracji, ale w tym kontekście rozważana jest tylko konfiguracja oparta o Zbiory Replik połączona z automatycznym partycjonowaniem danych.
+W tej konfiguracji MongoDB posługuje się mechanizmem głosowania do wyboru węzła master w każdym zbiorze replik.
+Podział sieci powoduje, że część zbiorów replik znajdzie się po jednej ze stron podziału kontynuując normalne działanie, a część zostanie przedzielona.
+Przedzielone zbiory zachowają dostępność do odczytu i zapisu po stronie gdzie jest więcej węzłów, oraz tylko do odczytu po stronie gdzie jest mniej węzłów\footnote{Wbrew pozorom nie oznacza to, że system ten należy do grupy AP. Podział sieci sprawia w tym przypadku, że klienci systemu są w stanie dokonywać jedynie zapisów dotyczących tej części danych, których węzły master należą do tej samej partycji sieci co dany klient.}.
+W przypadku braku podziałów sieci, można skonfigurować MongoDB tak, aby zapewnić konsystencję danych, ale w wypadku awarii pojedynczych węzłów system stanie się niedostępny dla zapisów.
+MongoDB posiada zatem tylko jedną cechę, czyli odporność na podział sieci.
+
+Neo4J, które nie obsługuje partycjonowania danych, nie jest systemem stworzonym do bycia rozpraszanym na bardzo wiele węzłów.
+Wykorzystanie Apache Zookeeper sprawia, że w wypadku podziału sieci część, która nie zawiera większości węzłów Zookeeper stanie się niedostępna dla zapisów\footnote{Dokumentacja Neo4J nie specyfikuje co stanie się jeżeli węzeł straci połączenie z Apache Zookeeper. Wydaje się jednak prawdopodobne, że w takiej sytuacji system zachowuje się tak samo jak HBase i Google BigTable (które także wykorzystują rozproszoną usługę blokad) w analogicznej sytuacji i przestaje być dostępny zarówno dla odczytów jak i zapisów.}, przywrócenie połączenia spowoduje replikację zmian i kontynuację działania systemu.
+Ponieważ Neo4J wykorzystuje asynchroniczną replikację, możliwe jest dokonanie odczytu nieaktualnych danych, ale węzeł który dokonał zmiany zawsze może ją odczytać.
+Cechy te plasują Neo4J w grupie systemów odpornych na partycje i choć nie jest to system silnie konsystentny, to gwarancje konsystencji, które on oferuje są większe niż w przypadku innych nie zapewniających konsystencji systemów.
