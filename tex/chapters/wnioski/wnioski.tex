@@ -114,7 +114,7 @@ Z opisanych w tej pracy systemów podejście takie stosują HBase i MongoDB.
 
 Zaletą tego podejścia jest możliwość lokowania danych nawzajem powiązanych w tych samych przedziałach, co przyspiesza przetwarzanie przedziałów powiązanych danych (odczyt jednej załaduje do pamięci RAM także kilka innych sąsiadujących).
 W porównaniu do Consistent Hashing, ten algorytm podziału danych ma wiele zalet.
-Po pierwsze przedziały są w przybliżeniu tej samej wielkości, więc ich równomierna dystrybucja rzeczywiście oznacza, że wszystkie węzły odpowiadają za taką samą ilość danych (przynajmniej liczoną w megabajtach).
+Po pierwsze, przedziały są w przybliżeniu tej samej wielkości, więc ich równomierna dystrybucja rzeczywiście oznacza, że wszystkie węzły odpowiadają za taką samą ilość danych (przynajmniej liczoną w megabajtach).
 Ponadto liczba fragmentów łatwo się dostosowuje do ilości danych przechowywanych przez system - potencjalnie system, który zaczyna działanie od kilku węzłów, może być rozbudowywany o kolejne aż osiągnie rozmiar rzędu tysięcy węzłów.
 W przypadku algorytmu inspirowanego przez Amazon Dynamo górną granicą jest skonfigurowana liczba przedziałów, która z kolei w systemach takich jak BigCouch, gdy ustawiona jest na zbyt wysoką może ograniczyć wydajność systemu.
 

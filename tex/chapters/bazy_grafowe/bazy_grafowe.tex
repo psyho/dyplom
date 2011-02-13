@@ -1,7 +1,9 @@
 \chapter{Bazy Grafowe}
 
 \section*{Streszczenie}
-W tym rozdziale opisane zostaną dwie bazy grafowe: Neo4J.
+W tym rozdziale opisane zostało Neo4J -- najbardziej znana i dojrzała grafowa baza danych.
+System ten posiada niemalże monopol na rynku grafowych baz danych na licencji Open Source, ale mimo to popularnością znacznie ustępuje większości, jeżeli nie wszystkim opisanym wcześniej systemom NoSQL.
+Prawdopodobnie wiąże się to z licencją tego produktu, która sprawia, że wykorzystanie Neo4J w typowej aplikacji internetowej wiąże się albo z koniecznością kupna licencji, albo z koniecznością udostępnienia kodu aplikacji.
 
 \section{Neo4J}
 \label{sec:neo4j}
@@ -28,7 +30,7 @@ Pozwala ono wprawdzie korzystać z Neo4J aplikacjom napisanym na inne platformy 
 
 \subsection*{Replikacja}
 
-\missingfigure{Replikacja Neo4J}
+\myfigure{chapters/bazy_grafowe/neo4j-replikacja.png}{Neo4J Replikacja}{fig:neo4j-replikacja}
 
 Od wersji 1.2 Neo4J posiada możliwość replikacji typu master-slave\footnote{Funkcjonalność ta jest dostępna tylko w wersji Open Source i najdroższej wersji komercyjnej.}.
 Funkcjonalność ta przypomina bardzo Zbiory Replik w MongoDB\footnote{patrz strona \pageref{sec:mongodb-replication}.}, z tą różnicą że Neo4J wykorzystuje Apache Zookeeper\footnote{Jest to system Open Source bardzo przypominający Google Chubby, który został opisany na stronie \pageref{sec:google-chubby}.} do wyboru serwera master, podczas gdy MongoDB wykorzystuje mechanizm głosowania pomiędzy wszystkimi dostępnymi węzłami.
@@ -128,7 +130,7 @@ W przypadku już istniejących systemów, które nie są uruchamiane na platform
 \subsection*{Dokumentacja i wsparcie}
 
 Neo4J jest wprawdzie dojrzałą bazą danych i prawdopodobnie najpopularniejszym systemem wśród grafowych baz danych, ale tym niemniej nie należy do najlepiej udokumentowanych systemów NoSQL.
-Głównym źródłem wiedzy o Neo4J jest oficjalne wiki projektu, które opisuje głównie aspekty użytkowe bazy, czyli API i możliwości konfiguracji, ale nie poświęca wiele miejsca architekturze tej baz i jej szczegółom implementacyjnym.
+Głównym źródłem wiedzy o Neo4J jest oficjalne wiki projektu, które opisuje głównie aspekty użytkowe bazy, czyli API i możliwości konfiguracji, ale nie poświęca wiele miejsca architekturze tej bazy i jej szczegółom implementacyjnym.
 W internecie można znaleźć kilka prezentacji wideo na temat Neo4J, ale ich treść jest praktycznie identyczna.
 Projekt ten też wydaje się rozwijać wolniej niż inne opisywane w tej pracy.
 Prawdopodobnie jest to związane z jego komercyjną naturą.

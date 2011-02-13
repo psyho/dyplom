@@ -2,6 +2,9 @@
 
 \section*{Streszczenie}
 W tym rozdziale opisane zostaną dwie bazy dokumentowe: CouchDB i MongoDB.
+Pierwsza z nich jest jednym z najstarszych i najbardziej znanych systemów NoSQL, druga natomiast jest prawdopodobnie najczęściej wybieranym przez twórców aplikacji internetowych systemem NoSQL.
+Szczególnie wartymi uwagi cechami CouchDB są rozbudowany mechanizm replikacji, pozwalający na tworzenie rozproszonych aplikacji, gdzie każdy klient posiada własną kopię bazy, oraz implementacja MapReduce, która zapisuje wyniki wywołania funkcji \emph{map} i \emph{reduce}, ułatwiając tworzenie indeksów drugiego poziomu.
+MongoDB natomiast cechuje się bardzo rozbudowanym i przyjaznym dla użytkownika API, pozwalającym na łatwe tworzenie indeksów i wyszukiwanie rekordów.
 
 \section{CouchDB}
 \label{sec:couchdb}
@@ -17,7 +20,7 @@ Apache CouchDB jest systemem napisanym w języku Erlang i dostępnym na licencji
 
 \subsection*{Protokół komunikacji}
 
-Głównym interfejsem komunikacji z CouchDB jest REST po HTTP.
+Głównym interfejsem komunikacji z CouchDB jest REST API po HTTP.
 Z jednej strony tego typu interfejs jest zaletą, gdyż jest to prosty protokół, obsługiwany z łatwością w każdym praktycznie języku programowania, a także zastosowanie HTTP umożliwia uzupełnienie CouchDB poprzez zastosowanie serwerów proxy czy load balancerów, których dla tego protokołu jest bardzo wiele.
 Zastosowanie tego protokołu umożliwia wręcz tworzenie aplikacji internetowych, które nie wymagają serwera aplikacyjnego - wystarczy klient w języku JavaScript wykonywany w przeglądarce i baza.
 Wadą wykorzystania HTTP jako protokołu komunikacji jest to, że w porównaniu z binarnymi protokołami transmisji jest dość wolny, gdyż wymaga większej przepustowości i więcej czasu na serializację i deserializację danych.
@@ -37,6 +40,7 @@ Istnieją także implementacje CouchDB w innych językach niż Erlang, dzięki c
 \myfigure{chapters/bazy_dokumentowe/couchdb-replikacja.png}{Replikacja CouchDB}{fig:couchdb-replikacja}
 
 Jednym z najciekawszych możliwych zastosowań CouchDB jest tworzenie aplikacji rozproszonych, w których baza danych jest zainstalowana na tym samym komputerze co aplikacja kliencka i synchronizuje się z bazą na centralnym serwerze, dzięki czemu można zapewnić działanie takiego systemu nawet w przypadku braku połączenia z siecią, a także ograniczyć opóźnienia postrzegane przez użytkownika.
+
 Aby umożliwić tworzenie aplikacji według tego wzorca, konieczne jest aby baza umożliwiała dwukierunkową replikację jedynie części zbioru danych, najlepiej w połączeniu z systemem kontroli dostępu, tak aby użytkownicy nie mogli nawzajem pobierać swoich danych.
 Ponadto potrzebne jest aby system pozwalał na utrzymywanie wielu równoległych połączeń o małej aktywności równocześnie, ponieważ w takiej rozproszonej architekturze każdy klient nawiązuje połączenie z centralnym serwerem na cały czas trwania sesji.
 
@@ -105,7 +109,7 @@ Ponieważ w praktyce węzły pośrednie są buforowane w pamięci, bardzo częst
 
 Struktury danych CouchDB są zapisywane na dysku jedynie przez dopisywanie na koniec pliku.
 Dzięki temu, w razie awarii, po ponownym uruchomieniu systemu, nie jest konieczne wykonywanie czasochłonnego sprawdzania plików z danymi - system jest gotów do działania praktycznie natychmiast.
-Warto także zwrócić uwagę, że plik ten nie jest dziennikiem transakcji (jak np. w Google BigTable) - jest to zapisane na dysku $B^+-tree$.
+Warto także zwrócić uwagę, że plik ten nie jest dziennikiem transakcji (jak np. w Google BigTable), tylko jest to zapisane na dysku $B^+-tree$.
 
 Wadą dopisywania na koniec pliku jest to, że pliki z danymi CouchDB potrafią urosnąć do bardzo dużych rozmiarów w stosunku do liczby dokumentów w bazie.
 Aby temu zaradzić możliwe jest upakowanie tych plików (ang. \emph{compaction}), ale operacja ta w przypadku bardzo obciążonych serwerów, gdy dodawanie zmian do nowego pliku nie nadąża za dodawaniem ich do oryginalnego pliku, może się nigdy nie skończyć.
@@ -117,7 +121,7 @@ Dodatkowo, możliwe jest też wykonywanie operacji \verb+fsync()+ explicite, ora
 \subsection*{Wersjonowanie}
 
 W CouchDB każdy dokument posiada numer wersji (\verb+_rev+).
-Każdy numer wersji składa się z liczby, która zwiększa się o jeden za każdym razem gdy dokument zostanie zmieniony, oraz z ciągu znaków, który jest wartością funkcji mieszającej MD5 liczoną z treści dokumentu, jego załączników i flag).
+Każdy numer wersji składa się z liczby, która zwiększa się o jeden za każdym razem gdy dokument zostanie zmieniony, oraz z ciągu znaków, który jest wartością funkcji mieszającej MD5 liczoną z treści dokumentu, jego załączników i flag.
 
 Aktualizując dokument w CouchDB należy podać jego aktualny numer wersji, jeżeli numer ten nie zostanie podany, albo jeżeli będzie inny niż najnowszy, to aktualizacja zostanie odrzucona (mechanizm ten jest nazywany MVCC - \emph{Multiversion Concurrency Control}).
 
@@ -342,7 +346,7 @@ W związku z wymienionymi powyżej cechami MongoDB, zaleca się aby używać tej
 MongoDB nie posiada mechanizmu wersjonowania dokumentów.
 Ponieważ w dokumentowym modelu danych w jednym dokumencie mieści się więcej rekordów, niż w wierszu relacyjnej bazy danych\footnote{Na przykład w relacyjnej bazie danych artykuły na blogu i komentarze byłyby zapisywane w różnych tabelach. Natomiast w MongoDB komentarze byłyby częścią artykułu, który jest dokumentem.}, to w MongoDB dostępnych jest kilka atomowych operacji pozwalających na zmianę dokumentu bez jego całkowitego nadpisywania.
 Pozwalają one między innymi na atomowe dodanie lub usunięcie wartości z tablicy będącej częścią dokumentu (np. dodanie komentarza do artykułu).
-Możliwe jest też ustawianie pojedynczych pół i inkrementowanie wartości liczbowych.
+Możliwe jest też ustawianie pojedynczych pól i inkrementowanie wartości liczbowych.
 Ponadto można wykonywać aktualizacje dokumentu, które powodzą się tylko jeżeli określone pola mają pewną wartość.
 
 \subsection*{Wyszukiwanie}
@@ -386,7 +390,7 @@ Jeżeli system stwierdzi, że czasy wykonania zapytań zaczęły odbiegać od pr
 
 \subsubsection*{MapReduce}
 
-Do wykonywania zapytań podsumowujących w MongoDb dostępny jest mechanizm MapReduce.
+Do wykonywania zapytań podsumowujących w MongoDB dostępny jest mechanizm MapReduce.
 Każda operacja MapReduce przyjmuje jako argumenty funkcje map, reduce i finalize oraz zestaw parametrów, które pozwalają na zawężenie zbioru dokumentów, które zostaną przetworzone.
 Funkcja finalize jest wykonywana po funkcji reduce i służy do przekształcenia wyniku tamtej funkcji (na przykład wyliczenia średniej).
 
@@ -395,7 +399,7 @@ Funkcja finalize jest wykonywana po funkcji reduce i służy do przekształcenia
 \subsubsection*{GridFS}
 
 MongoDB pozwala na przechowywanie dużych plików w bazie.
-Są one w sposób przeźroczysty dla użytkownika dzielone na fragmenty (domyślnie o wielkości 256kb), które następnie są zapisywane w bazie.
+Są one w sposób przeźroczysty dla użytkownika dzielone na fragmenty (domyślnie o wielkości 256kb), które następnie są zapisywane w bazie jak dokumenty.
 Dzięki tej funkcjonalności, pliki zapisane w bazie są replikowane i partycjonowane tak jak wszystkie dokumenty, oraz mogą być strumieniowane przez serwer bez konieczności wczytywania do pamięci więcej niż 4MB\footnote{4MB jest to aktualny limit wielkości dokumentu. Pliki nie mogą być zatem dzielone na większe fragmenty.} naraz.
 
 \subsubsection*{Ograniczone Kolekcje}
@@ -436,9 +440,7 @@ Rozwój MongoDB jest sponsorowany przez firmę 10gen.
 Oferuje ona usługi szkoleń, wsparcia i konsultacji związanych z tym systemem.
 Dostępny jest też hosting MongoDB oferowany przez kilka firm, między innymi MongoHQ i Mongo Machine.
 
-Dostępnych jest wiele bibliotek ułatwiających wykorzystanie MongoDb w aplikacjach.
-
-\subsection*{Pomocne odnośniki}
+Dostępnych jest wiele bibliotek ułatwiających wykorzystanie MongoDB w aplikacjach.
 
 \subsection*{Pomocne odnośniki}
 
