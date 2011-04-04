@@ -1,9 +1,9 @@
 \chapter{Definicja Problemu}
 
 \section*{Streszczenie}
-W poniższym rozdziale zostanie zaprezentowany problem, który usiłują rozwiązać systemy opisane w niniejszej pracy.
-Przedstawione zostaną sposoby skalowania aplikacji przy zastosowaniu relacyjnych baz danych.
-Opisane zostanie także pojęcie NoSQL i jakie problemy próbuje ten ruch rozwiązać.
+Poniższy rozdział prezentuje problem, który usiłują rozwiązać systemy opisane w niniejszej pracy.
+Przedstawione zostały sposoby skalowania aplikacji przy zastosowaniu relacyjnych baz danych.
+Opisane zostały także pojęcie NoSQL i jakie problemy próbuje ten ruch rozwiązać.
 
 \section{Wstęp}
 Popularyzacja dostępu do internetu przyczyniła się w ostatnich latach do  powstania licznych serwisów, które mogą się pochwalić dziesiątkami, a nawet setkami milionów odwiedzin dziennie. 
@@ -46,7 +46,7 @@ Wymaga to dodatkowej pracy ze strony programisty \cite{zaitsev-scaling-mysql}.
 Kiedy oczywiste staje się, że nasz serwer nie jest w stanie sobie poradzić z obciążeniem wynikającym z zapisów, mamy dwie drogi do wyboru: wymienić maszynę na mocniejszą, albo zacząć przetrzymywać tylko część danych na pojedynczym serwerze.
 Pierwsza opcja, nazywana \emph{skalowaniem wzwyż}, ma pewne zalety: nie wymaga zmian w aplikacji i jej nie komplikuje.
 Wadą tego rozwiązania jest jednak cena w porównaniu do możliwości.
-Cytując za artykułem na blogu \emph{Coding Horror} \cite{codinghorror-scaling-up-vs-out}: za cenę stu tysięcy dolarów możemy albo kupić jeden potężny serwer z 32 procesorami, 512GB RAM i 4TB przestrzeni dyskowej, albo 83 mniejsze serwery posiadające łącznie 332 rdzenie, 664GB RAM i 40,5TB przestrzeni dyskowej.
+Cytując za artykułem na blogu \emph{Coding Horror} \cite{codinghorror-scaling-up-vs-out}: za cenę stu tysięcy dolarów możemy albo kupić jeden potężny serwer (przedstawiony na rysunku \ref{fig:superkomputer}) z 32 procesorami, 512GB RAM i 4TB przestrzeni dyskowej, albo 83 mniejsze serwery posiadające łącznie 332 rdzenie, 664GB RAM i 40,5TB przestrzeni dyskowej.
 Oczywiście nie można w ten sposób skalować aplikacji wzwyż w nieskończoność, ale warto pamiętać, że tylko nieliczne strony mogą konkurować rozmiarami z takimi gigantami jak Facebook.
 Większość aplikacji nigdy nie wyrośnie ponad rozmiar, w którym ,,superkomputer'' nie wystarcza już do utrzymania ich obciążenia.
 
@@ -81,7 +81,7 @@ Kosztowne i trudne są także operacje joinowania pomiędzy serwerami.
 
 Podstawową receptą na przyspieszenie aplikacji internetowych jest cacheowanie.
 Najpopularniejszym rozwiązaniem stosowanym do tego celu jest obecnie Memcached.
-Memcached to \emph{darmowy i open source, rozproszony, wysokowydajny system do przechowywania obiektów w pamięci, ogólnego zastosowania ale przeznaczony do przyspieszania dynamicznych aplikacji internetowych przez zmniejszenie obciążenia bazy danych}\footnote{ang. Free \& open source, high-performance, distributed memory object caching system, generic in nature, but intended for use in speeding up dynamic web applications by alleviating database load. - http://memcached.org/}.
+Memcached to \emph{darmowy i open source, rozproszony, wysokowydajny system do przechowywania obiektów w pamięci, ogólnego zastosowania, przeznaczony do przyspieszania dynamicznych aplikacji internetowych przez zmniejszenie obciążenia bazy danych}\footnote{ang. Free \& open source, high-performance, distributed memory object caching system, generic in nature, but intended for use in speeding up dynamic web applications by alleviating database load. - http://memcached.org/}.
 Ponieważ serwery Memcached nie komunikują się między sobą bezpośrednio, możemy zwiększać przepustowość systemu liniowo, poprzez dodawanie kolejnych maszyn.
 Stosowanie Memcached w porównaniu do cache bazy danych ma wiele zalet: cache bazy danych jest ograniczony do pojedynczego serwera, czyszczony przy zapisach i ograniczony w tym, co możemy do niego zapisywać.
 Dla porównania nad Memcached mamy o wiele większą kontrolę i większą swobodę co do tego co w nim się znajdzie.
@@ -99,8 +99,8 @@ Innym problemem jest też konieczność dokonywania migracji schematu bazy danyc
 Dodanie kolumny czy indeksu do tabeli zawierającej miliony wierszy czasem trwa nawet godzinami.
 
 Wszystko powyższe wymaga bardzo dużych nakładów pracy na stworzenie i utrzymanie takiego systemu.
-Co więcej, systemy stworzone według tej receptury tracą główne zalety relacyjnych baz danych: rezygnując z łączenia tabel rezygnujemy z relacyjności bazy, zaś wprowadzając shardowanie rezygnujemy z możliwości zadawania zapytań, które dotyczyłyby wszystkich wierszy tabeli.
-W związku z tym, że systemy te są tworzone od zera na własne potrzeby i często są ściśle związane z infrastrukturą i architekturą aplikacji, bardzo problematyczne jest udostępnienie tego kodu na licencji open source.
+Co więcej, systemy stworzone według tej receptury tracą główne zalety relacyjnych baz danych: rezygnując z łączenia tabel rezygnujemy z możliwości zadawania zapytań dotyczących więcej niż jednej tabeli na raz, zaś wprowadzając shardowanie rezygnujemy z możliwości zadawania zapytań, które dotyczyłyby wszystkich wierszy pojedynczej tabeli.
+W związku z tym, że systemy te są tworzone od zera na własne potrzeby i często są ściśle związane z infrastrukturą i architekturą aplikacji, bardzo problematyczne jest udostępnienie kodu na licencji open source.
 W ostatnich latach jednak część z rozwiązań mających na celu zastąpić relacyjne bazy danych w pewnych rozwiązaniach wymagających skalowalności została upubliczniona.
 Noszą one wspólną nazwę systemów NoSQL.
 
@@ -123,4 +123,4 @@ Warto pamiętać, że przeważająca większość tworzonych w dzisiejszych czas
 Dlatego właśnie, chociaż ruch NoSQL kojarzy się przede wszystkim ze skalowalnością, jednym z jego założeń jest dostosowanie systemu bazodanowego do potrzeb konkretnej aplikacji.
 Przykładowo: chociaż w relacyjnej bazie danych można bez większego problemu odwzorować graf, bazy grafowe umożliwiają znacznie efektywniejsze implementacje algorytmów na tej strukturze danych, ponieważ złożoność operacji znalezienia krawędzi wychodzących bądź wchodzących do wierzchołka nie zależy od wielkości całego grafu (w odróżnieniu od bazy relacyjnej).
 
-W dalszej części tej pracy opisane zostały różne rodzaje baz danych -- zarówno takie, które ułatwiają skalowanie aplikacji, jak i takie, które upraszczają różne aspekty modelowania danych. 
+W dalszej części pracy opisane są różne rodzaje baz danych -- zarówno takie, które ułatwiają skalowanie aplikacji, jak i takie, które upraszczają różne aspekty modelowania danych. 
