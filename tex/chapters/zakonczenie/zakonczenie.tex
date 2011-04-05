@@ -6,8 +6,8 @@ Przedstawione zostały także teorie i wzorce, które wpłynęły na architektur
 
 Dostępność nowych, nierelacyjnych systemów baz danych, zebranych pod wspólną nazwą ,,Systemów NoSQL'', zachęca twórców aplikacji do porzucania sprawdzonych przez bardzo wiele lat rozwiązań, którymi są relacyjne bazy danych, na rzecz nowych systemów bazodanowych, które kuszą wizją ,,skalowalności'', ukrywając równocześnie trudności i problemy jakie wiążą się z ich zastosowaniem.
 
-Podjęcie wyboru między relacyjną bazą danych a jednym z systemów NoSQL, a szczególnie wybór jednego z wielu systemów nierelacyjnych jest wyborem bardzo trudnym i wymagającym dobrego zrozumienia tematyki rozproszonych systemów bazodanowych i wymagań biznesowych aplikacji na rzecz której ten wybór jest dokonywany.
-Poniżej zamieszczone zostały przykładowe pytania jakie powinien sobie w takiej sytuacji zadać architekt systemu. 
+Podjęcie wyboru między relacyjną bazą danych a jednym z systemów NoSQL, a szczególnie wybór jednego z wielu systemów nierelacyjnych, jest wyborem bardzo trudnym i wymagającym dobrego zrozumienia tematyki rozproszonych systemów bazodanowych i wymagań biznesowych aplikacji, na rzecz której ten wybór jest dokonywany.
+Poniżej, definiując pewną metodykę postępowania przy wyborze systemu, zamieszczone zostały przykładowe pytania jakie powinien sobie w takiej sytuacji zadać architekt systemu. 
 
 \section*{Przykładowe kryteria wyboru}
 
@@ -26,7 +26,8 @@ Poniżej zamieszczone zostały przykładowe pytania jakie powinien sobie w takie
  Dla niektórych aplikacji, każda minuta niedostępności może wiązać się z poważnymi konsekwencjami finansowymi.
  Do systemów takich należą na przykład systemy wspierające produkcję czy systemy płatności internetowych.
 
- W innych przypadkach czasowe ograniczenie dostępności systemu nie wiąże się z wielkimi kosztami, dlatego bardziej opłaca się minimalizować koszt wytworzenia aplikacji, która byłaby bardziej skomplikowana (a zatem droższa), jeżeli wykorzystywałaby system stawiający na wysoką dostępność (Riak, Cassandra, CouchDB).
+ W innych przypadkach czasowe ograniczenie dostępności systemu nie wiąże się z wielkimi kosztami. 
+ Dlatego bardziej opłaca się minimalizować koszt wytworzenia aplikacji, która byłaby bardziej skomplikowana (a zatem droższa), jeżeli wykorzystywałaby system stawiający na wysoką dostępność (Riak, Cassandra, CouchDB).
 
  \item Czy aplikacja potrzebuje specyficznych funkcjonalności zapewnianych przez system?
 
@@ -35,7 +36,7 @@ Poniżej zamieszczone zostały przykładowe pytania jakie powinien sobie w takie
  Redis z kolei posiada implementacje wielu struktur danych, takich jak zbiory, listy i tablice mieszające.
  Jeszcze bardziej unikalny zestaw funkcjonalności posiada Neo4J, która to baza oferuje niespotykane nigdzie indziej możliwości modelowania domeny aplikacji (graf jest bardzo naturalnym sposobem odwzorowania rzeczywistości), a także umożliwia bardzo efektywną realizację algorytmów grafowych.
 
- Specyficzne potrzeby aplikacji są najlepszym powodem aby wykorzystać bazę danych najbardziej przystającą do wymagań, ale ponieważ każda taka funkcjonalność została dodana pewnym kosztem, to warto się upewnić, że nie ponosi się kosztów zbędnych funkcjonalności systemu.
+ Specyficzne potrzeby aplikacji są znaczącym powodem aby wykorzystać bazę danych najbardziej przystającą do wymagań, ale ponieważ każda taka funkcjonalność została dodana pewnym kosztem, to warto się upewnić, że nie ponosi się kosztów zbędnych dla funkcjonalności systemu.
 
 \end{itemize}
 
@@ -44,5 +45,5 @@ Jak bardzo liczy się opóźnienie?
 Jaki jest stosunek zapisów do odczytów? 
 Czy aplikacja będzie skalowana dynamicznie, czy węzły będą dodawane i usuwane z klastra bardzo rzadko?
 
-Odpowiedź na nie musi być istotną częścią procesu decyzyjnego -- zbyt wiele zespołów tworzących aplikacje internetowe ślepo podążając za modą wybiera jako główne narzędzie persystencji systemy NoSQL takie jak MongoDB, będąc całkowicie pozbawionymi świadomości wad tych systemów i możliwych alternatyw.
-Celem autora było przedstawienie tych alternatyw, ich wad i zalet, oraz informacji, które pozwolą czytelnikowi na łatwiejsze zrozumienie wad i zalet innych systemów, dla których zabrakło tu miejsca.
+Odpowiedź na te pytania musi być istotną częścią procesu decyzyjnego -- zbyt wiele zespołów tworzących aplikacje internetowe ślepo podążając za modą wybiera jako główne narzędzie persystencji systemy NoSQL takie jak MongoDB, będąc całkowicie pozbawionymi świadomości wad tych systemów i możliwych alternatyw.
+Celem autora było przedstawienie tych alternatyw, ich wad i zalet, oraz informacji, które pozwalają na łatwiejsze zrozumienie wad i zalet innych systemów, dla których zabrakło tu miejsca.

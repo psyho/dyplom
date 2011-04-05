@@ -33,7 +33,7 @@ System ten oferuje jednak szerokie możliwości konfiguracji replikacji, w tym o
 \subsection{Replikacja Master-Slave z automatycznym wyborem serwera Master}
 
 Administracja systemem rozproszonym na wiele węzłów może być kosztowna.
-Z tego względu większość systemów, które reklamują się jako horyzontalnie skalowalne, implementuje funkcjonalności, które mają za zadanie ułatwienia życia ich administratorom.
+Z tego względu większość systemów, które uznajemy za horyzontalnie skalowalne, implementuje funkcjonalności, które mają za zadanie ułatwienia życia ich administratorom.
 Przykładem takiej funkcjonalności jest wybór nowego węzła Master w przypadku awarii jego poprzednika.
 
 Systemy opisane w tej pracy realizują tą funkcjonalność na różne sposoby.
@@ -42,7 +42,7 @@ Podstawową różnicą w tym przypadku jest to, czy system dokonuje wyboru noweg
 Systemem, w którym wybór węzła master polega na głosowaniu przeprowadzanym pośród wszystkich dostępnych węzłów, jest MongoDB.
 W systemie tym, węzeł master jest wybierany z pośród wszystkich węzłów należących do zbioru replik.
 Jeżeli decyzja nie może być podjęta, gdyż dostępna jest tylko połowa lub mniej węzłów, to dokonywanie zapisów staje się niemożliwe, ale system pozostaje dalej dostępny dla operacji odczytu.
-W przypadku gdy w MongoDB jest wykorzystywana funkcjonalność automatycznego partycjonowania danych, za metadane o systemie odpowiadają tak zwane węzły (a właściwie procesy) konfiguracyjne.
+W przypadku gdy w MongoDB jest wykorzystywana funkcjonalność automatycznego partycjonowania danych, za metadane systemu odpowiadają tak zwane węzły (a właściwie procesy) konfiguracyjne.
 Aby jakakolwiek zmiana w metadanych została wykonana, wszystkie te węzły muszą być aktywne.
 
 Do systemów wybierających węzeł master automatycznie przy pomocy systemu blokad Apache Zookeeper należą HBase i Neo4J.
@@ -58,9 +58,9 @@ W przypadku awarii tego węzła, cały system ulega awarii.
 
 Wykrycie awarii węzła master i wybór nowego, jest operacją, która może potrwać nawet kilkadziesiąt sekund.
 W wypadku replikacji, oznacza to że system (a przynajmniej ta część danych, za którą odpowiadał ten węzeł) staje się niedostępny do zapisu przez ten czas.
-W niektórych zastosowaniach nawet minutowy przestój systemu może się wiązać ze znacznymi konsekwencjami finansowymi.
+Jednak w niektórych zastosowaniach nawet minutowy przestój systemu może się wiązać ze znacznymi konsekwencjami.
 
-W takich przypadkach alternatywą są systemy, gdzie wiele węzłów równocześnie może obsłużyć tą samą operację zapisu, a równocześnie operacje zapisu nie są obsługiwane za każdym razem przez wszystkie węzły\footnote{Jeżeli wszystkie węzły muszą potwierdzić zapis aby się on powiódł, mamy do czynienia z opisywanym już mechanizmem 2PC (ang. \emph{2 Phase Commit}) i niedostępność jednego węzła powoduje niedostępność systemu.}.
+W takich przypadkach alternatywą są rozwiązania, w których wiele węzłów równocześnie może obsłużyć tą samą operację zapisu, a równocześnie operacje zapisu nie są obsługiwane za każdym razem przez wszystkie węzły\footnote{Jeżeli wszystkie węzły muszą potwierdzić zapis aby się on powiódł, mamy do czynienia z opisywanym już mechanizmem 2PC (ang. \emph{2 Phase Commit}) i niedostępność jednego węzła powoduje niedostępność systemu.}.
 Dzięki takiej redundancji, możliwe jest, aby awaria jednego z węzłów nie miała wpływu na dostępność systemu.
 
 Niestety konsekwencją takiej architektury jest to, że konfliktujące zapisy (np. usunięcie rekordu i jego zmiana) mogą zostać obsłużone równocześnie przez dwa różne węzły,  a dopiero późniejsza synchronizacja doprowadza do wykrycia takiego konfliktu.
@@ -72,25 +72,25 @@ Oznacza to po prostu, że w systemie nie ma węzłów wyróżnionych.
 Taka architektura systemu stanowi znaczne ułatwienie dla jego administracji - dodając węzeł do systemu wystarczy uruchomić pojedynczy proces i wskazać mu adres jednego z już działających węzłów, a system zajmie się resztą.
 Dla porównania MongoDB posiada pięć rodzajów procesów, które muszą być wystartowane z odpowiednimi parametrami i na właściwych maszynach aby poprawnie skonfigurować system z replikacją i partycjonowaniem.
 
-Systemy opisane w tej pracy, które implementują ten wariant replikacji to Riak, Cassandra i CouchDB.
+Systemy, które implementują ten wariant replikacji to Riak, Cassandra i CouchDB.
 Pierwsze dwa z nich są inspirowane Amazon Dynamo, podobnie jak implementujący partycjonowanie wariant CouchDB - BigCouch.
 Z tej grupy jedynie Apache Cassandra nie pozwala na rozwiązywanie konfliktów przez klientów systemu, a jedynie opiera się na znacznikach czasowych.
 
 \section{Partycjonowanie}
 
 Część opisywanych w tej pracy systemów została stworzona z myślą o przechowywaniu ogromnych ilości danych, większych niż można pomieścić na pojedynczym węźle.
-W innych przypadkach ilość danych nie musi być wcale taka duża, ale po prostu ze względów wydajnościowych korzystne jest, aby dane w całości mieściły się w pamięci RAM, więc aby system był w stanie poradzić sobie z typowymi zbiorami danych, konieczne jest aby był on w stanie dzielić te zbiory pomiędzy węzły.
+W innych przypadkach ilość danych nie musi być wcale taka duża, ale po prostu ze względów wydajnościowych korzystne jest, aby dane w całości mieściły się w pamięci RAM. Aby system był w stanie poradzić sobie z typowymi zbiorami danych, konieczne jest aby był on w stanie dzielić te zbiory pomiędzy węzły.
 
 Najprostszym mechanizmem podziału jest określenie liczby partycji z góry, wraz z adresami serwerów za nie odpowiedzialnych.
-Przy zapisie bądź odczycie rekordu, na podstawie jego klucza przy pomocy funkcji mieszającej lub operacji modulo ustalany jest serwer który odpowiada za ten klucz.
+Przy zapisie bądź odczycie rekordu, na podstawie jego klucza przy pomocy funkcji mieszającej lub operacji modulo ustalany jest serwer, który odpowiada za ten klucz.
 
 Ten prymitywny mechanizm nie tylko nie uwzględnia replikacji, ale także utrudnia dodawanie bądź usuwanie węzłów z systemu.
 Jedynym systemem spośród opisanych w tej pracy, który wykorzystuje tego typu mechanizm jest Redis, ale nie jest to funkcja tego systemu, tylko coś co jest zaimplementowane w ramach biblioteki do komunikacji z tą bazą.
 W przyszłości Redis ma wspierać partycjonowanie danych w ramach Redis Cluster\footnote{patrz strona \pageref{sec:redis-cluster}.}.
 
-Poza Redisem, jedynym systemem który nie obsługuje partycjonowania danych jest Neo4J, choć i on ma obsługiwać tą funkcjonalność w przyszłości.
+Poza Redisem, jedynym systemem, który nie obsługuje partycjonowania danych jest Neo4J, choć i on ma obsługiwać tą funkcjonalność w przyszłości.
 
-Pozostałe systemy można podzielić na inspirowane algorytmem Consistent Hashing znanym z Amazon Dynamo i inspirowanie podziałem na fragmenty (tablety) znanym z Google BigTable.
+Pozostałe systemy można podzielić na inspirowane algorytmem Consistent Hashing znanym z Amazon Dynamo oraz inspirowanie podziałem na fragmenty (tablety) znanym z Google BigTable.
 
 \subsection*{Consistent Hashing}
 
@@ -116,9 +116,9 @@ Zaletą tego podejścia jest możliwość lokowania danych nawzajem powiązanych
 W porównaniu do Consistent Hashing, ten algorytm podziału danych ma wiele zalet.
 Po pierwsze, przedziały są w przybliżeniu tej samej wielkości, więc ich równomierna dystrybucja rzeczywiście oznacza, że wszystkie węzły odpowiadają za taką samą ilość danych (przynajmniej liczoną w megabajtach).
 Ponadto liczba fragmentów łatwo się dostosowuje do ilości danych przechowywanych przez system - potencjalnie system, który zaczyna działanie od kilku węzłów, może być rozbudowywany o kolejne aż osiągnie rozmiar rzędu tysięcy węzłów.
-W przypadku algorytmu inspirowanego przez Amazon Dynamo górną granicą jest skonfigurowana liczba przedziałów, która z kolei w systemach takich jak BigCouch, gdy ustawiona jest na zbyt wysoką może ograniczyć wydajność systemu.
+W przypadku algorytmu inspirowanego przez Amazon Dynamo górną granicą jest skonfigurowana liczba przedziałów, która z kolei w systemach takich jak BigCouch, gdy ustawiona jest na zbyt wysoką, może ograniczyć wydajność systemu.
 
-Wadą natomiast jest to, że poprzez wybranie niewłaściwego klucza partycjonowania (np. czasu utworzenia rekordu), możemy sprawić, że większość zapisów będzie trafiać do tego samego przedziału obciążając tym samym nadmiernie jeden węzeł, co z łatwością może doprowadzić do awarii tego węzła i niedostępności systemu.
+Wadą natomiast jest to, że poprzez wybranie niewłaściwego klucza partycjonowania (np. czasu utworzenia rekordu), możemy sprawić, że większość zapisów będzie trafiać do tego samego przedziału, obciążając tym samym nadmiernie jeden węzeł, co z łatwością może doprowadzić do awarii tego węzła i niedostępności systemu.
 
 \section{Wersjonowanie}
 
@@ -128,9 +128,9 @@ Drugim z wyjątków jest Redis, który wprawdzie nie implementuje prawdziwych tr
 Pozwala to wprawdzie na grupowe wykonanie kilku operacji zapisu, ale wykonanie operacji odczytu jest niemożliwe w ramach takiej ,,transakcji'', co do pewnego stopnia ogranicza jej przydatność.
 
 Jednym ze sposobów na ominięcie problemu braku transakcji jest zapewnienie istnienia operacji pozwalających na atomową zmianę klucza.
-Redis implementuje struktury danych, które mogą być w taki sposób modyfikowane a także pozwala na zgrupowanie kilku dowolnych modyfikujących operacji w jedną.
+Redis implementuje struktury danych, które mogą być w taki sposób modyfikowane, a także pozwala na zgrupowanie kilku dowolnych modyfikujących operacji w jedną.
 MongoDB także posiada szereg funkcji pozwalających na dokonywanie prostych modyfikacji dokumentów, takich jak dodanie pola czy dodanie elementu do tablicy.
-W przypadku kolumnowych baz danych (Cassandra, HBase), możliwe jest wykonywanie operacji na pojedynczych kolumnach, które na poziomie pojedynczego rekordu są aplikowane atomowo.
+W przypadku kolumnowych baz danych (Cassandra, HBase), możliwe jest wykonywanie operacji na pojedynczych kolumnach, które na poziomie pojedynczego rekordu są wykonywane atomowo.
 
 Systemy, które oferują wysoką dostępność, czyli Riak, Cassandra i CouchDB, muszą także radzić sobie z konfliktami spowodowanymi zmianami wykonanymi na różnych węzłach systemu.
 Riak w tym celu posługuje się mechanizmem zegarów wektorowych, które pozwalają na śledzenie historii zmian rekordu, z dużym prawdopodobieństwem pozwalając na określenie, które różnice są konfliktami, a które oznaczają, że jeden z węzłów ma nieaktualne informacje.
@@ -140,7 +140,7 @@ Należy jednak zwrócić uwagę, że Cassandra wersjonuje każdą kolumnę rekor
 
 \section{Wyszukiwanie rekordów}
 
-Wyszukiwanie rekordów na podstawie ich właściwości w zbiorze danych, który składa się z wielu milionów a nawet miliardów rekordów nie jest prostym zadaniem.
+Wyszukiwanie rekordów na podstawie ich właściwości w zbiorze danych, który składa się z wielu milionów, a nawet miliardów, rekordów nie jest prostym zadaniem.
 Większość systemów opisanych w tej pracy pozwala użytkownikowi na wyszukiwanie rekordów jedynie po ich kluczu głównym, pozostawiając programiście stworzenie indeksów drugiego poziomu i zarządzanie nimi, ale praktycznie każdy z nich posiada pewne ułatwienia związane z wyszukiwaniem.
 
 Redis posiada dużą liczbę struktur danych, które pozwalają na grupowanie rekordów w kolekcje, a operacje na zbiorach pozwalają także na tworzenie prostych indeksów.
@@ -149,7 +149,7 @@ Riak bazuje na frameworku MapReduce w celu wyszukiwania węzłów, ale dla duży
 Zbudowany na podstawie tego systemu Riak Search pozwala na wyszukiwanie rekordów używając składni zapytań biblioteki Lucene.
 
 Kolumnowe bazy danych nie pozwalają na wyszukiwanie rekordów po dowolnej kolumnie, ale posiadają bogate API do wyszukiwania kolumn wewnątrz jednego wiersza.
-W połączeni z faktem, że kolumny są przechowywane posortowane, pozwala to na tworzenie prostych indeksów drugiego poziomu.
+W połączeniu z faktem, że przechowywane kolumny są posortowane, pozwala to na tworzenie prostych indeksów drugiego poziomu.
 W najnowszej wersji Apache Cassandra nie jest już nawet konieczne ręczne tworzenie i utrzymywanie tych struktur, gdyż można to zlecić systemowi.
 
 Do budowy bardziej złożonych indeksów w kolumnowych bazach danych możliwe jest wykorzystanie Apache Hadoop, z którym oba opisane w tej pracy systemy są dobrze zintegrowane.
@@ -158,7 +158,7 @@ Dokumentowe bazy danych posiadają najbardziej rozbudowane możliwości wyszukiw
 CouchDB posługuje się w tym celu tak zwanymi Widokami, czyli implementacją MapReduce, która zapisuje wyniki działania tych funkcji w drzewie $B-tree$, co pozwala na wyszukiwanie przy pomocy tak zbudowanych indeksów w czasie logarytmicznym względem liczby dokumentów w bazie, a także na szybkie wykonywanie operacji podsumowujących, takich jak zliczanie dokumentów spełniających pewne kryteria.
 Wadą tego podejścia jest to, że wymaga ono stworzenia widoków dla każdego potrzebnego aplikacji rodzaju zapytań, a dodanie takiej funkcji, czy nawet jej zaktualizowanie wymaga dużej ilości czasu na przeliczenie indeksu.
 
-MongoDB posiada zarówno możliwość tworzenia indeksów drugiego poziomu, wyszukiwanie po atrybutach na których nie ma założonego indeksu, a także tworzenie złożonych zapytań.
+MongoDB posiada zarówno możliwość tworzenia indeksów drugiego poziomu, wyszukiwania po atrybutach na których nie ma założonego indeksu, a także tworzenia złożonych zapytań.
 Dzięki temu system ten oferuje najwygodniejsze API wyszukiwania spośród wszystkich omawianych.
 Do wad tego rozwiązania należy to, że wszystkie indeksy muszą mieścić się w pamięci operacyjnej, co ogranicza liczbę indeksów jakie można stworzyć.
 Takie ograniczenie, w połączeniu z faktem, że zapytania mogą odwoływać się do atrybutów, które nie posiadają indeksu sprawia, że dla dużych zbiorów danych wyszukiwanie może być wolne.

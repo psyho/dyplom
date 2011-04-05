@@ -41,8 +41,8 @@ W przypadku zapisu, węzeł slave kontaktuje się z serwerem master i czeka aż 
 Przy każdym zapisie zanim operacja zwróci przetwarzanie do klienta, dane są zapisane na przynajmniej dwóch węzłach.
 W ten sposób z punktu widzenia serwera aplikacyjnego zapewniona jest konsystencja na poziomie odczytu własnych zapisów (ang. \emph{ready-your-writes consistency}).
 
-Taka architektura pozwala na skalowanie w zastosowaniach o znacznej przewadze odczytów do liczby zapisów.
-Warto jednak pamiętać, że konfiguracja ta wymaga nieparzystej liczby instancji Zookeeper, czyli zalecane jest wykorzystywanie jej w konfiguracjach od trzech węzłów wzwyż.
+Taka architektura pozwala na skalowanie w zastosowaniach o znacznej przewadze odczytów nad liczbą zapisów.
+Warto jednak pamiętać, że konfiguracja ta wymaga nieparzystej liczby instancji ZooKeeper, czyli zalecane jest wykorzystywanie jej w konfiguracjach od trzech węzłów wzwyż.
 
 \subsection*{Partycjonowanie}
 

@@ -1,7 +1,7 @@
 \chapter{Bazy Dokumentowe}
 
 \section*{Streszczenie}
-W tym rozdziale opisane zostaną dwie bazy dokumentowe: CouchDB i MongoDB.
+W tym rozdziale opisane zostały dwie bazy dokumentowe: CouchDB i MongoDB.
 Pierwsza z nich jest jednym z najstarszych i najbardziej znanych systemów NoSQL, druga natomiast jest prawdopodobnie najczęściej wybieranym przez twórców aplikacji internetowych systemem NoSQL.
 Szczególnie wartymi uwagi cechami CouchDB są rozbudowany mechanizm replikacji, pozwalający na tworzenie rozproszonych aplikacji, gdzie każdy klient posiada własną kopię bazy, oraz implementacja MapReduce, która zapisuje wyniki wywołania funkcji \emph{map} i \emph{reduce}, ułatwiając tworzenie indeksów drugiego poziomu.
 MongoDB natomiast cechuje się bardzo rozbudowanym i przyjaznym dla użytkownika API, pozwalającym na łatwe tworzenie indeksów i wyszukiwanie rekordów.
@@ -11,7 +11,7 @@ MongoDB natomiast cechuje się bardzo rozbudowanym i przyjaznym dla użytkownika
 
 \subsection*{Wstęp}
 
-Apache CouchDB to dokumentowa baza danych oferująca szereg nie spotykanych w innych systemach funkcjonalności, takich jak framework MapReduce, który pozwala na tworzenie indeksów drugiego poziomu, czy bardzo rozbudowaną funkcjonalność replikacji, która pozwala na tworzenie systemów, w których klient może przechowywać lokalnie jedynie ten fragment bazy, który go interesuje (umożliwiając tym samym pracę nawet w warunkach utraty połączenia z siecią) i pozostawić funkcjonalność synchronizacji danych CouchDB.
+Apache CouchDB to dokumentowa baza danych oferująca szereg niespotykanych w innych systemach funkcjonalności, takich jak framework MapReduce, który pozwala na tworzenie indeksów drugiego poziomu, czy bardzo rozbudowaną funkcjonalność replikacji, która pozwala na tworzenie systemów, w których klient może przechowywać lokalnie jedynie ten fragment bazy, który go interesuje (umożliwiając tym samym pracę nawet w warunkach utraty połączenia z siecią) i pozostawić funkcjonalność synchronizacji danych CouchDB.
 
 System ten jest jednym z najdłużej dostępnych na rynku - baza ta została udostępniona już w 2005 roku.
 O dojrzałości i popularności tego projektu świadczy ogromna ilość dostępnej dokumentacji oraz aktywna społeczność.
@@ -20,7 +20,7 @@ Apache CouchDB jest systemem napisanym w języku Erlang i dostępnym na licencji
 
 \subsection*{Protokół komunikacji}
 
-Głównym interfejsem komunikacji z CouchDB jest REST API po HTTP.
+Głównym interfejsem komunikacji z CouchDB jest REST API.
 Z jednej strony tego typu interfejs jest zaletą, gdyż jest to prosty protokół, obsługiwany z łatwością w każdym praktycznie języku programowania, a także zastosowanie HTTP umożliwia uzupełnienie CouchDB poprzez zastosowanie serwerów proxy czy load balancerów, których dla tego protokołu jest bardzo wiele.
 Zastosowanie tego protokołu umożliwia wręcz tworzenie aplikacji internetowych, które nie wymagają serwera aplikacyjnego - wystarczy klient w języku JavaScript wykonywany w przeglądarce i baza.
 Wadą wykorzystania HTTP jako protokołu komunikacji jest to, że w porównaniu z binarnymi protokołami transmisji jest dość wolny, gdyż wymaga większej przepustowości i więcej czasu na serializację i deserializację danych.
