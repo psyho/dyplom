@@ -144,14 +144,14 @@ Podobnie jak inne systemy typu klucz-wartość Redis nie udostępnia możliwośc
  Możliwe jest wykonanie przecięcia i sumy, ale nie różnicy posortowanych zbiorów.
  Możliwe jest także, podobnie jak dla list, stronicowanie zbioru.
 
- \item[Tablica mieszająca] - często rekordy w Redisie są zapisywane w taki sposób, że kluczowi identyfikującemu rekord przypisujemy wartość, którą jest obiekt, zserializowany, np. do formatu JSON.
+ \item[Tablica mieszająca] - często rekordy w Redisie są zapisywane w taki sposób, że kluczowi identyfikującemu rekord przypisujemy rekord zserializowany, np. do formatu JSON.
  Jest to akceptowalne, jeżeli zawsze chcemy odczytywać rekordy w całości, ale jeżeli rekord jest duży, a potrzebne jest nam tylko kilka jego pól, to lepiej każde z nich zapisać pod osobnym kluczem.
  Tablica mieszająca jest strukturą, która optymalizuje właśnie to zastosowanie.
 \end{description}
 
 \subsection*{Unikalne cechy}
 
-Redis posiada wiele funkcjonalności, które go wyróżniają na tle innych systemów typu klucz-wartość.
+Redis posiada wiele funkcjonalności, które wyróżniają go na tle innych systemów typu klucz-wartość.
 Wśród nich poczesne miejsce zajmuje na pewno opisana wcześniej obsługa różnych typów danych, ale można do nich zaliczyć także mechanizm obsługi zdarzeń (Publish-Subscribe) oraz implementacja pamięci wirtualnej wewnątrz systemu, bez polegania na funkcjonalności systemu operacyjnego.
 
 \subsubsection*{Publish-Subscribe}
@@ -218,13 +218,13 @@ Poniżej zamieszczono kilka odnośników do stron WWW związanych z Redisem.
 \subsection*{Wstęp} 
 
 Riak jest napisaną w Erlangu, dopiero zdobywającą popularność bazą typu klucz-wartość, która mocno bazuje na opisanych w artykule o Amazon Dynamo technikach (patrz strona \pageref{sec:dynamo-techniki}).
-System ten jest dostępny w dwóch wersjach: darmowej na licencji open source (Apache License 2.0), oraz rozszerzonej, płatnej wersji o nazwie Riak Enterprise DS.
+System ten jest dostępny w dwóch wersjach: darmowej na licencji open source (Apache License 2.0) oraz rozszerzonej, płatnej wersji o nazwie Riak Enterprise DS.
 
 Niniejszy rozdział nie zagłębia się w opisane już techniki, tylko zamiast tego opisuje szczegóły, które nie występują w Dynamo, a zostały zaimplementowane na potrzeby Riaka.
 
 \subsection*{Protokół komunikacji}
 
-Riak obsługuje trzy protokoły komunikacji - natywny w Erlangu\footnote{Erlang jest językiem, który bardzo dobrze obsługuje komunikację między procesową w środowisku rozproszonym (praktycznie bez różnicy czy procesy są częścią tego samego procesu systemu operacyjnego, czy znajdują się na różnych maszynach) - ten klient wykorzystuje właśnie ten protokół komunikacji.}, interfejs REST po HTTP (wewnętrznie używający klienta w Erlangu) oraz interfejs w technologii Protocol Buffers\footnote{Protocol Buffers jest technologią serializacji i definicji interfejsu RPC opublikowaną przez Google w 2008 roku i używaną wewnętrznie w wielu projektach tej firmy. Więcej szczegółów jest dostępnych na stronie domowej projektu http://code.google.com/p/protobuf/}.
+Riak obsługuje trzy protokoły komunikacji - natywny w Erlangu\footnote{Erlang jest językiem, który bardzo dobrze obsługuje komunikację międzyprocesową w środowisku rozproszonym (praktycznie bez różnicy czy procesy są częścią tego samego procesu systemu operacyjnego, czy znajdują się na różnych maszynach) - ten klient wykorzystuje właśnie ten protokół komunikacji.}, interfejs REST po HTTP (wewnętrznie używający klienta w Erlangu) oraz interfejs w technologii Protocol Buffers\footnote{Protocol Buffers jest technologią serializacji i definicji interfejsu RPC opublikowaną przez Google w 2008 roku i używaną wewnętrznie w wielu projektach tej firmy. Więcej szczegółów jest dostępnych na stronie domowej projektu http://code.google.com/p/protobuf/}.
 Większość bibliotek wykorzystuje PBC (Protocol Buffers Client) do komunikacji z Riakiem, ze względu na przewagę jaką ten protokół ma pod względem wydajności nad HTTP.
 
 Riak nie obsługuje żadnych mechanizmów autentykacji ani autoryzacji użytkowników.
@@ -238,7 +238,7 @@ Konfiguracji replikacji dokonuje się na poziomie kubełka określając (tak jak
 Węzły te są wybierane zgodnie z algorytmem Consistent Hashing opisanym we wcześniejszym rozdziale (strona \pageref{sec:dynamo-consistent-hashing}).
 W przypadku awarii wykorzystywany jest opisany na stronie \pageref{sec:dynamo-hinted-handoff} mechanizm Hinted Handoff.
 
-Przy odczytach i zapisach stosowane są znane już czytelnikowi parametry R i W, które oznaczają odpowiednio ile węzłów (z N przechowujących wartość) musi odpowiedzieć zanim operacja zwróci rezultat.
+Przy odczytach i zapisach stosowane są opisane już parametry R i W, które oznaczają odpowiednio ile węzłów (z N przechowujących wartość) musi odpowiedzieć zanim operacja zwróci rezultat.
 W przypadku odczytów jest zastosowany mechanizm Read Repair, który polega na tym, że jeżeli któryś z węzłów zwróci nieaktualną wartość (ale nie wartość będącą w konflikcie z inną zwróconą - patrz zegary wektorowe strona \pageref{sec:dynamo-vector-clocks}), to wartość na tym węźle zostanie automatycznie uaktualniona, a klientowi zostanie zwrócona tylko jedna, najnowsza wersja. 
 
 \subsection*{Partycjonowanie}
@@ -258,7 +258,7 @@ Przy zapisie oprócz podania parametru W oznaczającego ile węzłów musi potwi
 Riak oferuje kilka wbudowanych \emph{backendów}, ale dostępne są też inne, niestandardowe.
 Wbudowane backendy to: DETS (domyślny), Bitcask (zapis do plików typu \emph{append-only}), ETS (w pamięci), gb\_trees (drzewo w pamięci), fs (każdy klucz w osobnym pliku na dysku), cache (dostępnych kila wariantów) oraz multi\_backend, który pozwala na konfigurację backendu dla kubełków. 
 
-Niestety nie ma sposobu na zapewnienie replikacji klucza na określoną liczbę węzłów zapisujących na dysk albo w pamięci (z artykułu o Amazon Dynamo można wywnioskować, że mechanizm taki tam występuje, podobnie jak zapewnienie, że jedna z replik znajduje się w innym centrum obliczeniowym).
+Niestety nie ma sposobu na zapewnienie replikacji klucza na określoną liczbę węzłów zapisujących na dysk albo w pamięci (z artykułu o Amazon Dynamo można wywnioskować, że mechanizm taki występuje tam, podobnie jak zapewnienie, że jedna z replik znajduje się w innym centrum obliczeniowym).
 
 \subsection*{Wersjonowanie}
 
@@ -324,15 +324,15 @@ Niestety, jedynie komercyjna wersja Riaka posiada możliwość replikacji międz
 \subsection*{Typowe zastosowania}
 
 W ostatnich latach termin Cloud Computing (w wolnym tłumaczeniu - obliczenia w chmurze) zyskał znacznie na popularności.
-Cloud Computing polega na tym, że firmy zamiast tworzyć i zarządzać własnymi centrami obliczeniowymi, wynajmują wirtualne maszyny od wyspecjalizowanych dostawców, dzięki czemu firmy te nie muszą się przejmować takimi problemami jak awarie sprzętu, czy administracją nim.
+Cloud Computing polega na tym, że firmy zamiast tworzyć i zarządzać własnymi centrami obliczeniowymi, wynajmują wirtualne maszyny od wyspecjalizowanych dostawców, dzięki czemu firmy te nie muszą się przejmować takimi problemami jak awarie sprzętu, czy jego administracją.
 Dużą zaletą tego modelu jest także to, że płaci się w tych rozwiązaniach z dokładnością do godziny, dzięki czemu można wynajmować więcej maszyn w godzinach szczytu (lub w sezonie większego obciążenia), a mniej na przykład w nocy.
 
 Niestety Cloud Computing ma też wady.
-Na Amazon Elastic Computing Cloud (Amazon EC2 - najpopularniejszy dostawca Cloud Computing) należy liczyć się z tym, że wynajęte maszyny mogą być regularnie wyłączne i włączane, co w przypadku takich baz jak Redis czy MongoDB może grozić regularną utratą danych.
+Na Amazon Elastic Computing Cloud (Amazon EC2 - najpopularniejszy dostawca Cloud Computing) należy liczyć się z tym, że wynajęte maszyny mogą być regularnie wyłączane i włączane, co w przypadku takich baz jak Redis czy MongoDB może grozić regularną utratą danych.
 
 Dwie cechy Riaka czynią go idealnym kandydatem do wykorzystania ,,w chmurze'': nie posiada on wyróżnionych węzłów, więc restart dowolnego z nich nigdy nie spowoduje chwilowej niedostępności całego systemu, a ponadto posiada bardzo dobrą obsługę dodawania oraz usuwania węzłów, dzięki czemu można go łatwo skalować w górę lub w dół w zależności od obciążenia, czy pory dnia.
 
-W przypadku systemów mniejszej skali, Riak może być bardzo przydatny w przypadku aplikacji, gdzie niedostępność systemu nawet przez kilka-kilkadziesiąt sekund może spowodować znaczne straty finansowe.
+W przypadku systemów mniejszej skali, Riak może być bardzo przydatny w przypadku aplikacji, gdzie niedostępność systemu nawet przez kilka-kilkadziesiąt sekund może spowodować znaczne straty.
 
 \subsection*{Przeciwwskazania}
 
