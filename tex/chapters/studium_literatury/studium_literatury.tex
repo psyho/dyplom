@@ -2,24 +2,24 @@
 
 \section*{Streszczenie}
 
-W studium literatury zajmę się opisaniem teorii CAP (\emph{Consistency, Availability, Partition Tolerance}), zwanej również teorią Brewer'a od nazwiska jej autora. 
+W studium problemu opisana została teoria CAP (\emph{Consistency, Availability, Partition Tolerance}), zwana również teorią Brewer'a od nazwiska jej autora. 
 Teoria ta twierdzi, że rozproszony system nie jest w stanie zapewnić równocześnie wszystkich trzech gwarancji: konsystencji danych widzianych przez węzły systemu, odporności całości systemu na awarie poszczególnych jego węzłów oraz odporności systemu na utratę połączenia pomiędzy poszczególnymi węzłami lub ich grupami. 
 
-Opiszę także BASE (\emph{Basically Available, Soft state, Eventual consistency}) i Eventual Consistency, które wprowadzają model konsystencji systemu bazodanowego, który o wiele lepiej przystaje do systemów rozproszonych niż ACID, dając programiście dużo większe możliwości wpłynięcia na zachowanie systemu i jego charakterystyki wydajnościowe, ale opłacając to kosztem zwiększenia złożoności korzystania z takiego systemu.
+Opisane zostały także BASE (\emph{Basically Available, Soft state, Eventual consistency}) i Eventual Consistency, które wprowadzają model konsystencji systemu bazodanowego, który o wiele lepiej przystaje do systemów rozproszonych niż ACID, dając programiście dużo większe możliwości wpłynięcia na zachowanie systemu i jego charakterystyki wydajnościowe, ale opłacając to kosztem zwiększenia złożoności korzystania z takiego systemu.
 
 Google MapReduce to nie tylko narzędzie pozwalające na przetwarzanie astronomicznych ilości danych.
 Jest to także wzorzec wykorzystywany przez wiele systemów NoSQL w celu zapewnienia możliwości przetwarzania dużych zbiorów rekordów pod nieobecność takich operatorów jak GROUP BY w SQL.
 
-Przedstawię także zasady działania Google BigTable oraz Amazon Dynamo, które bardzo istotnie wpłynęły na architekturę systemów NoSQL. 
+Przedstawione zostały także zasady działania Google BigTable oraz Amazon Dynamo, które bardzo istotnie wpłynęły na architekturę systemów NoSQL. 
 Bazy te przedstawiają sobą zupełnie różne podejścia do problemu skalowalności: Amazon Dynamo stawia przede wszystkim na dostępność, podczas gdy Google BigTable stawia na konsystencję.
 
-Koncepcje i techniki opisane w tym rozdziale odbijają się echem w architekturach wielu z systemów opisanych w kolejnych częściach niniejszej pracy, dlatego przedstawienie ich tutaj ma za zadanie umożliwić czytelnikowi lepsze zrozumienie tych systemów i tego, na czym opierali się ich autorzy podczas ich projektowania.
+Koncepcje i techniki opisane w tym rozdziale odbijają się echem w architekturach wielu z systemów opisanych w kolejnych częściach niniejszej pracy, dlatego przedstawienie ich tutaj ma za zadanie umożliwić czytelnikowi lepsze zrozumienie tych systemów i tego, jakie założenia czynili ich autorzy podczas ich projektowania.
 
 \section{Teoria CAP}
 
 \subsection*{Wprowadzenie}
 
-Pierwszym artykułem omawianym w tym rozdziale jest Teoria CAP.
+Pierwszym zagadnieniem omawianym w tym rozdziale jest Teoria CAP.
 Zrozumienie tej teorii ma istotne znaczenie dla udanej analizy rozproszonych systemów bazodanowych.
 Wzmianki i odniesienia do niej można znaleźć w bardzo wielu artykułach dotyczących NoSQL, a ponieważ teoria ta nie została przez autora sformułowana w postaci publikacji, istnieje wiele jej interpretacji i rozbieżności w tym, jak różni ludzie ją rozumieją.
 
@@ -84,7 +84,7 @@ Systemy takie najczęściej klasyfikujemy jako CA, ponieważ powinny być one od
 
 BASE to wzorzec, który w przypadku rozproszonych systemów bazodanowych pozwala na zastąpienie skomplikowanego i obniżającego dostępność systemu mechanizmu koordynacji transakcji kolejką zadań do wykonania w tle, co odbywa się kosztem konsystencji.
 Artykuł \cite{base-an-acid-alternative} jest krótki, prosty do zrozumienia i okraszony licznymi przykładami prowadzącymi czytelnika od rozwiązania używającego 2PC \footnote{2 Phase Commit - patrz poniżej} do rozwiązania opartego na BASE drobnymi krokami.
-Wzorzec ten jest bardzo uniwersalny, dlatego warto zapoznać się dokładniej z tą publikacją.
+Wzorzec ten jest bardzo uniwersalny, dlatego warto się z nim dokładniej zapoznać.
 
 \subsection*{Opis}
 
@@ -152,7 +152,7 @@ Artykuł \cite{vogels-eventually-consistent} wprowadza ponadto kilka rodzajów E
  W przypadku awarii i konieczności nawiązania nowej sesji, gwarancje te nie przechodzą na nowo nawiązaną sesję.
  \item[Monotonic Write Consistency]
  W tym przypadku system gwarantuje, że operacje zostaną wykonane w tej samej kolejności, w jakiej żądania ich wykonania zostały wysłane.
- Systemy które nie oferują tej gwarancji są bardzo trudne w użyciu.
+ Systemy, które nie oferują tej gwarancji są bardzo trudne w użyciu.
 \end{description}
 
 \subsection*{Konfiguracja Eventual Consistency}
@@ -193,27 +193,31 @@ Możliwość konfiguracji parametrów R, W i N stopniowo staje się standardem w
 
 \subsection*{Wprowadzenie}
 
-Google MapReduce to narzędzie pozwalające na przetwarzanie ogromnych zbiorów danych w równolegle na wielu węzłach.
+Google MapReduce to narzędzie pozwalające na przetwarzanie ogromnych zbiorów danych równolegle na wielu węzłach.
 Bezpośrednim odpowiednikiem MapReduce jest dostępny na licencji Open Source projekt Apache Hadoop, który jest stosowany przez takich internetowych gigantów jak Yahoo i Facebook.
 Jednak znaczenie MapReduce jest o wiele większe niż zainspirowanie tego projektu.
-Map-Reduce jest aktualnie de-facto standardem wykonywania skomplikowanych zapytań w systemach, które poza tym udostępniają jedynie bardzo uproszczony interfejs, tak jak bazy klucz-wartość, a nawet w systemach o rozbudowanych językach zapytań jak MongoDB, Map-Reduce jest stosowane w przypadku zapytań, które w SQL wymagałyby użycia klauzuli GROUP BY.
-Najdalej posuwa się w adopcji Map-Reduce CouchDB, gdzie wzorzec ten jest wykorzystywany do zapytań w trybie on-line, co możliwe jest dzięki temu, że wyniki operacji map są zapisywane dla każdego dokumentu i przeliczane przy każdej jego zmianie. 
+Map-Reduce jest aktualnie de-facto standardem wykonywania skomplikowanych zapytań w systemach, które poza tym udostępniają jedynie bardzo uproszczony interfejs, tak jak bazy klucz-wartość, a nawet w systemach o rozbudowanych językach zapytań jak MongoDB. 
+MapReduce jest stosowane w przypadku zapytań, które w SQL wymagałyby użycia klauzuli GROUP BY.
+Najdalej posuwa się w zastosowaniu MapReduce CouchDB, gdzie wzorzec ten jest wykorzystywany do zapytań w trybie on-line, co możliwe jest dzięki temu, że wyniki operacji map są zapisywane dla każdego dokumentu i przeliczane przy każdej jego zmianie. 
 
 \subsection*{Opis}
 
 Google MapReduce \cite{google-mapreduce} jest biblioteką wykorzystywaną do przetwarzania dużych zbiorów danych w środowisku rozproszonym.
 Użytkownik biblioteki specyfikuje dwie funkcje nazywane \emph{map} i \emph{reduce} oraz kilka innych parametrów konfiguracyjnych.
-Następnie biblioteka dba o to aby dane wejściowe zostały podzielone, na poszczególnych rekordach została wykonana funkcja \emph{map}, a jej wyniki zostały zagregowane przy pomocy funkcji \emph{reduce}.
+Zadaniem biblioteki jest przetworzenie pliku wejściowego, w którym są zapisane rekordy, w taki sposób, aby dla każdego rekordu w tym pliku została wywołana funkcja \emph{map}, a na wynikach tej funkcji została wywołana funkcja \emph{reduce}.
 
 Operacje \emph{map} i \emph{reduce} są powszechnie spotykane w językach funkcyjnych, takich jak na przykład LISP.
-\emph{Map} na wejściu otrzymuje parę $(k, v): k \in K_1, v \in V_1$ a na wyjściu emituje listę par $(k, v): k \in K_2, v \in V_2$.
-\emph{Reduce} na wejściu otrzymuje parę $(k, (v_1, ..., v_n)): k \in K_2, v_1...v_n \in V_2$ i na wyjściu emituje $v: v \in V_2$.
+\emph{Map} na wejściu otrzymuje parę klucz-wartość, gdzie kluczem jest identyfikator rekordu, a wartością sam rekord z pliku wejściowego.
+Funkcja \emph{map} może zwrócić dowolnie wiele par klucz-wartość.
+Klucze zwracane przez funkcje \emph{map} są nazywane \emph{kluczami pośrednimi} i nie muszą być w żaden sposób związane z identyfikatorami rekordów.
+Funkcji \emph{reduce} jest przekazywany klucz pośredni, oraz lista wszystkich wartości zwróconych dla tego klucza przez funkcję \emph{map} dla różnych rekordów.
+Wynikiem działania funkcji \emph{reduce} jest para klucz-wartość, gdzie kluczem jest klucz pośredni przekazany jako argument funkcji\footnote{W większości implementacji frameworka MapReduce, funkcja \emph{reduce} może być wywołana na wynikach swojego działania, dlatego zazwyczaj funkcja ta zwraca dane w takim samym formacie w jakim je przyjmuje.}.
 
 \subsection*{Przykład}
 
 Poniżej przedstawiam przykładowy kod funkcji \emph{map} i \emph{reduce} w języku Python dla problemu zliczania wystąpień słów w zbiorze tekstów. 
 Jak widzimy funkcja \emph{map} przyjmuje pary (klucz, wartość) z przestrzeni (Nazwy Dokumentów, Treść Dokumentów), zwracając pary z innej przestrzeni (Słowa, Liczby Naturalne).
-Funkcja \emph{reduce} w przykładzie przyjmuje pary gdzie kluczem jest słowo, natomiast wartością jest lista liczb naturalnych określająca liczby wystąpień tego słowa w różnych dokumentach (albo wielokrotnie w tym samym dokumencie).
+Funkcja \emph{reduce} w przykładzie przyjmuje słowo oraz listę liczb naturalnych określającą liczby wystąpień tego słowa w różnych dokumentach (albo wielokrotnie w tym samym dokumencie).
 
 \begin{verbatim}
 def map(document_name, document_value):
@@ -265,7 +269,7 @@ Użytkownik tworzy aplikację, w której specyfikuje dwie funkcje \emph{map} i \
  Lokacje tych plików są przekazywane do węzła \emph{master}, który z kolei jest odpowiedzialny za przekazanie ich do węzła wykonującego operację \emph{reduce} na odpowiednim fragmencie danych.
  \item Węzeł wykonujący operację \emph{reduce} po otrzymaniu takiego powiadomienia pobiera odpowiednie pliki bezpośrednio od węzła, który je przechowuje.
  Po otrzymaniu wszystkich potrzebnych plików, \emph{worker} sortuje otrzymane dane po kluczu, tak aby wartości dla danego klucza sąsiadowały ze sobą w pliku.
- \item Po posortowaniu plików wejściowych węzeł iteruje po kluczach i dla każdego z nich przekazuje klucz oraz listę wszystkich przypisanych mu wartości do funkcji \emph{reduce}, zapisując następnie jej wynik w pliku wyjściowym.
+ \item Po posortowaniu plików wejściowych węzeł przechodzi kolejno po kluczach i dla każdego z nich przekazuje klucz oraz listę wszystkich przypisanych mu wartości do funkcji \emph{reduce}, zapisując następnie jej wynik w pliku wyjściowym.
  \item Kiedy wszystkie operacje \emph{reduce} zakończą się, \emph{master} budzi program użytkownika i wywołanie funkcji \emph{MapReduce} kończy się.
 \end{enumerate}
 
@@ -282,7 +286,7 @@ W artykule \cite{google-mapreduce} zostało opisanych kilka istotnych optymaliza
  Z tego względu biblioteka wprowadza pojęcie funkcji łączącej (ang. \emph{combiner}).
  Funkcja ta dokonuje wstępnej redukcji przed wysłaniem wartości przez sieć do węzła wykonującego operację \emph{reduce}.
  Najczęściej stosuje się w tym miejscu tą samą funkcję co w operacji \emph{reduce}, ale aby to było możliwe, funkcja ta musi być łączna i przemienna, co czasem wymaga wprowadzenia pewnych zmian.
- Dla przykładu: przedstawiona wcześniej funkcja map emitująca wszystkie słowa w danym dokumencie emituje powtarzające się słowa wielokrotnie.
+ Dla przykładu: przedstawiona wcześniej funkcja map zwracająca wszystkie słowa w danym dokumencie, zwraca powtarzające się słowa wielokrotnie.
  Poprzez zsumowanie wystąpień przed przesłaniem znacznie zmniejszamy ilość danych do wysłania.
  \item Funkcja partycjonująca może być wyspecyfikowana przez użytkownika, dzięki czemu potencjalnie możliwe jest takie jej określenie, aby dane powiązane ze sobą znalazły się w jednym pliku wynikowym (aczkolwiek kosztem ryzyka nierównomiernego podziału kluczy między partycje).
  \item Dzięki sortowaniu kluczy pośrednich, pliki wynikowe są łatwiejsze do przetwarzania, umożliwiając na przykład wyszukiwanie binarne.
@@ -328,8 +332,8 @@ Stanowi on jedno z podstawowych narzędzi dla praktyki prostych odczytów, ale z
 
 \subsection*{Wprowadzenie}
 
-W tym rozdziale opisane zostały dwie bazy danych, które wpłynęły znacząco na architekturę dostępnych publicznie systemów NoSQL.
-Pierwszą z nich jest system stosowany przez firmę Amazon i który cechuje się tym, że został zaprojektowany z myślą o wysokiej dostępności.
+W tej części opisany został jeden z systemów, które wpłynęły znacząco na architekturę dostępnych publicznie systemów NoSQL.
+Amazon Dynamo jest systemem stworzonym przez firmę Amazon i cechuje się tym, że został zaprojektowany z myślą o wysokiej dostępności.
 System ten, mimo że jako baza typu klucz-wartość jest bardzo prosty z punktu widzenia użytkownika, opiera się wewnętrznie na zastosowaniu wielu ciekawych technik, którym poświęcono więcej uwagi w dalszej części rozdziału.
 Wybór dostępności ponad konsystencję wiąże się z istotnymi konsekwencjami.
 Najbardziej widoczną z nich jest skomplikowany system wersjonowania rekordów, który wprawdzie umożliwia systemowi zachowanie dostępności w przypadku podziału sieci lub awarii grup węzłów, ale także sprawia, że system jest znaczniej bardziej skomplikowany w użyciu.
@@ -357,9 +361,9 @@ Pokazuje to jak Eventual Consistency może z powodzeniem być stosowane w sytuac
 Autorzy Amazon Dynamo określili takie założenia co do architektury:
 
 \begin{itemize}
- \item system jest zawsze w stanie przyjąć operację zapisu,
- \item w związku z replikacją danych i naciskiem na wysoką dostępność, w systemie może wystąpić wiele wersji rekordu,
- \item rozwiązywanie konfliktów między wersjami następuje przy odczycie i jest dokonywane przez aplikację, nie przez bazę (ale aplikacja może z tego zrezygnować i wybrać prosty mechanizm, np. ostatni zapis wygrywa),
+ \item system jest zawsze w stanie przyjąć operację zapisu, aby użytkownik zawsze mógł dodać towary do koszyka,
+ \item w związku z replikacją danych i naciskiem na wysoką dostępność, w systemie może wystąpić wiele wersji rekordu (koszyka),
+ \item rozwiązywanie konfliktów między wersjami następuje przy odczycie i jest dokonywane przez aplikację, nie przez bazę (ale aplikacja może z tego zrezygnować i wybrać prosty mechanizm, np. ostatni zapis wygrywa), w ten sposób w wypadku połączenia dwóch wersji koszyka, co najwyżej ponownie pojawią się w nim usunięte przez użytkownika towary, ale nic nie zostanie utracone,
  \item system musi się łatwo skalować wszerz poprzez dodawanie kolejnych węzłów i nie powinno to mieć dużego wpływu ani na administrację systemem ani na sam system,
  \item system musi się charakteryzować symetrią: każdy węzeł ma taki sam zestaw obowiązków jak wszystkie inne,
  \item system musi być zdecentralizowany: żaden węzeł nie jest wyróżniony i wszelkie operacje są wykonywane korzystając z mechanizmów \emph{peer-to-peer},
@@ -379,10 +383,10 @@ W systemie takim jak Dynamo, który ma za zadanie skalować się do setek węzł
 W Amazon Dynamo za podział na partycje odpowiada zmodyfikowany algorytm Consistent Hashing.
 Kolejne paragrafy opisują najpierw podstawowy algorytm, a następnie kolejne jego modyfikacje.
 
-Consistent Hashing to algorytm który dla dowolnego klucza określa który węzeł systemu go przechowuje.
+Consistent Hashing to algorytm który dla dowolnego klucza określa który węzeł systemu przechowuje dane z nim powiązane.
 Ponieważ klucze są dowolnymi ciągami bajtów, zawsze operując na nich używamy funkcji mieszającej (ang. \emph{hashing function}).
-Przeciwdziedzinę tej funkcji mieszającej traktujemy jako pierścień gdzie najmniejsza i największa możliwa wartość niejako stykają się ze sobą, podobnie jak ma to na przykład miejsce w przypadku długości geograficznych czy godzin na tarczy zegara.
-W podstawowej wersji systemu każdy węzeł systemu losuje jedną wartość na tym pierścieniu.
+Przeciwdziedzina tej funkcji mieszającej jest niejako pierścieniem, gdzie najmniejsza i największa możliwa wartość ,,stykają się'' ze sobą, podobnie jak ma to na przykład miejsce w przypadku długości geograficznych czy godzin na tarczy zegara.
+W podstawowej wersji systemu każdy węzeł systemu ma przypisaną jedną losową wartość na tym pierścieniu.
 Aby określić któremu węzłowi odpowiada dany klucz, obliczamy dla niego wartość funkcji mieszającej, a następnie znajdujemy węzeł, którego ,,pozycja'' na pierścieniu jest najbliższą zgodnie z ruchem wskazówek zegara po wartości wyliczonej.
 W takim schemacie każdemu węzłowi odpowiada jeden, ciągły fragment pierścienia (patrz rysunek \ref{fig:consistent-hashing-01}).
 
@@ -414,7 +418,7 @@ Rysunek \ref{fig:consistent-hashing-03} przedstawia opisaną powyżej wersję al
 \label{sec:dynamo-replikacja}
 
 Mechanizm opisany w poprzednim rozdziale przydziela przedziały kluczy do węzłów, które są \emph{koordynatorami} tych przedziałów.
-Nazwa ,,koordynator'' może być dość myląca ponieważ węzeł ten niczego w rzeczywistości nie koordynuje, jedyne jego wyróżnienie polega na tym, że jest pierwszym węzłem na liście węzłów przechowujących dany przedział kluczy.
+Nazwa ,,koordynator'' może być dość myląca ponieważ węzeł ten niczego w rzeczywistości nie koordynuje, jedyne jego wyróżnienie polega na tym, że jest pierwszym węzłem na liście węzłów przechowujących dane z danego przedziału kluczy.
 Oczywiście nie wystarcza aby każdy przedział był zapisany tylko na dysku koordynatora - awaria pojedynczego węzła powodowałaby wtedy (potencjalnie nieodwracalne) straty danych, a przynajmniej ich czasową niedostępność.
 W Amazon Dynamo dane są replikowane do N fizycznych węzłów, gdzie N\footnote{
 Uważny czytelnik zwróci uwagę na to, że ta sama nomenklatura była wykorzystana w artykule o Eventual Consistency.
@@ -437,33 +441,35 @@ Amazon Dynamo jest systemem, w którym dane są replikowane asynchronicznie i kt
 Konsekwencją tego podejścia jest możliwość występowania wielu wersji rekordu równocześnie w systemie, a w przypadku długotrwałych podziałów sieci możliwe jest nawet istnienie równoległych ,,drzew historii'' dla tego rekordu.
 
 Podobnie jak wcześniej i tu widzimy wyraźny wpływ tego, jak wymagania biznesowe wpłynęły na wybór algorytmów i architektury Dynamo.
-Jednym z rozdzajów danych które są przechowywane w tym systemie jest koszyk użytkownika.
+Jednym z rodzajów danych, które są przechowywane w tym systemie jest koszyk użytkownika.
 Ze względów finansowych jest istotne aby użytkownik nie tylko mógł zawsze dodać nowe przedmioty do swojego koszyka, ale także aby informacja o dodaniu tych przedmiotów nigdy nie została utracona.
 Gdyby zatem do wersjonowania rekordów w systemie użyto znaczników czasowych, nie byłoby możliwe określenie logicznej kolejności modyfikacji danego rekordu.
-Wykorzystanie startegii ,,nowszy wygrywa'' do rozwiązywania ewentualnych konfliktów mogłoby grozić utratą zamówień z koszyka, a zatem negatywnymi konsekwencjami finansowymi dla firmy.
+Przykładowo użytkownik, który w krótkim odstępie czasu dodałby do koszyka kilka przedmiotów, gdyby zapytania te trafiły do różnych węzłów systemu, mógłby stworzyć kilka konfliktujących ze sobą wersji koszyka.
+Wykorzystanie strategii ,,nowszy wygrywa'' do rozwiązywania ewentualnych konfliktów mogłoby grozić utratą zamówień z koszyka, a zatem negatywnymi konsekwencjami finansowymi dla firmy.
 
 Autorzy Amazon Dynamo zdecydowali się na wykorzystanie mechanizmu nazywanego zegarami wektorowymi (ang. \emph{vector clocks}).
 Zegar wektorowy jest to zbiór par, gdzie pierwszym elementem pary jest identyfikator węzła\footnote{Riak, opisany w rozdziale \ref{sec:riak}, używa identyfikatorów klientów jako pierwszych elementów pary. Użycie identyfikatorów serwerów wiąże się bowiem z ryzykiem utraty danych. Problem ten jest opisany bliżej w \cite{basho-vector-clocks-hard}.}, a drugim elementem jest liczba naturalna.
 Przy każdej modyfikacji rekordu serwer dokonujący tej modyfikacji zwiększa o 1 liczbę przypisaną do swojego identyfikatora w zegarze wektorowym (albo wpisuje swój identyfikator z wartością 1, jeżeli go wcześniej nie było).
-Jeżeli wszystkie elementy zegara A mają wszystkie wartości odpowiednich elementów mniejsze bądź równe wartościom wektora B, to mówimy że A jest przodkiem wektora B i w przypadku napotkania takich dwóch wersji B zastępuje A.
-Jeżeli natomiast ani A nie jest przodkiem B ani vice versa, to mówimy że te dwie wersje rekordu znajdują się w konflikcie, który z kolei musi zostać rozwiązany przez aplikację (klienta).
+Jeżeli wszystkie identyfikatory węzłów dla zegara A mają odpowiadające im wartości mniejsze bądź równe odpowiednim wartościom w zegarze B, to mówimy że A jest przodkiem wektora B i w przypadku napotkania takich dwóch wersji B zastępuje A.
+Jeżeli natomiast ani A nie jest przodkiem B ani vice versa, to mówimy, że te dwie wersje rekordu znajdują się w konflikcie, który z kolei musi zostać rozwiązany przez aplikację (klienta).
 
 Zegar wektorowy rekordu o długim czasie życia w systemie może osiągnąć potencjalnie nieograniczoną długość.
 Aby temu zapobiec do pary identyfikator węzła-liczba, dodaje się jeszcze trzeci element: znacznik czasu (ang. \emph{timestamp}), który zapisuje kiedy ostatni raz dany węzeł modyfikował wartość rekordu.
 Długość zegara można dzięki temu kontrolować poprzez usuwanie najstarszych elementów, kiedy długość zegara przekroczy pewien próg (10 dla Dynamo).
-Teoretycznie utrata tych informacji grozi wystąpieniem konieczności rozwiązywania konfliktów między wersjami które w rzeczywistości są w relacji następstwa, ale zdarzenie takie jest wysoce nieprawdopodobne i nie wiąże się z dużymi trudnościami dla aplikacji.
+W normalnych warunkach długość zegara nie powinna przekroczyć N (stopnia replikacji), ale awarie węzłów i podziały sieci mogą sprawić, że długość ta będzie większa.
+Usuwając część elementów zegara tracimy jednak część zawartych w nim informacji, a to może sprawić, szczególnie w wypadku zaistnienia podziału sieci, że rekord, który w jednej z partycji w ogóle nie został zmodyfikowany, zostanie oznaczony jako pozostający w konflikcie z wersją, która została zmodyfikowana w drugiej partycji, tylko dlatego, że nowy element wektora spowodował usunięcie starego elementu, który pozostał w niezmodyfikowanym zegarze.
 
 Bardzo dobry opis zegarów wektorowych czytelnik może znaleźć w artykułach na blogu firmy Basho, która to firma zajmuje się rozwojem bazy Riak: \cite{basho-vector-clocks-easy} opisuje tą technikę z punktu widzenia klienta, zaś \cite{basho-vector-clocks-hard} opisuje ją z punktu widzenia implementacji serwera.
 
 \subsubsection*{Operacje odczytu i zapisu}
 
 Jako baza typu klucz-wartość, Amazon Dynamo udostępnia użytkownikowi dwie podstawowe operacje: \emph{put} i \emph{get}.
-Operacja \emph{get} przyjmuje między innymi parametr R, określający minimalną liczbę węzłów które muszą dokonać operacji odczytu aby zakończyła się ona sukcesem.
-Operacja \emph{put} jako jeden z parametrów przyjmuje z kolei wartość W, określającą ile węzłów musi potwierdzić zapis wartości aby operacja się powiodła.
+Operacja \emph{get} przyjmuje między innymi parametr R, określający minimalną liczbę węzłów, które muszą dokonać operacji odczytu aby zakończyła się ona sukcesem.
+Operacja \emph{put} jako jeden z parametrów przyjmuje z kolei wartość W, określającą ile węzłów musi potwierdzić zapis wartości, aby operacja się powiodła.
 
 Amazon Dynamo używa protokołu HTTP w komunikacji między klientem i serwerem.
-Zaletą tego podejścia jest brak konieczności linkowania aplikacji z kodem służącym do komunikacji z Amazon Dynamo, wadą jednak jest to, że klient który traktuje bazę jako ,,czarną skrzynkę'' jest wolniejszy.
-Jeżeli klient nie jest świadomy istnienia list preferencyjnych i informacji w nich zawartych, operacja odczytu przebiega następująco: 
+Zaletą tego podejścia jest brak konieczności linkowania aplikacji z kodem służącym do komunikacji z Amazon Dynamo, wadą jednak jest to, że klient, który traktuje bazę jako ,,czarną skrzynkę'' jest wolniejszy.
+Jeżeli klient nie jest świadomy istnienia list preferencyjnych i informacji w nich zawartych, a zatem nie wie, na którym węźle przechowywane są dane interesującego go klucza, operacja odczytu przebiega następująco: 
 \begin{enumerate}
  \item Klient wysyła zapytanie, które jest obsługiwane przez \emph{load balancer}.
  \item \emph{Load balancer} może wybrać węzeł, do którego ma przekazać zapytanie, albo poprzez inspekcję przekazywanego zapytania i wybór węzła na podstawie listy preferencyjnej, albo losowo z pośród wszystkich węzłów systemu.
@@ -488,7 +494,7 @@ Przypomnijmy, że Amazon Dynamo na liście preferencyjnej zawiera więcej węzł
 Informacja o tym, że rekord miał trafić do innego węzła, ale ze względu na jego awarię trafił do węzła aktualnego jest zapisywana w metadanych tego rekordu.
 Rekordy takie są przechowywane osobno od reszty rekordów i regularnie jest dokonywane sprawdzenie, czy można już taki rekord przekazać do węzła, na który miał on trafić oryginalnie.
 Technikę tę nazywamy \emph{Hinted Handoff}, czyli w wolnym tłumaczeniu przekazywanie z sugestiami.
-W Amazon Dynamo operacje dołączenia, czy usunięcia fizycznego węzła są jawne, stąd też przyjmujemy że węzły stają się niedostępne jedynie tymczasowo, w przypadku permanentnej awarii węzeł powinien zostać jawnie usunięty.
+W Amazon Dynamo operacje dołączenia, czy usunięcia fizycznego węzła są jawne, stąd też przyjmujemy że węzły stają się niedostępne jedynie tymczasowo, a w przypadku permanentnej awarii węzeł powinien zostać jawnie usunięty.
 
 \subsubsection*{Wykrywanie różnic - Merkle Trees}
 \label{merkle-trees}
@@ -521,7 +527,7 @@ Artykuł ,,Dynamo: amazon's highly available key-value store'' \cite{amazon-dyna
 
 \subsection*{Wprowadzenie}
 
-Opisany w tym rozdziale system jest pierwowzorem dla wszystkich baz typu kolumnowego a zarazem jest także dobrym przykładem bazy, która w wypadku podziału sieci stawia na konsystencję kosztem dostępności.
+Opisany w tym rozdziale system jest pierwowzorem dla wszystkich baz typu kolumnowego, a zarazem jest także dobrym przykładem bazy, która w wypadku podziału sieci stawia na konsystencję kosztem dostępności.
 Google BigTable nie da się łatwo zanalizować na podstawie artykułu, który ten system przedstawia, ponieważ aby zrozumieć działanie tej bazy należy sięgnąć do źródeł opisujących dwa systemy, na których bardzo mocno się ona opiera: Google Chubby i Google File System (GFS).
 Pierwszy z nich umożliwia BigTable wybór węzła master i ułatwia zadania takie jak utrzymywanie listy aktywnych węzłów systemu, drugi zaś zapewnia możliwość trwałego zapisu danych i replikację.
 
@@ -564,10 +570,10 @@ Nazwa grupy kolumn musi składać się ze znaków nadających się do wydruku, z
 Rodzina kolumn zazwyczaj przechowuje wartości tego samego typu, gdyż wartości te są razem kompresowane.
 Rodzina kolumn musi być dodana do schematu zanim będzie możliwe dodawanie wartości w jej kolumnach, ale co ważne nie jest konieczne deklarowanie samych kolumn.
 W bazach takich jak BigTable przyjmuje się, że liczba rodzin kolumn jest niewielka i zmienia się nieznacznie wraz z rozwojem aplikacji.
-Jedynie nie-puste wartości kolumn są zapisywane, więc można powiedzieć, że tabela BigTable jest macierzą rzadką (ang. \emph{sparse}).
+Jedynie nie-puste wartości kolumn są zapisywane, więc można powiedzieć, że tabela BigTable jest ,,macierzą rzadką'' (ang. \emph{sparse}).
 
 Dzięki temu, że nie ma konieczności deklarowania kolumn, oraz tego że puste komórki nie zajmują miejsca, kolumny w BigTable są bardziej wszechstronne niż kolumny, które są czytelnikowi znane z relacyjnych baz danych.
-Często sama nazwa kolumny zawiera dane, takie jak na przykład klucz innego rekordu (bardzo łatwo w ten sposób modelować relację jeden do wielu).
+Czasami nazwą kolumny może być liczba, na przykład będąca identyfikatorem innego rekordu (bardzo łatwo w ten sposób modelować relację jeden do wielu).
 Ponadto BigTable pozwala na wersjonowanie komórek macierzy, czyli parze (klucz, nazwa kolumny) odpowiada lista wartości, z których każda opisana jest czasem modyfikacji.
 Stare rewizje mogą być usuwane przez system automatycznie albo dzięki określeniu maksymalnej liczby wartości do zapisania, albo przez określenie jak dawne wersje mają być przechowywane (np. z ostatnich siedmiu dni).
 Inną właściwością BigTable jest to, że zmiana wielu wartości kolumn jest dokonywana atomowo, co upraszcza pracę w rozproszonym środowisku.
@@ -630,11 +636,11 @@ Klient nie znający lokalizacji tabletu zawierającego interesujący go klucz mu
 Jak widać, ważne jest aby klient zapisywał dane o lokalizacji tabletów.
 Widać także, że wspomniany wcześniej fakt, że powiązane rekordy mogą należeć do tego samego tabletu, pomaga zmniejszyć opóźnienia operacji na nich.
 
-W przypadku jeżeli klient posiana nieaktualne informacje o lokalizacji tabletu, próbuje on skontaktować się kolejno z serwerami od trzeciego do pierwszego poziomu korzystając z zapisanych danych o ich lokalizacji, a następnie wykrywa lokalizację tabletu według wcześniej opisanego schematu począwszy od tabletu, informacje o którym nie uległy dezaktualizacji.
-W pesymistycznym przypadku może to oznaczać konieczność połączenia aż z sześcioma węzłami, ale zazwyczaj nie jest to konieczne.
+W przypadku jeżeli klient posiana nieaktualne informacje o lokalizacji tabletu, próbuje on skontaktować się kolejno z serwerami od trzeciego do pierwszego poziomu korzystając z zapisanych danych o ich lokalizacji, a następnie wykrywa lokalizację tabletu według wcześniej opisanego schematu począwszy od tabletu, o którym informacje nie uległy dezaktualizacji.
+W pesymistycznym przypadku może to oznaczać konieczność połączenia aż z sześcioma\footnote{W przypadku gdy klient nie posiada żadnych informacji o węzłach, musi wykonać 3 zapytania aby poznać lokalizację tabletu. Jeżeli posiada całkowicie nieaktualne informacje, to najpierw dowiaduje się o tym poprzez wykonanie 3 zapytań do węzłów, które już nie odpowiadają za serwowanie tabletów każdego z 3 poziomów, a następnie kolejne 3 aby poznać aktualną lokalizację interesującego tabletu.} węzłami, ale zazwyczaj nie jest to konieczne.
 
 Serwery tabletów używają Google Chubby do rejestrowania się w systemie.
-Aby tego dokonać przy starcie serwera tabletów tworzy on plik w specjalnym katalogu i zdobywa na nim blokadę do zapisu.
+Aby tego dokonać, przy starcie serwer tabletów tworzy plik w specjalnym katalogu w Google Chubby i zdobywa na nim blokadę do zapisu.
 Dopóki serwer tabletów posiada tą blokadę, dopóty może on zajmować się serwowaniem tabletów.
 Jeżeli straci blokadę, stara się ją odzyskać, jeżeli jednak plik na którym miał blokadę został usunięty, serwer tabletów jest zmuszony zakończyć działanie.
 Węzeł master komunikuje się co pewien czas ze wszystkimi serwerami tabletów, żądając od nich podania statusu ich blokady.
@@ -650,7 +656,7 @@ Pierwszą z nich jest \emph{tablet log}, do którego zapisywane są wszelkie mod
 Każda taka operacja musi zostać zapisana w tym pliku zanim zostanie przetworzona.
 
 Po zapisaniu do \emph{tablet logu} operacja może zostać odwzorowana w pamięci operacyjnej.
-Mutacje są wykonywane korzystając z techniki \emph{copy-on-write} (kopiowanie przy zapisie), dzięki czemu wynik operacji nie jest widoczny aż do jej zakończenia.
+Zmiany są wykonywane korzystając z techniki \emph{copy-on-write} (kopiowanie przy zapisie), dzięki czemu wynik operacji nie jest widoczny aż do jej zakończenia.
 Co pewien czas struktura w pamięci (nazywana \emph{memtable}) jest zrzucana na dysk (do GFS) do pliku SSTable.
 SSTable to format pozwalający na zapisywanie tablic asocjacyjnych, odczytywanie kluczy zakresami i posiadający specjalny indeks, który, po wczytaniu do pamięci operacyjnej przy otwarciu pliku, umożliwia odczyt dowolnej wartości z pliku przy pomocy pojedynczego wyszukania na dysku.
 
@@ -665,7 +671,7 @@ W kolejnych sekcjach zostaną one pokrótce opisane aby ułatwić czytelnikowi z
 
 \subsubsection*{Google File System}
 
-Google File System (GFS) opisany w artykule \cite{google-file-system} jest rozproszonym systemem plików (ang. \emph{distributed file system}), który jest zoptymalizowany pod duże pliki, najczęściej aktualizowane przez dopisywanie na koniec (ang. \emph{append-only files}), ale umożliwia także przechowywanie małych plików i losowy dostęp.
+Google File System (GFS) opisany w artykule \cite{google-file-system} jest rozproszonym systemem plików (ang. \emph{distributed file system}), który jest zoptymalizowany pod duże pliki, najczęściej aktualizowane przez dopisywanie na koniec (ang. \emph{append-only files}), ale umożliwia także przechowywanie małych plików i losowy dostęp do nich.
 Wszystkie pliki w GFS dzielone są na fragmenty rozmiaru 64MB (ang. \emph{chunk}).
 System ten jest zaprojektowany z myślą o pracy na setkach lub tysiącach średniej klasy maszyn.
 
@@ -752,24 +758,24 @@ Komórki Chubby są zazwyczaj współdzielone między różnymi aplikacjami.
 
 W Google BigTable Chubby jest wykorzystywany do zapewnienia istnienia pojedynczego węzła master, wykrywania serwerów tabletów i ich awarii, przechowywania danych dotyczących schematu bazy i list dostępu.
 Awaria i niedostępność Chubby powoduje także niedostępność BigTable.
-Cytując za artykułem \cite{google-bigtable}, przełożyło się to średnio na zmniejszenie dostępności systemu średnio o 0.0047\%, a w najgorszym przypadku o 0.0326\%\footnote{Dla lepszego zobrazowania: odpowiednio 24 minuty i 171 minut w ciągu roku}.
+Cytując za artykułem \cite{google-bigtable}, przełożyło się to na zmniejszenie dostępności systemu średnio o 0.0047\%, a w najgorszym przypadku o 0.0326\%\footnote{Dla lepszego zobrazowania: odpowiednio 24 minuty i 171 minut w ciągu roku}.
 
 \subsection*{Znaczenie}
 
 Wpływy Google BigTable można znaleźć w HBase, Hypertable, Apache Cassandra i nawet MongoDB.
 Baza ta jest typowym przykładem systemu, który w obliczu wystąpienia podziałów sieci wybiera konsystencję kosztem dostępności (CP w Teorii CAP).
-Bardzo interesujące jest zastosowanie Google Chubby w tym systemie jako sposób na uniknięcie skomplikowanego problemu rozproszonego konsensusu.
+Bardzo interesujące jest zastosowanie Google Chubby w tym systemie jako sposób na uniknięcie skomplikowanego problemu wyboru wyróżnionego węzła.
 Odpowiednik Google Chubby o nazwie Zookeeper, zaimplementowany na potrzeby HBase, jest wykorzystywany do wyboru węzła master w grafowej bazie Neo4J.
 Technika ta może być z powodzeniem stosowana w wielu systemach rozproszonych upraszczając ich architekturę.
 
 Zainteresowanym lekturą artykułu przedstawiającego Google BigTable \cite{google-bigtable} polecam także lekturę dwóch innych pokrewnych artykułów o Google Chubby \cite{google-chubby} i Google File System \cite{google-file-system}.
-Pominięcie ich może bowiem sprawić, że czytelnik nie będzie w stanie samodzielnie zrozumieć architektury BigTable, a tym bardziej konsekwencji jakie mają decyzje podjęte przez architektów firmy Google.
+Pominięcie ich może bowiem sprawić, że czytelnik nie będzie w stanie samodzielnie zrozumieć architektury BigTable, a tym bardziej konsekwencji jakie powodują założenia przyjęte przez architektów firmy Google.
 
 \section{Podsumowanie}
 
-W powyższym rozdziale przedstawione zostały podstawowe artykuły i koncepcje które mają wpływ na skalowalne bazy danych które są obecnie dostępne na rynku.
-Opisane zostały dwie wysoce skalowalne bazy danych wykorzystywane przez internetowych gigantów -- Google i Amazon.
+W powyższym rozdziale przedstawione zostały na podstawie literatury koncepcje, które mają wpływ na skalowalne bazy danych obecnie na rynku.
+Opisane zostały dwie wysoko skalowalne bazy danych wykorzystywane przez internetowych gigantów -- Amazon i Google.
 Sukces obu rozwiązań nie ulega wątpliwości, a pokazują one jak bardzo mogą różnić się podejścia do skalowalności.
 Z jednej strony mamy Amazon Dynamo, które stawia przede wszystkim na dostępność systemu, którą opłaca trudniejszym interfejsem z punktu widzenia programisty.
 Z drugiej strony mamy Google BigTable, które poświęca dostępność dla konsystencji, ale dzięki temu jest o wiele prostsze i wymaga mniejszych nakładów pracy od programisty.
-Przedstawiony został także framework MapReduce, który jest podstawą do wykonywania zapytań które muszą dokonać przeglądu wszystkich lub dużej części rekordów w bazie, w wielu nierelacyjnych systemach bazodanowych.
+Przedstawiony został także framework MapReduce, który jest podstawą do wykonywania zapytań, które muszą dokonać przeglądu wszystkich lub dużej części rekordów w bazie, w wielu nierelacyjnych systemach bazodanowych.
