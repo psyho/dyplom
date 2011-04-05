@@ -101,7 +101,7 @@ Bardzo dobre wprowadzenie do modelu danych Apache Cassandra można znaleźć w a
 
  \item[Column] - kolumna.
  Jest to trójka (nazwa, wartość, czas ostatniej modyfikacji).
- Nazwa i wartość kolumny nie może przekroczyć rozmiary dwóch gigabajtów.
+ Nazwa i wartość kolumny nie może przekroczyć rozmiaru dwóch gigabajtów.
  W odróżnieniu od Google BigTable (gdzie jest przechowywanych wiele wersji wartości), Cassandra przechowuje tylko najnowszą wersję, a znacznik czasowy jest używany tylko przy rozstrzyganiu konfliktów.
 
  \item[Super Column] - super kolumna.
@@ -139,13 +139,13 @@ Wart uwagi jest fakt, że Apache Cassandra jako jeden z bardzo nielicznych syste
 
 \subsection*{Typowe zastosowania}
 
-Jeszcze zanim ten system został upubliczniony, dowiódł on swojej przydatności w firmie Facebook, gdzie umożliwił wyszukiwanie w miliardach wiadomości które użytkownicy tego serwisu wysyłają do siebie codziennie.
+Jeszcze zanim ten system został upubliczniony, dowiódł on swojej przydatności w firmie Facebook, gdzie umożliwił wyszukiwanie w miliardach wiadomości, które użytkownicy tego serwisu wysyłają do siebie codziennie.
 Nie jest zatem przypadkiem, że baza ta została później zaadoptowana przez innych wielkich graczy na rynku aplikacji internetowych: Twitter, Digg i Reddit.
 Zainteresowanie jakim Cassandra cieszy się pośród inżynierów największych aplikacji internetowych, świadczy o tym, że system ten należy do grupy najlepiej skalowalnych baz danych dostępnych aktualnie na rynku.
 
 Do tej pory jednak Cassandra nie zdobyła dużej popularności wśród twórców mniejszych aplikacji.
 Jest to najprawdopodobniej związane z tym, że tworzenie aplikacji opartych o ten system jest dość trudne i wymaga znacznie większych nakładów pracy niż w przypadku dokumentowych baz danych, czy nawet baz klucz-wartość takich jak Riak, które mogą się pochwalić wbudowanym frameworkiem MapReduce. 
-Pomiędzy wersjami 0.6 i 0.7\footnote{W momencie pisania tych słów data wydania wersji 0.7 nie jest jeszcze znana, ale dostępna jest już wersja \emph{Release Candidate} 4.} zostało jednak wprowadzonych wiele zmian (na czele z indeksami drugiego poziomu i możliwością zmiany schematu bez ponownego uruchamiania serwera), które sprawiają, że system ten jest znacznie bardziej przyjazny dla użytkownika niż jeszcze przed rokiem, a zatem jest bardzo prawdopodobne, że nabierze on tym samym większej popularności.
+Pomiędzy wersjami 0.6 i 0.7\footnote{W momencie pisania pracy data wydania wersji 0.7 nie jest jeszcze znana, ale dostępna jest już wersja \emph{Release Candidate} 4.} zostało jednak wprowadzonych wiele zmian (na czele z indeksami drugiego poziomu i możliwością zmiany schematu bez ponownego uruchamiania serwera), które sprawiają, że system ten jest znacznie bardziej przyjazny dla użytkownika niż jeszcze przed rokiem, a zatem jest bardzo prawdopodobne, że nabierze on tym samym większej popularności.
 
 Podobnie jak Riak, Cassandra jest systemem, który powinien dobrze radzić sobie ,,w chmurze''.
 Posiada on nawet wbudowane mechanizmy pozwalające na określenie topologii sieci w środowisku Amazon EC2 na potrzeby strategii replikacji.
@@ -159,7 +159,7 @@ Brak transakcji i zegarów wektorowych sprawia także, że problematyczne może 
 \subsection*{Dokumentacja i wsparcie}
 
 W internecie jest dostępnych wiele źródeł informacji na temat Apache Cassandra.
-Wiele użytecznych informacji znajduje się na wiki projektu, jednak struktura tej strony jest nieprzejrzysta i utrudnia dotarcie do tych danych.
+Wiele użytecznych informacji znajduje się na wiki projektu, jednak struktura tej strony jest nieprzejrzysta i utrudnia dotarcie do interesujących danych.
 
 Projekt ten jest aktywnie rozwijany i wyraźnie nabiera co raz większej popularności.
 
