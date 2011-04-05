@@ -3,11 +3,11 @@
 \section*{Streszczenie}
 
 Jednym z założeń ruchu NoSQL jest zwrócenie uwagi użytkowników systemów bazodanowych na fakt, że dla różnych aplikacji i do różnych zastosowań mogą pasować zupełnie różne systemy.
-Ogromna liczba nierelacyjnych baz danych\footnote{Strona http://nosql-database.org/ wymienia ponad stu takich baz.} sprawia, że niemożliwym jest opisanie wszystkich z nich w niniejszej pracy.
+Ogromna liczba baz danych NoSQL\footnote{Strona http://nosql-database.org/ wymienia ponad stu takich baz.} sprawia, że niemożliwym jest opisanie wszystkich z nich w niniejszej pracy.
 Z tego względu przedstawionych zostanie jedynie kilka najlepiej znanych i najbardziej popularnych rozwiązań.
 
 Istnieje wiele możliwych sposobów klasyfikacji systemów NoSQL.
-Na potrzeby tej pracy przyjęto najczęściej stosowany system, który dzieli bazy ze względu na wykorzystywany model danych.
+Na potrzeby tej pracy przyjęto najczęściej stosowany system, który dzieli bazy ze względu na wykorzystywany logiczny model danych.
 
 \section{Podział ze względu na model danych}
 
@@ -25,13 +25,12 @@ Na potrzeby tej pracy przyjęto najczęściej stosowany system, który dzieli ba
  Kolumny przynależące do jednej rodziny z reguły zawierają dane jednego typu, gdyż są one kompresowane razem.
  Bazy te zazwyczaj wymagają zdefiniowania struktury bazy z dokładnością do rodzin kolumn.
  Jedynie kolumny, którym jest przypisana jakaś wartość dla danego klucza zajmują miejsce w pamięci, dzięki temu różnych kolumn może być bardzo wiele i często służą na przykład do tworzenia list wartości.
- Bazy kolumnowe pozwalają jedynie na wykonywanie zapytań o pojedynczy klucz lub ich zakres, ale za to oferują szeroki zakres możliwości limitowania zwracanych kolumn.
+ Bazy kolumnowe pozwalają jedynie na wykonywanie zapytań o pojedynczy klucz lub ich zakres, ale za to oferują szeroki zakres możliwości wyboru zwracanych kolumn.
 
  \item[Bazy dokumentowe]
  W systemie dokumentowym unikalnemu kluczowi przypisany jest tak zwany dokument.
  Dokument jest to drzewo, którego liśćmi są wartości prymitywne (np. ciąg znaków, liczba, wartość logiczna, pusty obiekt NULL, itp.) a węzłami wartości złożone (tablica, tablica asocjacyjna).
- Dokumenty są zazwyczaj zgrupowane w kolekcje, po których można iterować.
- Dokumenty należące do tej samej kolekcji nie muszą mieć tych samych pól czy struktury.
+ Dokumenty są zazwyczaj zgrupowane w kolekcje, ale dokumenty należące do tej samej kolekcji nie muszą mieć tych samych pól czy struktury.
  W odróżnieniu od systemu typu klucz-wartość przechowującego dane w formacie JSON, systemy dokumentowe są w stanie interpretować wartości zawarte w dokumentach i umożliwiają użytkownikowi efektywne wyszukiwanie rekordów na podstawie tych wartości przy pomocy różnych rodzajów indeksów.
  W bazie dokumentowej nie występują zazwyczaj relacje między dokumentami, ale możliwe jest zagnieżdżanie dokumentów, co ułatwia modelowanie relacji jeden-do-wielu.
  
@@ -40,7 +39,7 @@ Na potrzeby tej pracy przyjęto najczęściej stosowany system, który dzieli ba
  W takim systemie można uzyskać informacje zarówno o krawędziach wchodzących jak i wychodzących.
  Zarówno węzły, jak i krawędzie grafu są opisane właściwościami.
  Podobnie jak w przypadku baz dokumentowych węzły czy krawędzie nie mają z góry narzuconej struktury i mogą się różnić liczbą, typem i nazwami właściwości.
- Podstawowym mechanizmem zapytań w bazie grafowej są rożne mechanizmy trawersowania grafu biorąc pod uwagę właściwości węzłów i krawędzi i poruszając się po krawędziach wchodzących i wychodzących.
+ Podstawowym mechanizmem zapytań w bazie grafowej są rożne mechanizmy trawersowania grafu biorąc pod uwagę tak właściwości węzłów i krawędzi jak i poruszając się po krawędziach wchodzących i wychodzących.
  Drugorzędnym mechanizmem jest wyszukiwanie węzłów i krawędzi grafu na podstawie ich właściwości.
  Możliwość wykonywania takich zapytań nie jest jednak konieczna w bazie grafowej i niektóre produkty pozostawiają obsługę takich zapytań innym systemom. 
 
@@ -48,7 +47,7 @@ Na potrzeby tej pracy przyjęto najczęściej stosowany system, który dzieli ba
 
 \section{Opisane aspekty rozwiązań}
 
-Ponieważ dokładne przedstawienie dowolnego systemu bazodanowego na kilku stronach A4 jest zadaniem nie do wykonania, zamierzeniem autora tej pracy było wybranie najbardziej istotnych i cennych dla czytelnika informacji.
+Ponieważ dokładne przedstawienie dowolnego systemu bazodanowego na kilku stronach jest zadaniem nie do wykonania, zamierzeniem autora jest przedstawienie najbardziej istotnych i cennych dla czytelnika informacji.
 Pominięte zostały przede wszystkim szczegóły dotyczące API poszczególnych systemów oraz łatwo dostępne informacje, takie jak instrukcja instalacji systemu.
 Opisane zostały natomiast istotne cechy, które pozwalają czytelnikowi lepiej zrozumieć mechanizm działania aplikacji.
 Każda baza została opisana według następującego schematu:
