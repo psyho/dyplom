@@ -253,7 +253,7 @@ Użytkownik tworzy aplikację, w której specyfikuje dwie funkcje \emph{map} i \
  \item \emph{R} - określa liczbę zadań \emph{reduce}.
 \end{itemize}
 
-\myfigure{chapters/studium_literatury/map-reduce.png}{Google MapReduce}{fig:map-reduce}
+\myfigure{chapters/studium_literatury/map-reduce.png}{Google MapReduce}{fig:map-reduce}{Na podstawie \cite{google-mapreduce}}
 
 \begin{enumerate}
  \item Biblioteka MapReduce dzieli plik wejściowy na \emph{M} części.
@@ -390,7 +390,7 @@ W podstawowej wersji systemu każdy węzeł systemu ma przypisaną jedną losow�
 Aby określić któremu węzłowi odpowiada dany klucz, obliczamy dla niego wartość funkcji mieszającej, a następnie znajdujemy węzeł, którego ,,pozycja'' na pierścieniu jest najbliższą zgodnie z ruchem wskazówek zegara po wartości wyliczonej.
 W takim schemacie każdemu węzłowi odpowiada jeden, ciągły fragment pierścienia (patrz rysunek \ref{fig:consistent-hashing-01}).
 
-\myfigure{chapters/studium_literatury/consistent-hashing-01.png}{Podstawowe Consistent Hashing}{fig:consistent-hashing-01}
+\myfigure{chapters/studium_literatury/consistent-hashing-01.png}{Podstawowe Consistent Hashing}{fig:consistent-hashing-01}{Na podstawie \cite{amazon-dynamo}}
 
 Podstawowy wariant algorytmu ma wiele wad.
 Problemem jest na przykład potencjalnie bardzo nierównomierna dystrybucja kluczy między węzłami.
@@ -398,7 +398,7 @@ Nie ma też żadnego wsparcia dla heterogeniczności środowiska - nie możemy ,
 W związku z tymi ograniczeniami, wprowadza się tak zwane ,,wirtualne węzły'': pojedynczemu fizycznemu węzłowi przypisuje się wiele pozycji na pierścieniu (zazwyczaj liczba tych pozycji jest znacznie większa od ogólnej liczby węzłów).
 Dzięki tej modyfikacji (o ile liczba wirtualnych węzłów jest wystarczająco duża) dystrybucja kluczy będzie znacznie bardziej sprawiedliwa, możemy też kontrolować obciążenie poszczególnych węzłów poprzez przyporządkowanie im mniejszej lub większej liczby pozycji na pierścieniu (patrz rysunek \ref{fig:consistent-hashing-02}).
 
-\myfigure{chapters/studium_literatury/consistent-hashing-02.png}{Consistent Hashing z wirtualnymi węzłami}{fig:consistent-hashing-02}
+\myfigure{chapters/studium_literatury/consistent-hashing-02.png}{Consistent Hashing z wirtualnymi węzłami}{fig:consistent-hashing-02}{Na podstawie \cite{amazon-dynamo}}
 
 Opisana powyżej wersja algorytmu lepiej radzi sobie z dodawaniem i usuwaniem węzłów niż wersja podstawowa, jednak w rzeczywistości nie sprawdza się zbyt dobrze.
 Przy dodaniu węzła do systemu, klucze znajdujące się do tej pory pod opieką innych węzłów muszą być przekazane nowemu węzłowi.
@@ -412,7 +412,7 @@ Następnie każdy z przedziałów przydzielamy losowo jednemu z węzłów tak ab
 Dzięki temu rekordy przynależące do różnych z przedziałów mogą być przechowywane w odrębnych plikach, które z kolei mogą być przesyłane w ramach potrzeby do przejmujących nad przedziałem kontrolę węzłów bez zbędnego przeglądania danych na dysku.
 Rysunek \ref{fig:consistent-hashing-03} przedstawia opisaną powyżej wersję algorytmu.
 
-\myfigure{chapters/studium_literatury/consistent-hashing-03.png}{Consistent Hashing z rozdziałem partycjonowania i pozycjonowania rekordów}{fig:consistent-hashing-03}
+\myfigure{chapters/studium_literatury/consistent-hashing-03.png}{Consistent Hashing z rozdziałem partycjonowania i pozycjonowania rekordów}{fig:consistent-hashing-03}{Na podstawie \cite{amazon-dynamo}}
 
 \subsubsection*{Replikacja}
 \label{sec:dynamo-replikacja}
@@ -615,7 +615,7 @@ Węzły BigTable dzielimy na trzy rodzaje:
 
 \subsubsection*{Drzewo tabletów}
 
-\myfigure{chapters/studium_literatury/bigtable-tablets.png}{Drzewo Tabletów}{fig:bigtable-tablets}
+\myfigure{chapters/studium_literatury/bigtable-tablets.png}{Drzewo Tabletów}{fig:bigtable-tablets}{Na podstawie \cite{google-bigtable}}
 
 Metadane dotyczące wszystkich tabletów są zapisane w trzypoziomowym drzewie.
 Korzeniem tego drzewa jest specjalny tablet (tzw. \emph{root tablet}).
@@ -649,7 +649,7 @@ Jeżeli master nie jest w stanie się połączyć z serwerem tabletów, lub jeż
 \subsection*{Architektura serwera tabletów}
 \label{sec:bigtable-architektura-serwera-tabletow}
 
-\myfigure{chapters/studium_literatury/bigtable-tablet-datastructures.png}{Serwer Tabletów}{fig:bigtable-tablet-server}
+\myfigure{chapters/studium_literatury/bigtable-tablet-datastructures.png}{Serwer Tabletów}{fig:bigtable-tablet-server}{Na podstawie \cite{google-bigtable}}
 
 Dane o tablecie są zapisywane przez serwer tabletów w trzech lokacjach.
 Pierwszą z nich jest \emph{tablet log}, do którego zapisywane są wszelkie modyfikujące tablet operacje.

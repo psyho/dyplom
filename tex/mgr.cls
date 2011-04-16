@@ -20,9 +20,9 @@
 
 \RequirePackage{graphicx}
 
-\RequirePackage{float}
-\floatstyle{boxed}
-\restylefloat{figure}
+%\RequirePackage{float}
+%\floatstyle{boxed}
+%\restylefloat{figure}
 
 \def\advisor#1{\gdef\@advisor{#1}} 
 \def\advisorpl#1{\gdef\@advisorpl{#1}} 

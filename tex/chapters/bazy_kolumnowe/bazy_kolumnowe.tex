@@ -228,7 +228,7 @@ Każdy serwer regionów (tak jak w Apache Cassandra i BigTable) zapisuje wszystk
 Struktura danych w pamięci jest regularnie zapisywana na dysk do plików (\verb+HFile+), które formatem przypominają pliki SSTable znane z BigTable, a te z kolei co pewien czas są łączone aby uniknąć wyszukiwania w dużej liczbie plików przy odczycie.
 Architektura ta jest dokładniej opisana w artykule na blogu Larsa George - jednego z programistów tworzących HBase \cite{george-hbase-storage}, z którego zaczerpnięty został Rysunek \ref{fig:hbase-files}. 
 
-\myfigure{chapters/bazy_kolumnowe/hbase-files.png}{Architektura HBase}{fig:hbase-files}
+\myfigure{chapters/bazy_kolumnowe/hbase-files.png}{Architektura HBase}{fig:hbase-files}{Źródło: \cite{george-hbase-storage}}
 
 W starszych wersjach HBase, w przypadku awarii węzła master cały system musiał być uruchomiony ponownie, ale od wersji 0.20 została wprowadzona integracja z odpowiednikiem Google Chubby - Apache ZooKeeper, co pozwoliło na usunięcie tego problemu.
 
