@@ -10,7 +10,7 @@ Druga z nich dzięki architekturze, w której żaden węzeł nie jest wyróżnio
 
 \subsection*{Wstęp} 
 
-Redis jest jedną z najbardziej popularnych baz NoSQL.
+Redis jest jedną z najbardziej popularnych\footnote{Popularność baz danych jest bardzo trudna do zmierzenia. Stwierdzenia dotyczące popularności poszczególnych systemów są subiektywną oceną autora, popartą obserwacją częstotliwości z jaką systemy te są wymieniane na blogach związanych z tematyką NoSQL, takich jak \cite{mynosql}.} baz NoSQL.
 Swoją popularność zawdzięcza on niezwykle bogatemu jak na bazę typu klucz-wartość API, oraz bardzo dużej wydajności\footnote{Wraz z instalacją systemu dostępne jest narzędzie redis-benchmark, które to dla komputera klasy PC pokazało wydajność ponad 140 tysięcy operacji GET i SET na sekundę.}.
 Bardzo często system ten jest wykorzystywany w aplikacjach internetowych równolegle z relacyjnymi bazami danych, najczęściej jako kolejka zadań albo w zastępstwie Memcached jako cache oraz baza, w której przechowywana jest sesja użytkownika.
 System ten jest dostępny za darmo na licencji open source (New BSD License).
@@ -49,7 +49,7 @@ Dlatego dopóki nie zostanie zaimplementowany \emph{Redis Cluster}, systemowi te
 \label{sec:redis-cluster}
 
 W planach jest implementacja tak zwanego \emph{Redis Cluster}, który pozwoli na horyzontalne skalowanie systemu poprzez replikację i partycjonowanie danych.
-Redis Cluster będzie systemem typu CA (Consistent-Available).
+Redis Cluster będzie systemem typu CA (Consistent-Available)\footnote{Dokładniejszy opis tego rozwiązania można znaleźć w \cite{antirez-redis-cluster}.}.
 W systemie będą występować cztery rodzaje węzłów:
 
 \begin{description}
@@ -222,6 +222,8 @@ System ten jest dostępny w dwóch wersjach: darmowej na licencji open source (A
 
 Niniejszy rozdział nie zagłębia się w opisane już techniki, tylko zamiast tego opisuje szczegóły, które nie występują w Dynamo, a zostały zaimplementowane na potrzeby Riaka.
 
+Informacje w tym rozdziale zostały zaczerpnięte głównie z wiki projektu, które stanowi bardzo dobre źródło informacji na jego temat \cite{riak-wiki}.
+
 \subsection*{Protokół komunikacji}
 
 Riak obsługuje trzy protokoły komunikacji - natywny w Erlangu\footnote{Erlang jest językiem, który bardzo dobrze obsługuje komunikację międzyprocesową w środowisku rozproszonym (praktycznie bez różnicy czy procesy są częścią tego samego procesu systemu operacyjnego, czy znajdują się na różnych maszynach) - ten klient wykorzystuje właśnie ten protokół komunikacji.}, interfejs REST po HTTP (wewnętrznie używający klienta w Erlangu) oraz interfejs w technologii Protocol Buffers\footnote{Protocol Buffers jest technologią serializacji i definicji interfejsu RPC opublikowaną przez Google w 2008 roku i używaną wewnętrznie w wielu projektach tej firmy. Więcej szczegółów jest dostępnych na stronie domowej projektu http://code.google.com/p/protobuf/}.
@@ -352,7 +354,7 @@ Riak jest tworzony przez firmę Basho, która oferuje także komercyjną wersję
 Poniżej zamieszczono kilka odnośników do stron WWW związanych z Riakiem.
 
 \begin{description}
- \item [https://wiki.basho.com/display/RIAK/Riak] - strona wiki z dokumentacją projektu
+ \item [http://wiki.basho.com/] - strona wiki z dokumentacją projektu
  \item [http://www.basho.com/] - strona domowa projektu
  \item [http://blog.basho.com/] - oficjalny blog, na którym można znaleźć wiele ciekawych informacji na temat Riaka
  \item [http://seancribbs.github.com/ripple/] - biblioteka dla języka Ruby implementująca zarówno niskopoziomowego klienta Riaka, ale także bibliotekę mapującą obiekty na rekordy w Riaku (odpowiednik ORM).
