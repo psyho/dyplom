@@ -52,7 +52,11 @@ O\'{s}wiadczam, \'{s}wiadoma(y) odpowiedzialno\'{s}ci karnej za po\'{s}wiadczeni
       {\large \dptname \\}
     }
 
-    \vspace*{25mm}
+    \vspace*{10mm}
+
+    \centering\includegraphics[width=3cm]{agh_logo.jpg}
+
+    \vspace*{10mm}
 
     {\huge \@author}\\                                                       
 
